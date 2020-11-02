@@ -72,6 +72,7 @@ h1, h2, h3, b, input {
 	font-family: "Lucida Console", "Courier New", monospace;
 	color: rgba(0, 0, 0, 0.5);
 	text-shadow: var(--hqProperty3);
+	padding: 0;
 }
 
 .smallNode {

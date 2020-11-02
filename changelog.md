@@ -1,6 +1,6 @@
 # The Prestige Tree: Rewritten changelog (major updates only):
 
-### v0.3: Enhanced Spacetime - 10/30/20
+### v0.3: Enhanced Spacetime - 11/2/20
 - Ported the "T", "E", & "S" layers
 - Added the next group of achievements
 

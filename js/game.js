@@ -1,4 +1,5 @@
 var player;
+var shiftDown = false;
 var needCanvasUpdate = true;
 var NaNalert = false;
 var gameEnded = false;
@@ -112,13 +113,14 @@ function rowReset(row, layer) {
 
 function layerDataReset(layer, keep = []) {
 	let storedData = {unlocked: player[layer].unlocked, first: player[layer].first} // Always keep unlocked & time unlocked
+	if (player[layer].auto) storedData.auto = player[layer].auto;
 
 	for (thing in keep) {
 		if (player[layer][keep[thing]] !== undefined)
 			storedData[keep[thing]] = player[layer][keep[thing]]
 	}
 
-	player[layer] = layers[layer].startData();
+	layOver(player[layer], layers[layer].startData());
 	player[layer].upgrades = []
 	player[layer].milestones = []
 	player[layer].challenges = getStartChallenges(layer)
@@ -127,7 +129,7 @@ function layerDataReset(layer, keep = []) {
 		player[layer].clickables = getStartClickables(layer)
 
 	for (thing in storedData) {
-		player[layer][thing] =storedData[thing]
+		player[layer][thing] = storedData[thing]
 	}
 }
 

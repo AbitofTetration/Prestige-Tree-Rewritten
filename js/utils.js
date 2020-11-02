@@ -610,6 +610,7 @@ function updateAchievements(layer){
 		if (!isNaN(id) && !(player[layer].achievements.includes(id)) && layers[layer].achievements[id].done()) {
 			player[layer].achievements.push(id)
 			if (layers[layer].achievements[id].onComplete) layers[layer].achievements[id].onComplete()
+			addNotification("achievement", layers[layer].achievements[id].name, "Achievement Gotten!");
 		}
 	}
 }
@@ -639,10 +640,17 @@ function addTime(diff, layer) {
 	else data.timePlayed = time
 }
 
+function layOver(obj1, obj2) {
+	for (let x in obj2) {
+		if (obj2[x] instanceof Object) layOver(obj1[x], obj2[x]);
+		else obj1[x] = obj2[x];
+	}
+}
+
 document.onkeydown = function(e) {
 	if (player===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
-	let shiftDown = e.shiftKey
+	shiftDown = !(!e.shiftKey)
 	let ctrlDown = e.ctrlKey
 	let key = e.key
 	if (ctrlDown) key = "ctrl+" + key
@@ -652,6 +660,10 @@ document.onkeydown = function(e) {
 		if (player[hotkeys[key].layer].unlocked)
 			hotkeys[key].onPress()
 	}
+}
+
+document.onkeyup = function(e) {
+	if (e.keyCode==16) shiftDown = false;
 }
 
 var onFocused = false

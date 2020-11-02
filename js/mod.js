@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9250"),
-	specialEndgameText: "v0.3 Beta 2 Endgame: Second Row 3 Layer unlocked",
+	specialEndgameText: "v0.3 Beta 3 Endgame: Third Row 3 Layer unlocked",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.3",
-	beta: 2,
+	beta: 3,
 	name: "Enhanced Spacetime",
 }
 
@@ -96,10 +96,8 @@ function addNotification(type="none",text="This is a test notification.",title="
 	notificationMessage = text;
 	notificationTimer = timer; 
 
-	activeNotifications.push({"time":notificationTimer,"type":notificationType,"title":notificationTitle,"message":notificationMessage,"id":notificationID})
+	activeNotifications.push({"time":notificationTimer,"type":notificationType,"title":notificationTitle,"message":(notificationMessage+"\n"),"id":notificationID})
 	notificationID++;
-
-	console.log(activeNotifications);
 }
 
 

@@ -198,7 +198,7 @@ addLayer("b", {
 			return Decimal.pow(this.effectBase(), player.b.points).max(0);
 		},
 		effectDescription() {
-			return "which are boosting Point generation by "+format(this.effect())+"x"
+			return "which are boosting Point generation by "+format(this.effect())+"x"+(shiftDown?("\n ("+format(this.effectBase())+"x each)"):"")
 		},
 		doReset(resettingLayer) {
 			let keep = [];
@@ -337,7 +337,7 @@ addLayer("g", {
 			return eff;
 		},
 		effectDescription() {
-			return "which are generating "+format(this.effect())+" Generator Power/sec"
+			return "which are generating "+format(this.effect())+" Generator Power/sec"+(shiftDown?("\n ("+format(this.effBase())+"x each)"):"")
 		},
 		update(diff) {
 			if (player.g.unlocked) player.g.power = player.g.power.plus(tmp.g.effect.times(diff));
@@ -513,7 +513,7 @@ addLayer("t", {
 			first: 0,
         }},
         color: "#006609",
-        requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 2))) }, // Can be a function that takes requirement increases into account
+        requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 1.415038))) }, // Can be a function that takes requirement increases into account
         resource: "time capsules", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
@@ -570,7 +570,7 @@ addLayer("t", {
         layerShown(){return player.b.unlocked},
         branches: ["b"],
 		upgrades: {
-			rows: 1,
+			rows: 2,
 			cols: 5,
 			11: {
 				title: "Pseudo-Boost",
@@ -585,7 +585,7 @@ addLayer("t", {
 			12: {
 				title: "Limit Stretcher",
 				description: "The Time Energy cap starts later based on your Boosters, and you get a free Extra Time Capsule.",
-				cost: new Decimal(5e4),
+				cost() { return new Decimal(player[this.layer].unlockOrder>0 ? 2e5 : 5e4) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
                 currencyLayer: "t",
@@ -598,7 +598,7 @@ addLayer("t", {
 			13: {
 				title: "Pseudo-Pseudo-Boost",
 				description: "Extra Time Capsules add to the first Time Upgrade's effect.",
-				cost: new Decimal(3e6),
+				cost() { return new Decimal(player[this.layer].unlockOrder>0 ? 3e7 : 3e6) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
                 currencyLayer: "t",
@@ -617,11 +617,22 @@ addLayer("t", {
 			15: {
 				title: "Time Potency",
 				description: "Time Energy affects Generator Power gain.",
-				cost: new Decimal(1.25e7),
+				cost() { return new Decimal(player[this.layer].unlockOrder>0 ? (player.s.unlocked?3e8:6e7) : 1.25e7) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
                 currencyLayer: "t",
 				unlocked() { return hasUpgrade("t", 13) },
+			},
+			
+			23: {
+				title: "Reverting Time",
+				description: "Time acts as if you chose it first.",
+				cost() { return new Decimal(player.s.unlocked?6.5e8:1.35e8) },
+				currencyDisplayName: "time energy",
+				currencyInternalName: "energy",
+				currencyLayer: "t",
+				unlocked() { return (player[this.layer].unlockOrder>0||hasUpgrade("t", 23))&&hasUpgrade("t", 13) },
+				onPurchase() { player[this.layer].unlockOrder = 0; },
 			},
 		},
 		freeExtraTimeCapsules() {
@@ -699,7 +710,7 @@ addLayer("e", {
 			first: 0,
         }},
         color: "#b82fbd",
-        requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 2))) }, // Can be a function that takes requirement increases into account
+        requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 1.415038))) }, // Can be a function that takes requirement increases into account
         resource: "enhance points", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
@@ -723,13 +734,14 @@ addLayer("e", {
 		freeEnh() {
 			let enh = new Decimal(0);
 			if (hasUpgrade("e", 13)) enh = enh.plus(1);
+			if (hasUpgrade("e", 21)) enh = enh.plus(2);
 			return enh;
 		},
         layerShown(){return player.b.unlocked&&player.g.unlocked},
         branches: ["b","g"],
 		upgrades: {
-			rows: 1,
-			cols: 4,
+			rows: 2,
+			cols: 3,
 			11: {
 				title: "Row 2 Synergy",
 				description: "Boosters & Generators boost each other.",
@@ -758,6 +770,19 @@ addLayer("e", {
 				description: "Get a free Enhancer.",
 				cost: new Decimal(2.5e3),
 				unlocked() { return hasUpgrade("e", 11) },
+			},
+			21: {
+				title: "Enhance Plus Plus",
+				description: "Get another two free Enhancers",
+				cost() { return new Decimal(player.e.unlockOrder>0?1e4:1e9) },
+				unlocked() { return hasUpgrade("e", 11) && ((!player.s.unlocked||(player.s.unlocked&&player.t.unlocked))&&player.t.unlocked) },
+			},
+			22: {
+				title: "Enhanced Reversion",
+				description: "Enhance acts as if you chose it first.",
+				cost: new Decimal(3e4),
+				unlocked() { return (player[this.layer].unlockOrder>0||hasUpgrade("e", 22))&&hasUpgrade("e", 12) },
+				onPurchase() { player[this.layer].unlockOrder = 0; },
 			},
 		},
 		buyables: {
@@ -830,7 +855,7 @@ addLayer("s", {
 			first: 0,
         }},
         color: "#dfdfdf",
-        requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 2))) }, // Can be a function that takes requirement increases into account
+        requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 1.415038))) }, // Can be a function that takes requirement increases into account
         resource: "space energy", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
@@ -890,7 +915,7 @@ addLayer("s", {
 			return l;
 		},
 		upgrades: {
-			rows: 1,
+			rows: 2,
 			cols: 5,
 			11: {
 				title: "Space X",
@@ -909,7 +934,7 @@ addLayer("s", {
 			13: {
 				title: "Shipped Away",
 				description: "Space Building Levels boost Generator Power gain, and you get 2 extra Space.",
-				cost: new Decimal(1e37),
+				cost() { return new Decimal(player[this.layer].unlockOrder>0?1e59:1e37) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -926,12 +951,27 @@ addLayer("s", {
 			15: {
 				title: "Four Square",
 				description: "The <b>Quaternary Space Building</b> cost is cube rooted, is 3x as strong, and also affects <b>BP Combo</b> (brought to the 2.7th root).",
-				cost: new Decimal(1e65),
+				cost() { return new Decimal(player[this.layer].unlockOrder>0?(player.e.unlocked?1e94:1e88):1e65) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
 				unlocked() { return hasUpgrade("s", 14) },
 			},
+			23: {
+				title: "Revert Space",
+				description() { return "Space acts as if you chose it first"+(player.t.unlocked?", and all Space Building costs are divided by 1e20.":".") },
+				cost() { return new Decimal(player.e.unlocked?1e105:1e95) },
+				currencyDisplayName: "generator power",
+                currencyInternalName: "power",
+                currencyLayer: "g",
+				unlocked() { return (player[this.layer].unlockOrder>0||hasUpgrade("s", 23))&&hasUpgrade("s", 13) },
+				onPurchase() { player[this.layer].unlockOrder = 0; },
+			},
+		},
+		divBuildCosts() {
+			let div = new Decimal(1);
+			if (hasUpgrade("s", 23) && player.t.unlocked) div = div.times(1e20);
+			return div;
 		},
 		buyables: {
 			rows: 1,
@@ -948,7 +988,7 @@ addLayer("s", {
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
 					let base = tmp.s.buildingBaseCosts[this.id];
 					if (x.eq(0)) return new Decimal(0);
-					return Decimal.pow(base, x.pow(1.35)).times(base);
+					return Decimal.pow(base, x.pow(1.35)).times(base).div(tmp.s.divBuildCosts);
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = Decimal.pow(x.plus(1).plus(tmp.s.freeSpaceBuildings), player.s.points.sqrt()).times(x.plus(tmp.s.freeSpaceBuildings).max(1).times(4));
@@ -976,7 +1016,7 @@ addLayer("s", {
 				title: "Secondary Space Building",
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
 					let base = tmp.s.buildingBaseCosts[this.id];
-					return Decimal.pow(base, x.pow(1.35)).times(base);
+					return Decimal.pow(base, x.pow(1.35)).times(base).div(tmp.s.divBuildCosts);
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = x.plus(tmp.s.freeSpaceBuildings).sqrt();
@@ -1004,7 +1044,7 @@ addLayer("s", {
 				title: "Tertiary Space Building",
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
 					let base = tmp.s.buildingBaseCosts[this.id];
-					return Decimal.pow(base, x.pow(1.35)).times(base);
+					return Decimal.pow(base, x.pow(1.35)).times(base).div(tmp.s.divBuildCosts);
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = Decimal.pow(1e18, x.plus(tmp.s.freeSpaceBuildings).pow(0.9))
@@ -1035,7 +1075,7 @@ addLayer("s", {
 					let base = tmp.s.buildingBaseCosts[this.id];
 					let cost = Decimal.pow(base, x.pow(1.35)).times(base);
 					if (hasUpgrade("s", 15)) cost = cost.root(3);
-					return cost;
+					return cost.div(tmp.s.divBuildCosts);
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let ret = x.plus(tmp.s.freeSpaceBuildings).times((hasUpgrade("s", 15))?3:1).add(1).pow(1.25)
@@ -1153,6 +1193,11 @@ addLayer("a", {
 				name: "Why no meta-layer?",
 				done() { return player.points.gte(Number.MAX_VALUE) },
 				tooltip: "Reach 1.8e308 Points. Reward: Double Prestige Point gain.",
+			},
+			33: {
+				name: "That Was Quick",
+				done() { return player.e.unlocked&&player.t.unlocked&&player.s.unlocked },
+				tooltip: "Unlock Time, Enhance, & Space.",
 			},
         },
         midsection: [
