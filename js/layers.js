@@ -418,7 +418,11 @@ addLayer("g", {
 				title: "I Need More!",
 				description: "Boosters add to the Generator base.",
 				cost: new Decimal(7),
-				effect() { return player.b.points.add(1).log10().sqrt().div(3) },
+				effect() { 
+					let ret = player.b.points.add(1).log10().sqrt().div(3);
+					if (hasUpgrade("s", 24)) ret = ret.times(upgradeEffect("s", 24));
+					return ret;
+				},
 				unlocked() { return player.b.unlocked&&player.g.unlocked },
 				effectDisplay() { return "+"+format(this.effect()) },
 			},
@@ -426,7 +430,11 @@ addLayer("g", {
 				title: "I Need More II",
 				description: "Best Prestige Points add to the Generator base.",
 				cost: new Decimal(8),
-				effect() { return player.p.best.add(1).log10().add(1).log10().div(3) },
+				effect() { 
+					let ret = player.p.best.add(1).log10().add(1).log10().div(3);
+					if (hasUpgrade("s", 24)) ret = ret.times(upgradeEffect("s", 24));
+					return ret;
+				},
 				unlocked() { return player.g.best.gte(8) },
 				effectDisplay() { return "+"+format(this.effect()) },
 			},
@@ -455,7 +463,11 @@ addLayer("g", {
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
-				effect() { return player.g.power.add(1).log10().add(1) },
+				effect() { 
+					let ret = player.g.power.add(1).log10().add(1);
+					if (hasUpgrade("s", 24)) ret = ret.pow(upgradeEffect("s", 24));
+					return ret;
+				},
 				unlocked() { return hasUpgrade("g", 15) },
 				effectDisplay() { return format(this.effect())+"x" },
 			},
@@ -494,7 +506,11 @@ addLayer("g", {
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
-				effect() { return player.p.points.add(1).log10().pow(3).add(1) },
+				effect() { 
+					let ret = player.p.points.add(1).log10().pow(3).add(1);
+					if (hasUpgrade("s", 24)) ret = ret.pow(upgradeEffect("s", 24));
+					return ret;
+				},
 				unlocked() { return hasUpgrade("g", 23)&&hasUpgrade("g", 24) },
 				effectDisplay() { return format(this.effect())+"x" },
 			},
@@ -530,10 +546,16 @@ addLayer("t", {
 		enCapMult() {
 			let mult = new Decimal(1);
 			if (hasUpgrade("t", 12)) mult = mult.times(upgradeEffect("t", 12));
+			if (hasUpgrade("t", 22)) mult = mult.times(upgradeEffect("t", 22));
+			return mult;
+		},
+		enGainMult() {
+			let mult = new Decimal(1);
+			if (hasUpgrade("t", 22)) mult = mult.times(upgradeEffect("t", 22));
 			return mult;
 		},
 		effect() { return {
-			gain: Decimal.pow(3, player.t.points.plus(player.t.buyables[11]).plus(tmp.t.freeExtraTimeCapsules)).sub(1).times(player.t.points.plus(player.t.buyables[11]).gt(0)?1:0),
+			gain: Decimal.pow(3, player.t.points.plus(player.t.buyables[11]).plus(tmp.t.freeExtraTimeCapsules)).sub(1).times(player.t.points.plus(player.t.buyables[11]).gt(0)?1:0).times(tmp.t.enGainMult),
 			limit: Decimal.pow(2, player.t.points.plus(player.t.buyables[11]).plus(tmp.t.freeExtraTimeCapsules)).sub(1).times(100).times(player.t.points.plus(player.t.buyables[11]).gt(0)?1:0).times(tmp.t.enCapMult),
 		}},
 		effectDescription() {
@@ -585,7 +607,7 @@ addLayer("t", {
 			12: {
 				title: "Limit Stretcher",
 				description: "The Time Energy cap starts later based on your Boosters, and you get a free Extra Time Capsule.",
-				cost() { return new Decimal(player[this.layer].unlockOrder>0 ? 2e5 : 5e4) },
+				cost() { return new Decimal([5e4,2e5,2.5e6][player[this.layer].unlockOrder||0]) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
                 currencyLayer: "t",
@@ -598,7 +620,7 @@ addLayer("t", {
 			13: {
 				title: "Pseudo-Pseudo-Boost",
 				description: "Extra Time Capsules add to the first Time Upgrade's effect.",
-				cost() { return new Decimal(player[this.layer].unlockOrder>0 ? 3e7 : 3e6) },
+				cost() { return new Decimal([3e6,3e7,3e8][player[this.layer].unlockOrder||0]) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
                 currencyLayer: "t",
@@ -611,23 +633,33 @@ addLayer("t", {
 			14: {
 				title: "More Time",
 				description: "The Time Energy effect is raised to the power of 1.3.",
-				cost: new Decimal(4),
+				cost() { return new Decimal(player.t.unlockOrder>=2?5:4) },
 				unlocked() { return hasUpgrade("t", 13) },
 			},
 			15: {
 				title: "Time Potency",
 				description: "Time Energy affects Generator Power gain.",
-				cost() { return new Decimal(player[this.layer].unlockOrder>0 ? (player.s.unlocked?3e8:6e7) : 1.25e7) },
+				cost() { return new Decimal([1.25e7,(player.s.unlocked?3e8:6e7),1.5e9][player[this.layer].unlockOrder||0]) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
                 currencyLayer: "t",
 				unlocked() { return hasUpgrade("t", 13) },
 			},
 			
+			22: {
+				title: "Enhanced Time",
+				description: "Enhance Points boost Time Energy's generation and limit.",
+				cost: new Decimal(9),
+				unlocked() { return hasAchievement("a", 33) },
+				effect() { 
+					return player.e.points.plus(1).root(10);
+				},
+				effectDisplay() { return format(this.effect())+"x" },
+			},
 			23: {
 				title: "Reverting Time",
 				description: "Time acts as if you chose it first.",
-				cost() { return new Decimal(player.s.unlocked?6.5e8:1.35e8) },
+				cost() { return new Decimal(player[this.layer].unlockOrder>=2?3e9:(player.s.unlocked?6.5e8:1.35e8)) },
 				currencyDisplayName: "time energy",
 				currencyInternalName: "energy",
 				currencyLayer: "t",
@@ -691,8 +723,8 @@ addLayer("t", {
 				toggles: [["b", "auto"]],
 			},
 			4: {
-				requirementDescription: "12 Time Capsules",
-				done() { return player.t.best.gte(12) },
+				requirementDescription: "8 Time Capsules",
+				done() { return player.t.best.gte(8) },
 				effectDescription: "Boosters reset nothing.",
 			},
 		},
@@ -735,6 +767,7 @@ addLayer("e", {
 			let enh = new Decimal(0);
 			if (hasUpgrade("e", 13)) enh = enh.plus(1);
 			if (hasUpgrade("e", 21)) enh = enh.plus(2);
+			if (hasUpgrade("e", 23)) enh = enh.plus(upgradeEffect("e", 23));
 			return enh;
 		},
         layerShown(){return player.b.unlocked&&player.g.unlocked},
@@ -745,7 +778,7 @@ addLayer("e", {
 			11: {
 				title: "Row 2 Synergy",
 				description: "Boosters & Generators boost each other.",
-				cost: new Decimal(100),
+				cost() { return new Decimal((player.e.unlockOrder>=2)?25:100) },
 				unlocked() { return player.e.unlocked },
 				effect() { 
 					let exp = 1
@@ -756,7 +789,7 @@ addLayer("e", {
 			12: {
 				title: "Enhanced Prestige",
 				description: "Total Enhance Points boost Prestige Point gain.",
-				cost: new Decimal(1e3),
+				cost() { return new Decimal(player.e.unlockOrder>=2?400:1e3) },
 				unlocked() { return hasUpgrade("e", 11) },
 				effect() { 
 					let ret = player.e.total.add(1).pow(1.5) 
@@ -775,14 +808,24 @@ addLayer("e", {
 				title: "Enhance Plus Plus",
 				description: "Get another two free Enhancers",
 				cost() { return new Decimal(player.e.unlockOrder>0?1e4:1e9) },
-				unlocked() { return hasUpgrade("e", 11) && ((!player.s.unlocked||(player.s.unlocked&&player.t.unlocked))&&player.t.unlocked) },
+				unlocked() { return hasUpgrade("e", 13) && ((!player.s.unlocked||(player.s.unlocked&&player.t.unlocked))&&player.t.unlocked) },
 			},
 			22: {
 				title: "Enhanced Reversion",
 				description: "Enhance acts as if you chose it first.",
-				cost: new Decimal(3e4),
+				cost() { return new Decimal(player.e.unlockOrder>=2?1e3:3e4) },
 				unlocked() { return (player[this.layer].unlockOrder>0||hasUpgrade("e", 22))&&hasUpgrade("e", 12) },
 				onPurchase() { player[this.layer].unlockOrder = 0; },
+			},
+			23: {
+				title: "Enter the E-Space",
+				description: "Space Energy provides free Enhancers.",
+				cost: new Decimal(2e20),
+				unlocked() { return hasAchievement("a", 33) },
+				effect() {
+					return player.s.points.pow(2).div(25).floor();
+				},
+				effectDisplay() { return "+"+formatWhole(this.effect()) },
 			},
 		},
 		buyables: {
@@ -892,14 +935,18 @@ addLayer("s", {
 			"prestige-button",
 			"blank",
 			["display-text",
-				function() {return 'Your Space Energy has provided you with ' + formatWhole(tmp.s.space) + ' Space'},
-					{}],
-			"blank",
-			["display-text",
 				function() {return 'Your best Space Energy is ' + formatWhole(player.s.best)},
 					{}],
 			"blank",
-			"milestones", "blank", "buyables", "blank", "upgrades"],
+			"milestones", "blank", 
+			["display-text",
+				function() {return 'You have ' + format(player.g.power) + ' Generator Power'},
+					{}],
+			["display-text",
+				function() {return 'Your Space Energy has provided you with ' + formatWhole(tmp.s.space) + ' Space'},
+					{}],
+			"blank",
+			"buyables", "blank", "upgrades"],
         layerShown(){return player.g.unlocked},
         branches: ["g"],
 		freeSpaceBuildings() {
@@ -934,7 +981,7 @@ addLayer("s", {
 			13: {
 				title: "Shipped Away",
 				description: "Space Building Levels boost Generator Power gain, and you get 2 extra Space.",
-				cost() { return new Decimal(player[this.layer].unlockOrder>0?1e59:1e37) },
+				cost() { return new Decimal([1e37,1e59,1e94][player[this.layer].unlockOrder||0]) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -951,21 +998,35 @@ addLayer("s", {
 			15: {
 				title: "Four Square",
 				description: "The <b>Quaternary Space Building</b> cost is cube rooted, is 3x as strong, and also affects <b>BP Combo</b> (brought to the 2.7th root).",
-				cost() { return new Decimal(player[this.layer].unlockOrder>0?(player.e.unlocked?1e94:1e88):1e65) },
+				cost() { return new Decimal([1e65,(player.e.unlocked?1e94:1e88),1e129][player[this.layer].unlockOrder||0]) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
 				unlocked() { return hasUpgrade("s", 14) },
 			},
+			
 			23: {
 				title: "Revert Space",
 				description() { return "Space acts as if you chose it first"+(player.t.unlocked?", and all Space Building costs are divided by 1e20.":".") },
-				cost() { return new Decimal(player.e.unlocked?1e105:1e95) },
+				cost() { return new Decimal(player.s.unlockOrder>=2?1e141:(player.e.unlocked?1e105:1e95)) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
 				unlocked() { return (player[this.layer].unlockOrder>0||hasUpgrade("s", 23))&&hasUpgrade("s", 13) },
 				onPurchase() { player[this.layer].unlockOrder = 0; },
+			},
+			24: {
+				title: "Want More?",
+				description: "All four of the <b>I Need More</b> upgrades are stronger based on your Total Space Buildings.",
+				cost: new Decimal(1e177),
+				currencyDisplayName: "generator power",
+				currencyInternalName: "power",
+				currencyLayer: "g",
+				unlocked() { return hasAchievement("a", 33) },
+				effect() {
+					return tmp.s.totalBuildingLevels.sqrt().div(5).plus(1);
+				},
+				effectDisplay() { return format(this.effect().sub(1).times(100))+"% stronger" },
 			},
 		},
 		divBuildCosts() {
@@ -1124,8 +1185,8 @@ addLayer("s", {
 				toggles: [["g", "auto"]],
 			},
 			4: {
-				requirementDescription: "12 Space Energy",
-				done() { return player.s.best.gte(12) },
+				requirementDescription: "8 Space Energy",
+				done() { return player.s.best.gte(8) },
 				effectDescription: "Generators reset nothing.",
 			},
 		},
@@ -1197,7 +1258,7 @@ addLayer("a", {
 			33: {
 				name: "That Was Quick",
 				done() { return player.e.unlocked&&player.t.unlocked&&player.s.unlocked },
-				tooltip: "Unlock Time, Enhance, & Space.",
+				tooltip: "Unlock Time, Enhance, & Space. Reward: Unlock a new Time, Enhance, & Space Upgrade.",
 			},
         },
         midsection: [
