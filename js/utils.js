@@ -675,7 +675,7 @@ function gainFormulaNormal(layer) {
 	let start = tmp[layer].requires;
 	let mult = tmp[layer].gainMult;
 	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
-	return "(x/"+format(start)+")^"+format(exp)+(mult.eq(1)?"":(mult.lt(1)?("/"+format(mult.pow(-1))):("*"+format(mult))))
+	return "(x / "+format(start)+")^"+format(exp)+(mult.eq(1)?"":(mult.lt(1)?(" / "+format(mult.pow(-1))):(" * "+format(mult))))
 }
 
 function costFormulaStatic(layer) {
@@ -684,7 +684,18 @@ function costFormulaStatic(layer) {
 	if (!mult) mult = new Decimal(1);
 	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
 	let base = tmp[layer].base;
-	return "("+format(base)+"^(x^"+format(exp)+"))"+(mult.eq(1)?"":(mult.gt(1)?("*"+format(mult)):("/"+format(mult.pow(-1)))))
+	let resDiv = new Decimal(1);
+	
+	if (player[layer].points.gte(1225)) {
+		exp = exp.times(10)
+		resDiv = resDiv.times(Decimal.pow(1225, 9))
+	}
+	if (player[layer].points.gte(12)) {
+		exp = exp.times(2);
+		resDiv = resDiv.times(12);
+	}
+	
+	return "("+format(base)+"^(x^"+format(exp)+")"+(resDiv.eq(1)?"":(" / "+format(resDiv)))+")"+(mult.eq(1)?"":(mult.gt(1)?(" * ("+format(mult)+")"):(" / ("+format(mult.pow(-1))+")")))
 }
 
 function prestigeButtonText(layer)
