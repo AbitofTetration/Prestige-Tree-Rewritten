@@ -43,8 +43,8 @@ function format(decimal, precision=2) {
 	if (decimal.mag == Number.POSITIVE_INFINITY) return "Infinity"
 	if (decimal.gte("eeee1000")) {
 		var slog = decimal.slog()
-		if (slog.gte(1e6)) return "F" + format(slog.floor())
-		else return Decimal.pow(10, slog.sub(slog.floor())).toStringWithDecimalPlaces(3) + "F" + commaFormat(slog.floor(), 0)
+		if (slog.gte(1e3)) return "10^^" + formatWhole(slog)
+		else return "10^^" + regularFormat(slog, 3)
 	} else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
@@ -671,14 +671,32 @@ function focused(x) {
 	onFocused = x
 }
 
+function gainFormulaNormal(layer) {
+	let start = tmp[layer].requires;
+	let mult = tmp[layer].gainMult;
+	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
+	return "(x/"+format(start)+")^"+format(exp)+(mult.eq(1)?"":(mult.lt(1)?("/"+format(mult.pow(-1))):("*"+format(mult))))
+}
+
+function costFormulaStatic(layer) {
+	let start = tmp[layer].requires;
+	let mult = tmp[layer].gainMult.times(start);
+	if (!mult) mult = new Decimal(1);
+	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
+	let base = tmp[layer].base;
+	return "("+format(base)+"^(x^"+format(exp)+"))"+(mult.eq(1)?"":(mult.gt(1)?("*"+format(mult)):("/"+format(mult.pow(-1)))))
+}
+
 function prestigeButtonText(layer)
 {
-	if(tmp[layer].type == "normal")
-		return `${ player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${ (tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAt) : format(tmp[layer].nextAt))} ${ tmp[layer].baseResource }` : ""}`
-	else if(tmp[layer].type== "static")
-		return `${tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for "}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource}<br><br>${player[layer].points.lt(30) ? (tmp[layer].baseAmount.gte(tmp[layer].nextAt)&&(tmp[layer].canBuyMax !== undefined) && tmp[layer].canBuyMax?"Next:":"Req:") : ""} ${formatWhole(tmp[layer].baseAmount)} / ${(tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAtDisp) : format(tmp[layer].nextAtDisp))} ${ tmp[layer].baseResource }		
+	if(tmp[layer].type == "normal") {
+		if (shiftDown) return "Gain Formula: "+gainFormulaNormal(layer);
+		else return `${ player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${ (tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAt) : format(tmp[layer].nextAt))} ${ tmp[layer].baseResource }` : ""}`
+	} else if(tmp[layer].type== "static") {
+		if (shiftDown) return "Cost Formula: "+costFormulaStatic(layer);
+		else return `${tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for "}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource}<br><br>${player[layer].points.lt(30) ? (tmp[layer].baseAmount.gte(tmp[layer].nextAt)&&(tmp[layer].canBuyMax !== undefined) && tmp[layer].canBuyMax?"Next:":"Req:") : ""} ${formatWhole(tmp[layer].baseAmount)} / ${(tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAtDisp) : format(tmp[layer].nextAtDisp))} ${ tmp[layer].baseResource }		
 		`
-	else if(tmp[layer].type == "none")
+	} else if(tmp[layer].type == "none")
 		return ""
 	else
 		return layers[layer].prestigeButtonText()

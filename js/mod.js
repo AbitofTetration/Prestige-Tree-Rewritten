@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9250"),
-	specialEndgameText: "v0.3 Beta 4 Endgame: 1e1,160 Points",
+	specialEndgameText: "v0.3 Beta 5 Endgame: e1,500 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.3",
-	beta: 4,
+	beta: 5,
 	name: "Enhanced Spacetime",
 }
 
