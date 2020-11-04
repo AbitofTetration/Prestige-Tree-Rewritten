@@ -1,4 +1,5 @@
 var player;
+var shiftDown = false;
 var needCanvasUpdate = true;
 var NaNalert = false;
 var gameEnded = false;
@@ -71,6 +72,14 @@ function shouldNotify(layer){
 			}
 		}
 	}
+	
+	for (id in tmp[layer].buyables){
+		if (!isNaN(id)){
+			if (tmp[layer].buyables[id].unlocked && tmp[layer].buyables[id].canAfford){
+				return true
+			}
+		}
+	}
 
 	if (layers[layer].shouldNotify){
 		return layers[layer].shouldNotify()
@@ -103,14 +112,15 @@ function rowReset(row, layer) {
 }
 
 function layerDataReset(layer, keep = []) {
-	let storedData = {unlocked: player[layer].unlocked} // Always keep unlocked
+	let storedData = {unlocked: player[layer].unlocked, first: player[layer].first} // Always keep unlocked & time unlocked
+	if (player[layer].auto) storedData.auto = player[layer].auto;
 
 	for (thing in keep) {
 		if (player[layer][keep[thing]] !== undefined)
 			storedData[keep[thing]] = player[layer][keep[thing]]
 	}
 
-	player[layer] = layers[layer].startData();
+	layOver(player[layer], layers[layer].startData());
 	player[layer].upgrades = []
 	player[layer].milestones = []
 	player[layer].challenges = getStartChallenges(layer)
@@ -119,7 +129,7 @@ function layerDataReset(layer, keep = []) {
 		player[layer].clickables = getStartClickables(layer)
 
 	for (thing in storedData) {
-		player[layer][thing] =storedData[thing]
+		player[layer][thing] = storedData[thing]
 	}
 }
 
@@ -146,7 +156,7 @@ function doReset(layer, force=false) {
 	let row = tmp[layer].row
 	if (!force) {
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return;
-		let gain = tmp[layer].resetGain
+		let gain = tmp[layer].resetGain.max(0)
 		if (tmp[layer].type=="static") {
 			if (tmp[layer].baseAmount.lt(tmp[layer].nextAt)) return;
 			gain =(tmp[layer].canBuyMax ? gain : 1)
@@ -266,7 +276,7 @@ function completeChallenge(layer, x) {
 	updateChallengeTemp(layer)
 }
 
-VERSION.withoutName = "v" + VERSION.num + (VERSION.pre ? " Pre-Release " + VERSION.pre : VERSION.pre ? " Beta " + VERSION.beta : "")
+VERSION.withoutName = "v" + VERSION.num + (VERSION.pre ? (" Pre-Release " + VERSION.pre) : VERSION.beta ? (" Beta " + VERSION.beta) : "")
 VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "")
 
 

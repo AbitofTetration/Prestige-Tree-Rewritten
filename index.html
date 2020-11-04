@@ -2,6 +2,7 @@
 <head>
 
 	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" type="text/css" href="notification.css" />
 	<link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
 	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
 	<script type="text/javascript" src="js/break_eternity.js"></script>
@@ -43,6 +44,17 @@
 		<div v-if="player.tab=='changelog'" class="col right">
 			<button class="back" onclick="showTab('tree')">←</button><br><br><br>
 		</div>
+
+		<!-- Notifications -->
+		<div class="notification-container">
+			<transition-group name="fade">
+				<div v-for="notification,index in activeNotifications" class="notification" v-bind:class="notification.type" v-bind:key="notification.id">
+					<h3>{{notification.title}}</h3><br>
+					<h2 v-html="notification.message"></h2>
+				</div>
+			</transition-group>
+		</div>
+		
 		
 		<div v-if="player.tab=='info'" class="col right">
 			<button class="back" onclick="showTab('tree')">←</button><br>
@@ -68,9 +80,10 @@
 			Note by Jacorb: If anyone wishes to make a mod of this game, that is perfectly fine with me, just make sure to name it something different (ex: Prestige Tree NG+) and to let me know on <a href="https://discord.gg/wwQfgPa" target="_blank">my discord</a>.
 			<br><br>
 			Time Played: {{ formatTime(player.timePlayed) }}<br>
-			<span v-for="layer in LAYERS"><span v-if="player[layer].first!==undefined">First {{layer}} reset: {{formatTime(player[layer].first)}}<br></span></span><br>
+			<span v-for="layer in LAYERS"><span v-if="player[layer].first!==undefined && player[layer].unlocked">First {{layer}} reset: {{formatTime(player[layer].first)}}<br></span></span><br>
 			<h3>Hotkeys</h3><br>
 			<span v-for="key in hotkeys" v-if="player[key.layer].unlocked"><br>{{key.description}}</span>
+			<br>Press Shift to Show Formulas
 		</div>
 		<div v-if="player.tab=='options'" class="col right">
 			<button class="back" onclick="showTab('tree')">←</button><br>
@@ -116,7 +129,7 @@
 					<br>Offline Time: {{formatTime(player.offTime.remain)}}<br>
 				</span>
 				<span v-if="!player.keepGoing" class="overlayThing">
-					<br>Reach {{formatWhole(modInfo.endgame)+" "+modInfo.pointsName}} to beat the game!<br>
+					<br><span v-if="modInfo.specialEndgameText">{{modInfo.specialEndgameText}}</span><span v-if="!modInfo.specialEndgameText">Reach {{formatWhole(modInfo.endgame)+" "+modInfo.pointsName}} to beat the game!</span><br>
 				</span>
 				<br>
 				<span v-if="player.points.lt('1e1000')"  class="overlayThing">You have </span>
@@ -127,7 +140,7 @@
 				<div v-for="thing in tmp.displayThings" class="overlayThing"><span v-if="thing" v-html="thing"></span></div>
 			</div>
 			<div class="sideLayers" >
-				<div v-for="node in OTHER_LAYERS['side']"><layer-node :layer='node.layer' :abb='tmp[node.layer].symbol' :size="'small'"></layer-node></div>
+				<div v-for="node in OTHER_LAYERS['side']"><layer-node :layer='node.layer' :abb='tmp[node.layer].symbol' :size="'small'"></layer-node><br><button class='smallNode hidden'></button></div>
 			</div>
 		</div>
 
