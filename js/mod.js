@@ -8,13 +8,15 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e4750"),
+	endgame: new Decimal("1e9999999999"),
+	specialEndgameText: 'v0.4 Beta 1 Endgame: Complete "Upgrade Desert"',
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.3",
-	name: "Enhanced Spacetime",
+	num: "0.4",
+	beta: 1,
+	name: "Hindered Quirkiness",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
@@ -45,6 +47,8 @@ function getPointGen() {
 	if (player.g.unlocked) gain = gain.times(tmp.g.powerEff);
 	if (player.t.unlocked) gain = gain.times(tmp.t.enEff);
 	if (player.s.unlocked) gain = gain.times(buyableEffect("s", 11));
+	if (player.h.unlocked) gain = gain.times(tmp.h.effect);
+	if (player.q.unlocked) gain = gain.times(tmp.q.enEff);
 	return gain
 }
 

@@ -114,10 +114,13 @@ function rowReset(row, layer) {
 function layerDataReset(layer, keep = []) {
 	let storedData = {unlocked: player[layer].unlocked, first: player[layer].first} // Always keep unlocked & time unlocked
 	if (player[layer].auto) storedData.auto = player[layer].auto;
+	if (player[layer].autoExt) storedData.autoExt = player[layer].autoExt; // idk I don't feel like generalizing this
 
 	for (thing in keep) {
-		if (player[layer][keep[thing]] !== undefined)
-			storedData[keep[thing]] = player[layer][keep[thing]]
+		if (player[layer][keep[thing]] !== undefined) {
+			if (player[layer][keep[thing]] instanceof Decimal) storedData[keep[thing]] = new Decimal(JSON.parse(JSON.stringify(player[layer][keep[thing]])));
+			else storedData[keep[thing]] = player[layer][keep[thing]];
+		}
 	}
 
 	layOver(player[layer], layers[layer].startData());
@@ -230,7 +233,10 @@ function startChallenge(layer, x) {
 		enter = true
 	}	
 	doReset(layer, true)
-	if(enter) player[layer].activeChallenge = x
+	if(enter) {
+		player[layer].activeChallenge = x
+		if (layers[layer].challenges[x].onStart) layers[layer].challenges[x].onStart(true);
+	}
 
 	updateChallengeTemp(layer)
 }

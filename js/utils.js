@@ -93,6 +93,7 @@ function startPlayerBase() {
 		keepGoing: false,
 		hasNaN: false,
 		hideChallenges: false,
+		tapNerd: false,
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -650,7 +651,7 @@ function layOver(obj1, obj2) {
 document.onkeydown = function(e) {
 	if (player===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
-	shiftDown = !(!e.shiftKey)
+	shiftDown = player.tapNerd?((!(!e.shiftKey)) ? !shiftDown : shiftDown):(!(!e.shiftKey))
 	let ctrlDown = e.ctrlKey
 	let key = e.key
 	if (ctrlDown) key = "ctrl+" + key
@@ -663,7 +664,7 @@ document.onkeydown = function(e) {
 }
 
 document.onkeyup = function(e) {
-	if (e.keyCode==16) shiftDown = false;
+	if (e.keyCode==16 && !player.tapNerd) shiftDown = false;
 }
 
 var onFocused = false
