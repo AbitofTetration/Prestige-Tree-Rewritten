@@ -1552,6 +1552,7 @@ addLayer("h", {
         exponent: new Decimal(.125), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
+			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).h);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1568,7 +1569,11 @@ addLayer("h", {
         },
         layerShown(){return player.t.unlocked&&hasMilestone("q", 4)},
         branches: ["t"],
-		effect() { return player.h.points.times(player.points.plus(1).log("1e1000").plus(1)).plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1) },
+		effect() { 
+			let h = player.h.points.times(player.points.plus(1).log("1e1000").plus(1));
+			if (h.gte(15e4)) h = Decimal.pow(10, h.log(15e4).sqrt()).times(15e3);
+			return h.plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1) 
+		},
 		effectDescription() {
 			return "which are multiplying Point gain, Time Energy gain, & the Time Energy cap by "+format(this.effect())+" (boosted by Points)"
 		},
@@ -1646,6 +1651,7 @@ addLayer("q", {
         exponent: new Decimal(.0075), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
+			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).q);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1761,7 +1767,7 @@ addLayer("q", {
 		},
 		upgrades: {
 			rows: 1,
-			cols: 3,
+			cols: 4,
 			11: {
 				title: "Quirk Central",
 				description: "Total Quirks multiply each Quirk Layer's production (boosted by Quirk Upgrades bought).",
@@ -1794,6 +1800,21 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 11) },
+			},
+			14: {
+				title: "Row 4 Synergy",
+				description: "Hindrance Spirit & Quirks boost each other's gain.",
+				cost() { return player.q.time.plus(1).pow(2.4).times(1e6) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 12)||hasUpgrade("q", 13) },
+				effect() { return {
+					h: player.q.points.plus(1).cbrt(),
+					q: player.h.points.plus(1).root(4),
+				}},
+				effectDisplay() { return "H: "+format(this.effect().h)+"x, Q: "+format(this.effect().q)+"x" },
+				formula: "H: cbrt(Q+1), Q: (H+1)^0.25",
 			},
 		},
 })

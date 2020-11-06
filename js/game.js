@@ -117,7 +117,7 @@ function layerDataReset(layer, keep = []) {
 	if (player[layer].autoExt) storedData.autoExt = player[layer].autoExt; // idk I don't feel like generalizing this
 
 	for (thing in keep) {
-		if (player[layer][keep[thing]] !== undefined) {
+		if (player[layer][keep[thing]] !== undefined && player[layer][keep[thing]] !== null) {
 			if (player[layer][keep[thing]] instanceof Decimal) storedData[keep[thing]] = new Decimal(JSON.parse(JSON.stringify(player[layer][keep[thing]])));
 			else storedData[keep[thing]] = player[layer][keep[thing]];
 		}
@@ -363,7 +363,7 @@ var interval = setInterval(function() {
 	ticking = true
 	let now = Date.now()
 	let diff = (now - player.time) / 1e3
-	if (player.offTime !== undefined) {
+	if (player.offTime !== undefined && player.offTime !== null) {
 		if (player.offTime.remain > modInfo.offlineLimit * 3600000) player.offTime.remain = modInfo.offlineLimit * 3600000
 		if (player.offTime.remain > 0) {
 			let offlineDiff = Math.max(player.offTime.remain / 10, diff)
