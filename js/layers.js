@@ -216,6 +216,8 @@ addLayer("b", {
 			
 			// MULTIPLY
 			if (player.sb.unlocked) base = base.times(tmp.sb.effect);
+			if (hasUpgrade("q", 12)) base = base.times(upgradeEffect("q", 12));
+			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12)
 			
 			return base;
 		},
@@ -379,11 +381,18 @@ addLayer("g", {
 		resetsNothing() { return hasMilestone("s", 4) },
 		effBase() {
 			let base = new Decimal(2);
+			
+			// ADD
 			if (hasUpgrade("g", 12)) base = base.plus(upgradeEffect("g", 12));
 			if (hasUpgrade("g", 13)) base = base.plus(upgradeEffect("g", 13));
 			if (hasUpgrade("e", 11)) base = base.plus(upgradeEffect("e", 11).g);
 			if (player.e.unlocked) base = base.plus(layers.e.buyables[11].effect().second);
 			if (player.s.unlocked) base = base.plus(buyableEffect("s", 12));
+			
+			// MULTIPLY
+			if (hasUpgrade("q", 12)) base = base.times(upgradeEffect("q", 12));
+			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12)
+			
 			return base;
 		},
 		effect() {
@@ -418,6 +427,7 @@ addLayer("g", {
 			let exp = new Decimal(1/3);
 			if (hasUpgrade("b", 21)) exp = exp.times(2);
 			if (hasUpgrade("b", 22)) exp = exp.times(1.2);
+			if (hasUpgrade("q", 13)) exp = exp.times(1.25);
 			return exp;
 		},
 		powerEff() {
@@ -659,7 +669,7 @@ addLayer("t", {
 		},
 		enEff2() {
 			if (!hasUpgrade("t", 24)) return new Decimal(0);
-			let eff = player.t.energy.plus(1).log10().root(1.8);
+			let eff = player.t.energy.max(0).plus(1).log10().root(1.8);
 			return eff.floor();
 		},
 		nextEnEff2() {
@@ -668,14 +678,15 @@ addLayer("t", {
 			return next;
 		},
 		update(diff) {
-			if (player.t.unlocked) player.t.energy = player.t.energy.plus(this.effect().gain.times(diff)).min(this.effect().limit);
-			if (player.t.autoExt && hasMilestone("q", 2)) this.buyables[11].buyMax();
-			if (player.t.auto && hasMilestone("q", 5)) doReset("t");
+			if (player.t.unlocked) player.t.energy = player.t.energy.plus(this.effect().gain.times(diff)).min(this.effect().limit).max(0);
+			if (player.t.autoExt && hasMilestone("q", 1)) this.buyables[11].buyMax();
+			if (player.t.auto && hasMilestone("q", 3)) doReset("t");
 		},
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
             {key: "t", description: "Press T to Time Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
         ],
+		resetsNothing() { return hasMilestone("q", 5) },
 		tabFormat: ["main-display",
 			"prestige-button",
 			"blank",
@@ -692,7 +703,7 @@ addLayer("t", {
         doReset(resettingLayer){ 
 			let keep = [];
 			if (hasMilestone("q", 0)) keep.push("milestones")
-			if (hasMilestone("q", 3)) keep.push("upgrades")
+			if (hasMilestone("q", 2)) keep.push("upgrades")
             if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
         layerShown(){return player.b.unlocked},
@@ -713,7 +724,7 @@ addLayer("t", {
 			},
 			12: {
 				title: "Limit Stretcher",
-				description: "The Time Energy cap starts later based on your Boosters, and you get a free Extra Time Capsule.",
+				description: "Time Energy cap starts later based on Boosters, and +1 Extra Time Capsule.",
 				cost() { return new Decimal([5e4,2e5,2.5e6][player[this.layer].unlockOrder||0]) },
 				currencyDisplayName: "time energy",
                 currencyInternalName: "energy",
@@ -903,7 +914,7 @@ addLayer("e", {
         },
 		update(diff) {
 			if (hasMilestone("q", 1)) generatePoints("e", diff);
-			if (player.e.auto && hasMilestone("q", 2)) this.buyables[11].buyMax();
+			if (player.e.auto && hasMilestone("q", 1)) this.buyables[11].buyMax();
 		},
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
@@ -912,7 +923,7 @@ addLayer("e", {
         increaseUnlockOrder: ["t", "s"],
         doReset(resettingLayer){ 
 			let keep = []
-			if (hasMilestone("q", 3)) keep.push("upgrades")
+			if (hasMilestone("q", 2)) keep.push("upgrades")
 			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
 		freeEnh() {
@@ -1100,12 +1111,13 @@ addLayer("s", {
         hotkeys: [
             {key: "s", description: "Press S to Space Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
         ],
+		resetsNothing() { return hasMilestone("q", 5) },
         increaseUnlockOrder: ["t", "e"],
         doReset(resettingLayer){ 
             let keep = []
 			if (hasMilestone("q", 0)) keep.push("milestones")
-			if (hasMilestone("q", 3)) keep.push("upgrades")
-			if (hasMilestone("q", 4) && (resettingLayer=="q"||resettingLayer=="h")) {
+			if (hasMilestone("q", 2)) keep.push("upgrades")
+			if (hasMilestone("q", 2) && (resettingLayer=="q"||resettingLayer=="h")) {
 				keep.push("buyables");
 				keep.push("spent");
 			}
@@ -1176,7 +1188,7 @@ addLayer("s", {
 			return pow;
 		},
 		update(diff) {
-			if (player.s.auto && hasMilestone("q", 5)) doReset("s");
+			if (player.s.auto && hasMilestone("q", 3)) doReset("s");
 		},
 		upgrades: {
 			rows: 2,
@@ -1486,6 +1498,9 @@ addLayer("sb", {
 			let mult = new Decimal(1);
 			return mult;
 		},
+		update(diff) {
+			if (player.sb.auto && hasMilestone("q", 4)) doReset("sb");
+		},
 		canBuyMax() { return false },
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
@@ -1493,9 +1508,10 @@ addLayer("sb", {
         ],
         layerShown(){return player.t.unlocked&&player.e.unlocked&&player.s.unlocked},
 		automate() {},
-		resetsNothing() { return false },
+		resetsNothing() { return hasMilestone("q", 5) },
 		effectBase() {
 			let base = new Decimal(5);
+			if (hasChallenge("h", 12)) base = base.plus(.25);
 			return base;
 		},
 		effect() {
@@ -1550,9 +1566,9 @@ addLayer("h", {
 			player.q.energy = new Decimal(0);
            if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
-        layerShown(){return player.t.unlocked&&hasMilestone("q", 5)},
+        layerShown(){return player.t.unlocked&&hasMilestone("q", 4)},
         branches: ["t"],
-		effect() { return player.h.points.times(player.points.plus(1).log("1e1000").plus(1)).plus(1).pow(3) },
+		effect() { return player.h.points.times(player.points.plus(1).log("1e1000").plus(1)).plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1) },
 		effectDescription() {
 			return "which are multiplying Point gain, Time Energy gain, & the Time Energy cap by "+format(this.effect())+" (boosted by Points)"
 		},
@@ -1571,9 +1587,14 @@ addLayer("h", {
 			if (inChallenge("h", 11)) mult = mult.times(player.b.upgrades.length*3+1)
 			return mult;
 		},
+		baseDiv12() {
+			let div = new Decimal(1);
+			if (inChallenge("h", 12)) div = div.times(player.q.time.sqrt().times(player.sb.points.pow(3).times(3).plus(1)).plus(1))
+			return div;
+		},
 		challenges: {
 			rows: 1,
-			cols: 1,
+			cols: 2,
 			11: {
 				name: "Upgrade Desert",
 				completionLimit: 1,
@@ -1582,13 +1603,23 @@ addLayer("h", {
 				goal: new Decimal("1e1325"),
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
-				rewardDescription: "Nothing yet ;)",
+				rewardDescription: "Unlock Quirk Upgrades, and the Hindrance Spirit effect is raised to the power of 1.2.",
 				onStart(testInput=false) { 
 					if (testInput) {
 						player.p.upgrades = []; 
 						player.b.upgrades = [];
 					}
 				},
+			},
+			12: {
+				name: "Speed Demon",
+				completionLimit: 1,
+				challengeDescription: "The Booster/Generator bases are divided more over time (this effect is magnified by your Super-Boosters).",
+				unlocked() { return hasChallenge("h", 11) },
+				goal: new Decimal("1e3550"),
+				currencyDisplayName: "points",
+				currencyInternalName: "points",
+				rewardDescription: "Add 0.25 to the Super Booster base.",
 			},
 		},
 })
@@ -1631,6 +1662,11 @@ addLayer("q", {
         },
         layerShown(){return player.e.unlocked},
         branches: ["e"],
+		enGainMult() {
+			let mult = new Decimal(1);
+			if (hasUpgrade("q", 11)) mult = mult.times(upgradeEffect("q", 11));
+			return mult;
+		},
 		enGainExp() {
 			let exp = player.q.buyables[11].sub(1);
 			return exp;
@@ -1641,7 +1677,7 @@ addLayer("q", {
 		},
 		update(diff) {
 			player.q.time = player.q.time.plus(diff);
-			if (tmp.q.enGainExp.gte(0)) player.q.energy = player.q.energy.plus(player.q.time.pow(tmp.q.enGainExp).times(diff));
+			if (tmp.q.enGainExp.gte(0)) player.q.energy = player.q.energy.plus(player.q.time.times(tmp.q.enGainMult).pow(tmp.q.enGainExp).times(diff));
 		},
 		tabFormat: ["main-display",
 			"prestige-button",
@@ -1654,7 +1690,7 @@ addLayer("q", {
 					{}],
 			"blank",
 			["display-text",
-				function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(shiftDown?('(timeInRun^(quirkLayers-1))/sec'):'generated by Quirk Layers')+'), which multiplies Point and Generator Power gain by ' + format(tmp.q.enEff)},
+				function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(shiftDown?('Base Gain: (timeInRun^(quirkLayers-1))'):'generated by Quirk Layers')+'), which multiplies Point and Generator Power gain by ' + format(tmp.q.enEff)},
 					{}],
 			"blank",
 			"milestones", "blank",
@@ -1697,29 +1733,67 @@ addLayer("q", {
 			1: {
 				requirementDescription: "3 Total Quirks",
 				done() { return player.q.total.gte(3) },
-				effectDescription: "You can buy max Time & Space, and gain 100% of Enhance Point gain every second.",
+				effectDescription: "You can buy max Time & Space, gain 100% of Enhance Point gain every second, and unlock Auto-Enhancers & Auto-Extra Time Capsules.",
+				toggles: [["e", "auto"], ["t", "autoExt"]],
 			},
 			2: {
 				requirementDescription: "4 Total Quirks",
 				done() { return player.q.total.gte(4) },
-				effectDescription: "Unlock Auto-Enhancers & Auto-Extra Time Capsules.",
-				toggles: [["e", "auto"], ["t", "autoExt"]],
+				effectDescription: "Keep Time, Enhance, & Space Upgrades on all resets, and keep Space Buildings on Quirk/Hindrance resets.",
 			},
 			3: {
-				requirementDescription: "5 Total Quirks",
-				done() { return player.q.total.gte(5) },
-				effectDescription: "Keep Time, Enhance, & Space Upgrades on all resets.",
-			},
-			4: {
 				requirementDescription: "6 Total Quirks",
 				done() { return player.q.total.gte(6) },
-				effectDescription: "Keep Space Buildings on Quirk/Hindrance resets.",
+				effectDescription: "Unlock Auto-Time Capsules & Auto-Space Energy.",
+				toggles: [["t", "auto"], ["s", "auto"]],
 			},
-			5: {
+			4: {
 				requirementDescription: "10 Total Quirks",
 				done() { return player.q.total.gte(10) },
-				effectDescription: "Unlock Auto-Time Capsules, Auto-Space Energy, & Hindrances.",
-				toggles: [["t", "auto"], ["s", "auto"]],
+				effectDescription: "Unlock Hindrances & Auto-Super Boosters.",
+				toggles: [["sb", "auto"]],
+			},
+			5: {
+				requirementDescription: "25 Total Quirks",
+				done() { return player.q.total.gte(25) },
+				effectDescription: "Time, Space, & Super-Boosters reset nothing.",
+			},
+		},
+		upgrades: {
+			rows: 1,
+			cols: 3,
+			11: {
+				title: "Quirk Central",
+				description: "Total Quirks multiply each Quirk Layer's production (boosted by Quirk Upgrades bought).",
+				cost() { return player.q.time.plus(1).pow(1.2).times(100) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasChallenge("h", 11) },
+				effect() { return player.q.total.plus(1).log10().plus(1).pow(player.q.upgrades.length) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "(log(quirks+1)+1)^upgrades",
+			},
+			12: {
+				title: "Back To Row 2",
+				description: "Total Quirks multiply the Booster/Generator bases.",
+				cost() { return player.q.time.plus(1).pow(1.4).times(500) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 11) },
+				effect() { return player.q.total.plus(1).log10().plus(1).pow(1.25) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "(log(x+1)+1)^1.25",
+			},
+			13: {
+				title: "Skip the Skip the Second",
+				description: "The Generator Power effect is raised to the power of 1.25.",
+				cost() { return player.q.time.plus(1).pow(1.8).times(750) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 11) },
 			},
 		},
 })

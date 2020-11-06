@@ -319,7 +319,7 @@ function switchTheme() {
 	if (player.theme === undefined) player.theme = themes[1]
 	else {
 		player.theme = themes[Object.keys(themes)[player.theme] + 1]
-		if (!player.theme) delete player.theme
+		if (!player.theme) player.theme = null;
 	}
 	changeTheme()
 	resizeCanvas()
@@ -566,7 +566,7 @@ function showTab(name) {
 		onTreeTab = toTreeTab
 		resizeCanvas()
 	}
-	delete player.notify[name]
+	player.notify[name] = null;
 }
 
 function notifyLayer(name) {
