@@ -227,7 +227,7 @@ function load() {
 
 	player.tab = "tree"
 	if (player.offlineProd) {
-		if (player.offTime === undefined) player.offTime = { remain: 0 }
+		if (player.offTime === undefined || player.offTime === null) player.offTime = { remain: 0 }
 		player.offTime.remain += (Date.now() - player.time) / 1000
 	}
 	player.time = Date.now();
