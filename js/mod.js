@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9999999999"),
-	specialEndgameText: 'v0.4 Beta 3 Endgame: All 4 Quirk Upgrades bought',
+	specialEndgameText: 'v0.4 Beta 4 Endgame: e8,800 Points',
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.4",
-	beta: 3,
+	beta: 4,
 	name: "Hindered Quirkiness",
 }
 

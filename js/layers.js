@@ -665,6 +665,7 @@ addLayer("t", {
 		enEff() {
 			let eff = player.t.energy.add(1).pow(1.2);
 			if (hasUpgrade("t", 14)) eff = eff.pow(1.3);
+			if (hasUpgrade("q", 24)) eff = eff.pow(7.5);
 			return eff;
 		},
 		enEff2() {
@@ -818,6 +819,7 @@ addLayer("t", {
 			let free = new Decimal(0);
 			if (hasUpgrade("t", 12)) free = free.plus(1);
 			if (hasUpgrade("t", 24)) free = free.plus(tmp.t.enEff2);
+			if (hasUpgrade("q", 22)) free = free.plus(upgradeEffect("q", 22));
 			return free;
 		},
 		buyables: {
@@ -931,6 +933,7 @@ addLayer("e", {
 			if (hasUpgrade("e", 13)) enh = enh.plus(1);
 			if (hasUpgrade("e", 21)) enh = enh.plus(2);
 			if (hasUpgrade("e", 23)) enh = enh.plus(upgradeEffect("e", 23));
+			if (hasUpgrade("q", 22)) enh = enh.plus(upgradeEffect("q", 22));
 			return enh;
 		},
         layerShown(){return player.b.unlocked&&player.g.unlocked},
@@ -1032,6 +1035,7 @@ addLayer("e", {
                     let eff = {}
                     if (x.gte(0)) eff.first = Decimal.pow(25, x.pow(1.1))
                     else eff.first = Decimal.pow(1/25, x.times(-1).pow(1.1))
+					if (hasUpgrade("q", 24)) eff.first = eff.first.pow(7.5);
                 
                     if (x.gte(0)) eff.second = x.pow(0.8)
                     else eff.second = x.times(-1).pow(0.8).times(-1)
@@ -1126,6 +1130,8 @@ addLayer("s", {
 		space() {
 			let space = player.s.best.pow(1.1).times(3);
 			if (hasUpgrade("s", 13)) space = space.plus(2);
+			
+			if (inChallenge("h", 21)) space = space.div(10);
 			return space.floor().sub(player.s.spent).max(0);
 		},
 		buildingBaseCosts: {
@@ -1161,6 +1167,7 @@ addLayer("s", {
 			let x = new Decimal(0);
 			if (hasUpgrade("s", 11)) x = x.plus(1);
 			if (hasUpgrade("s", 22)) x = x.plus(upgradeEffect("s", 22));
+			if (hasUpgrade("q", 22)) x = x.plus(upgradeEffect("q", 22));
 			return x;
 		},
 		freeSpaceBuildings1to4() {
@@ -1184,7 +1191,9 @@ addLayer("s", {
 		},
 		buildingPower() {
 			let pow = new Decimal(1);
-			if (hasUpgrade("s", 21)) pow = pow.times(1.08);
+			if (hasUpgrade("s", 21)) pow = pow.plus(0.08);
+			if (hasChallenge("h", 21)) pow = pow.plus(challengeEffect("h", 21).div(100));
+			if (inChallenge("h", 21)) pow = pow.sub(0.9);
 			return pow;
 		},
 		update(diff) {
@@ -1598,7 +1607,7 @@ addLayer("h", {
 			return div;
 		},
 		challenges: {
-			rows: 1,
+			rows: 2,
 			cols: 2,
 			11: {
 				name: "Upgrade Desert",
@@ -1625,6 +1634,26 @@ addLayer("h", {
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription: "Add 0.25 to the Super Booster base.",
+			},
+			21: {
+				name: "Out of Room",
+				completionLimit: 1,
+				challengeDescription: "Space Buildings are respecced, your Space is divided by 10, and Space Building Power is decreased by 90%.",
+				unlocked() { return hasChallenge("h", 12) },
+				goal: new Decimal("1e435"),
+				currencyDisplayName: "generator power",
+				currencyInternalName: "power",
+				currencyLayer: "g",
+				rewardDescription: "Space Energy boosts the strength of Space Buildings.",
+				rewardEffect() { return player.s.points.div(2) },
+				rewardDisplay() { return format(this.rewardEffect())+"% stronger (additive)" },
+				formula: "(x/2)%",
+				onStart(testInput=false) {
+					if (testInput) {
+						resetBuyables("s");
+						player.s.spent = new Decimal(0);
+					}
+				},
 			},
 		},
 })
@@ -1671,6 +1700,7 @@ addLayer("q", {
 		enGainMult() {
 			let mult = new Decimal(1);
 			if (hasUpgrade("q", 11)) mult = mult.times(upgradeEffect("q", 11));
+			if (hasUpgrade("q", 21)) mult = mult.times(upgradeEffect("q", 21));
 			return mult;
 		},
 		enGainExp() {
@@ -1679,6 +1709,7 @@ addLayer("q", {
 		},
 		enEff() {
 			let eff = player.q.energy.plus(1).pow(2);
+			if (hasUpgrade("q", 23)) eff = eff.pow(3);
 			return eff;
 		},
 		update(diff) {
@@ -1766,7 +1797,7 @@ addLayer("q", {
 			},
 		},
 		upgrades: {
-			rows: 1,
+			rows: 2,
 			cols: 4,
 			11: {
 				title: "Quirk Central",
@@ -1815,6 +1846,48 @@ addLayer("q", {
 				}},
 				effectDisplay() { return "H: "+format(this.effect().h)+"x, Q: "+format(this.effect().q)+"x" },
 				formula: "H: cbrt(Q+1), Q: (H+1)^0.25",
+			},
+			21: {
+				title: "Quirk City",
+				description: "Super Boosters multiply each Quirk Layer's production.",
+				cost() { return player.q.time.plus(1).pow(3.2).times(1e8) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 11)&&hasUpgrade("q", 13) },
+				effect() { return Decimal.pow(1.25, player.sb.points) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1.25^x",
+			},
+			22: {
+				title: "Infinite Possibilities",
+				description: "Total Quirks provide free Extra Time Capsules, Enhancers, & Space Buildings.",
+				cost() { return player.q.time.plus(1).pow(4.2).times(2e11) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 12)&&hasUpgrade("q", 14) },
+				effect() { return player.q.total.plus(1).log10().sqrt().floor() },
+				effectDisplay() { return "+"+formatWhole(this.effect()) },
+				formula: "floor(sqrt(log(x+1)))",
+			},
+			23: {
+				title: "The Waiting Game",
+				description: "The Quirk Energy effect is cubed.",
+				cost() { return player.q.time.plus(1).pow(5.4).times(5e19) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 13)&&hasUpgrade("q", 21) },
+			},
+			24: {
+				title: "Exponential Madness",
+				description: "The first Time Energy effect & the first Enhancer effect are raised ^7.5.",
+				cost() { return player.q.time.plus(1).pow(6.8).times(1e24) },
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 14)&&hasUpgrade("q", 22) },
 			},
 		},
 })
@@ -1916,6 +1989,11 @@ addLayer("a", {
 				name: "Yet Another Row, Huh",
 				done() { return player.h.unlocked||player.q.unlocked },
 				tooltip: "Perform a Row 4 reset. Reward: Time/Enhance/Space don't increase each other's requirements.",
+			},
+			52: {
+				name: "Hinder is Coming",
+				done() { return inChallenge("h", 11) && player.points.gte("1e7250") },
+				tooltip: 'Reach e7,250 Points in "Upgrade Desert"',
 			},
         },
         midsection: [

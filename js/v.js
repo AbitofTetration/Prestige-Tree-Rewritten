@@ -108,7 +108,7 @@ function loadVue() {
 		<div v-if="tmp[layer].challenges" class="upgTable">
 			<div v-for="row in tmp[layer].challenges.rows" class="upgRow">
 				<div v-for="col in tmp[layer].challenges.cols">
-					<challenge v-if="tmp[layer].challenges[row*10+col]!== undefined && tmp[layer].challenges[row*10+col].unlocked" :layer = "layer" :data = "row*10+col" v-bind:style="tmp[layer].componentStyles.challenge"></challenge>
+					<challenge v-if="tmp[layer].challenges[row*10+col]!== undefined && tmp[layer].challenges[row*10+col].unlocked" :layer = "layer" :data = "row*10+col" :cl="hasChallenge(layer, row*10+col)?'done':((player[layer].activeChallenge == (row*10+col)&&!hasChallenge(layer, row*10+col)&&canCompleteChallenge(layer, row*10+col))?'canComplete':'none')" v-bind:style="tmp[layer].componentStyles.challenge"></challenge>
 				</div>
 			</div>
 		</div>
@@ -117,15 +117,16 @@ function loadVue() {
 
 	// data = id
 	Vue.component('challenge', {
-		props: ['layer', 'data'],
+		props: ['layer', 'data', 'cl'],
 		template: `
-		<div v-if="tmp[layer].challenges && tmp[layer].challenges[data]!== undefined && tmp[layer].challenges[data].unlocked && !(player.hideChallenges && hasChallenge(layer, [data]))" v-bind:class="{hChallenge: true, done: hasChallenge(layer, data), canComplete: player[layer].activeChallenge == data&&!hasChallenge(layer, data)&&canCompleteChallenge(layer, data)}">
+		<div v-if="tmp[layer].challenges && tmp[layer].challenges[data]!== undefined && tmp[layer].challenges[data].unlocked && !(player.hideChallenges && hasChallenge(layer, [data]))" v-bind:class="{hChallenge: true, done: cl=='done', canComplete: cl=='canComplete'}">
 			<br><h3 v-html="tmp[layer].challenges[data].name"></h3><br><br>
 			<button v-bind:class="{ longUpg: true, can: true, [layer]: true }" v-bind:style="{'background-color': tmp[layer].color}" v-on:click="startChallenge(layer, data)">{{player[layer].activeChallenge==(data)?(canCompleteChallenge(layer, data)?"Finish":"Exit Early"):(hasChallenge(layer, data)?"Completed":"Start")}}</button><br><br>
 			<span v-html="tmp[layer].challenges[data].challengeDescription"></span><br>
 			Goal: {{format(tmp[layer].challenges[data].goal)}} {{tmp[layer].challenges[data].currencyDisplayName ? tmp[layer].challenges[data].currencyDisplayName : "points"}}<br>
 			Reward: <span v-html="tmp[layer].challenges[data].rewardDescription"></span><br>
-			<span v-if="tmp[layer].challenges[data].rewardEffect!==undefined">Currently: <span v-html="(tmp[layer].challenges[data].rewardDisplay) ? (tmp[layer].challenges[data].rewardDisplay) : format(tmp[layer].challenges[data].rewardEffect)"></span></span>
+			<span v-if="tmp[layer].challenges[data].rewardEffect"><span v-if="shiftDown" v-html="'Formula: '+(tmp[layer].challenges[data].formula?tmp[layer].challenges[data].formula:'???')"></span>
+			<span v-if="!shiftDown" v-html="'Currently: '+((tmp[layer].challenges[data].rewardDisplay) ? (tmp[layer].challenges[data].rewardDisplay) : format(tmp[layer].challenges[data].rewardEffect))"></span></span>
 		</div>
 		`
 	})
@@ -448,6 +449,7 @@ function loadVue() {
 			keepGoing,
 			VERSION,
 			LAYERS,
+			shiftDown,
 			hotkeys
 		},
 	})
