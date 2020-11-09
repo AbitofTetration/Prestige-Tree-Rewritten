@@ -1,11 +1,28 @@
+const STATIC_SCALE_STARTS = {
+	"1": function() { return new Decimal(12) },
+	"2": function() { 
+		let start = new Decimal(12);
+		if (hasUpgrade("q", 31)) start = start.plus(upgradeEffect("q", 31));
+		return start;
+	},
+	"3": function() { 
+		let start = new Decimal(12);
+		if (hasUpgrade("q", 31)) start = start.plus(upgradeEffect("q", 31));
+		return start;
+	},
+	"4": function() { return new Decimal(12) },
+}
+
 function scaleStaticCost(gain, row) {
 	if (gain.gte(1225)) gain = gain.pow(10).div(Decimal.pow(1225, 9));
-	if (gain.gte(12) && row<4) gain = gain.pow(2).div(12);
+	let start = (STATIC_SCALE_STARTS[String(row+1)]?STATIC_SCALE_STARTS[String(row+1)]():1);
+	if (gain.gte(start)) gain = gain.pow(2).div(start);
 	return gain;
 }
 
 function softcapStaticGain(gain, row) {
-	if (gain.gte(12) && row<4) gain = gain.times(12).sqrt();
+	let start = (STATIC_SCALE_STARTS[String(row+1)]?STATIC_SCALE_STARTS[String(row+1)]():1);
+	if (gain.gte(start)) gain = gain.times(start).sqrt();
 	if (gain.gte(1225)) gain = gain.times(Decimal.pow(1225, 9)).root(10);
 	return gain;
 }
@@ -82,7 +99,10 @@ addLayer("p", {
 					if (hasUpgrade("g", 14)) eff = eff.pow(1.5);
 					if (hasUpgrade("g", 24)) eff = eff.pow(1.4666667);
 					
-					if (eff.gte("1e3500")) eff = eff.log10().times(Decimal.div("1e3500", 3500));
+					if (eff.gte("1e3500")) {
+						if (hasChallenge("h", 22)) eff = Decimal.pow(10, eff.log10().sqrt().times(Math.sqrt(3500)));
+						else eff = eff.log10().times(Decimal.div("1e3500", 3500));
+					}
 					return eff;
 				},
 				unlocked() { return hasUpgrade("p", 11) },
@@ -90,7 +110,10 @@ addLayer("p", {
 				formula() { 
 					let exp = format(0.5*(hasUpgrade("g", 14)?1.5:1)*(hasUpgrade("g", 24)?1.4666667:1));
 					let f = "(x+2)^"+exp
-					if (upgradeEffect("p", 12).gte("1e3500")) f = "log(x+2)*"+format(Decimal.div("1e3500",3500).times(exp))
+					if (upgradeEffect("p", 12).gte("1e3500")) {
+						if (hasChallenge("h", 22)) f = "10^(sqrt(log(x+2))*"+format(Decimal.mul(exp, 3500).sqrt())+")"
+						else f = "log(x+2)*"+format(Decimal.div("1e3500",3500).times(exp))
+					}
 					return f;
 				},
 			},
@@ -225,7 +248,7 @@ addLayer("b", {
 			return Decimal.pow(this.effectBase(), player.b.points).max(0);
 		},
 		effectDescription() {
-			return "which are boosting Point generation by "+format(this.effect())+"x"+(shiftDown?("\n ("+format(this.effectBase())+"x each)"):"")
+			return "which are boosting Point generation by "+format(this.effect())+"x"+(tmp.nerdMode?("\n ("+format(this.effectBase())+"x each)"):"")
 		},
 		doReset(resettingLayer) {
 			let keep = [];
@@ -392,6 +415,7 @@ addLayer("g", {
 			// MULTIPLY
 			if (hasUpgrade("q", 12)) base = base.times(upgradeEffect("q", 12));
 			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12)
+			if (player.sg.unlocked) base = base.times(tmp.sg.enEff)
 			
 			return base;
 		},
@@ -406,7 +430,7 @@ addLayer("g", {
 			return eff;
 		},
 		effectDescription() {
-			return "which are generating "+format(this.effect())+" Generator Power/sec"+(shiftDown?("\n ("+format(this.effBase())+"x each)"):"")
+			return "which are generating "+format(this.effect())+" Generator Power/sec"+(tmp.nerdMode?("\n ("+format(this.effBase())+"x each)"):"")
 		},
 		update(diff) {
 			if (player.g.unlocked) player.g.power = player.g.power.plus(tmp.g.effect.times(diff));
@@ -1045,7 +1069,7 @@ addLayer("e", {
                     let data = tmp[this.layer].buyables[this.id]
                     return "Cost: " + formatWhole(data.cost) + " Enhance Points\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.e.freeEnh.gt(0)?(" + "+formatWhole(tmp.e.freeEnh)):"") + "\n\
-                   "+(shiftDown?(" Formula 1: 25^(x^1.1)\n\ Formula 2: x^0.8"):(" Boosts Prestige Point gain by " + format(data.effect.first) + "x and adds to the Booster/Generator base by " + format(data.effect.second)))
+                   "+(tmp.nerdMode?(" Formula 1: 25^(x^1.1)\n\ Formula 2: x^0.8"):(" Boosts Prestige Point gain by " + format(data.effect.first) + "x and adds to the Booster/Generator base by " + format(data.effect.second)))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
                 canAfford() {
@@ -1130,6 +1154,7 @@ addLayer("s", {
 		space() {
 			let space = player.s.best.pow(1.1).times(3);
 			if (hasUpgrade("s", 13)) space = space.plus(2);
+			if (hasAchievement("a", 53)) space = space.plus(2);
 			
 			if (inChallenge("h", 21)) space = space.div(10);
 			return space.floor().sub(player.s.spent).max(0);
@@ -1326,7 +1351,7 @@ addLayer("s", {
                     let data = tmp[this.layer].buyables[this.id]
                     return "Cost: " + formatWhole(data.cost) + " Generator Power\n\
                     Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
-                   "+(shiftDown?("Formula: level^sqrt(spaceEnergy)*level*4"):(" Space Energy boosts Point gain & Prestige Point gain by " + format(data.effect) +"x"))
+                   "+(tmp.nerdMode?("Formula: level^sqrt(spaceEnergy)*level*4"):(" Space Energy boosts Point gain & Prestige Point gain by " + format(data.effect) +"x"))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
                 canAfford() {
@@ -1354,7 +1379,7 @@ addLayer("s", {
                     let data = tmp[this.layer].buyables[this.id]
                     return "Cost: " + formatWhole(data.cost) + " Generator Power\n\
                     Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
-                    "+(shiftDown?("Formula: sqrt(level)"):("Adds to base of Booster/Generator effects by +" + format(data.effect)))
+                    "+(tmp.nerdMode?("Formula: sqrt(level)"):("Adds to base of Booster/Generator effects by +" + format(data.effect)))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
                 canAfford() {
@@ -1383,7 +1408,7 @@ addLayer("s", {
                     let data = tmp[this.layer].buyables[this.id]
                     return "Cost: " + formatWhole(data.cost) + " Generator Power\n\
                     Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).times(tmp.s.buildingPower).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
-                    "+(shiftDown?("Formula: "+(data.effect.gte("e3e9")?"10^((level^0.3)*5.45e6)":"1e18^(level^0.9)")):("Divide Booster/Generator cost by " + format(data.effect)))
+                    "+(tmp.nerdMode?("Formula: "+(data.effect.gte("e3e9")?"10^((level^0.3)*5.45e6)":"1e18^(level^0.9)")):("Divide Booster/Generator cost by " + format(data.effect)))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
                 canAfford() {
@@ -1415,7 +1440,7 @@ addLayer("s", {
 					let extForm = hasUpgrade("s", 15)?3:1
                     return "Cost: " + formatWhole(data.cost) + " Generator Power\n\
                     Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
-					"+(shiftDown?("Formula: "+(data.effect.gte(1e6)?("log(level"+(extForm==1?"":"*3")+"+1)*2.08e5"):("(level"+(extForm==1?"":"*3")+"+1)^1.25"))):("<b>Discount One</b> is raised to the power of " + format(data.effect)))
+					"+(tmp.nerdMode?("Formula: "+(data.effect.gte(1e6)?("log(level"+(extForm==1?"":"*3")+"+1)*2.08e5"):("(level"+(extForm==1?"":"*3")+"+1)^1.25"))):("<b>Discount One</b> is raised to the power of " + format(data.effect)))
                 },
                 unlocked() { return player[this.layer].unlocked&&hasUpgrade("s", 14) }, 
                 canAfford() {
@@ -1438,13 +1463,14 @@ addLayer("s", {
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let ret = x.plus(tmp.s.freeSpaceBuildings).times(tmp.s.buildingPower).div(2);
+					if (hasUpgrade("q", 32)) ret = ret.times(2);
 					return ret.floor();
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return "Cost: " + formatWhole(data.cost) + " Generator Power\n\
                     Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings)):"") + "\n\
-					"+(shiftDown?("Formula: level/2"):("Add " + formatWhole(data.effect)+" levels to all previous Space Buildings."))
+					"+(tmp.nerdMode?("Formula: level"+(hasUpgrade("q", 32)?"":"/2")):("Add " + formatWhole(data.effect)+" levels to all previous Space Buildings."))
                 },
                 unlocked() { return player[this.layer].unlocked&&hasUpgrade("s", 25) }, 
                 canAfford() {
@@ -1527,7 +1553,7 @@ addLayer("sb", {
 			return Decimal.pow(this.effectBase(), player.sb.points).max(0);
 		},
 		effectDescription() {
-			return "which are multiplying the Booster base by "+format(this.effect())+"x"+(shiftDown?("\n ("+format(this.effectBase())+"x each)"):"")
+			return "which are multiplying the Booster base by "+format(this.effect())+"x"+(tmp.nerdMode?("\n ("+format(this.effectBase())+"x each)"):"")
 		},
 		doReset(resettingLayer){ 
 			let keep = []
@@ -1537,6 +1563,70 @@ addLayer("sb", {
 			unlocked: false,
 			points: new Decimal(0),
 			best: new Decimal(0),
+			first: 0,
+			auto: false,
+		}},
+})
+
+addLayer("sg", {
+        name: "super generators", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "SG", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 4, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        color: "#248239",
+        requires: new Decimal(200), // Can be a function that takes requirement increases into account
+        resource: "super generators", // Name of prestige currency
+        baseResource: "generators", // Name of resource prestige is based on
+        baseAmount() {return player.g.points}, // Get the current amount of baseResource
+		roundUpCost: true,
+        type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+		branches: ["g"],
+        exponent: 1.25, // Prestige currency exponent
+		base: 1.05,
+		gainMult() { 
+			let mult = new Decimal(1);
+			return mult;
+		},
+		update(diff) {
+			player.sg.power = player.sg.power.plus(tmp.sg.effect.times(diff));
+			if (hasMilestone("q", 6) && player.sg.auto) doReset("sg");
+		},
+		canBuyMax() { return false },
+        row: 2, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "G", description: "Press Shift+G to perform a super generator reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+        layerShown(){return hasUpgrade("q", 33)&&player.q.unlocked},
+		automate() {},
+		resetsNothing() { return hasMilestone("q", 6) },
+		effectBase() {
+			let base = new Decimal(5);
+			return base;
+		},
+		effect() {
+			return Decimal.pow(this.effectBase(), player.sg.points).sub(1).max(0);
+		},
+		effectDescription() {
+			return "which are generating "+format(this.effect())+" Super Generator Power/sec"+(tmp.nerdMode?("\n ("+format(this.effectBase())+"x each)"):"")
+		},
+		enEff() {
+			let eff = player.sg.power.plus(1).sqrt();
+			return eff;
+		},
+		doReset(resettingLayer){ 
+			let keep = []
+            if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+		tabFormat: ["main-display",
+			"prestige-button",
+			"blank",
+			["display-text",
+				function() {return 'You have ' + format(player.sg.power) + ' Super Generator Power, which multiplies the Generator base by '+format(tmp.sg.enEff)+'x'},
+					{}]],
+		startData() { return {
+			unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			power: new Decimal(0),
 			first: 0,
 			auto: false,
 		}},
@@ -1655,6 +1745,16 @@ addLayer("h", {
 					}
 				},
 			},
+			22: {
+				name: "Descension",
+				completionLimit: 1,
+				challengeDescription: "Prestige Upgrades, Achievement rewards, & the Primary Space Building are the only things that boost Point generation.",
+				unlocked() { return hasChallenge("h", 21) },
+				goal: new Decimal("1e3570"),
+				currencyDisplayName: "points",
+				currencyInternalName: "points",
+				rewardDescription: "<b>Prestige Boost</b>'s hardcap is now a softcap.",
+			},
 		},
 })
 
@@ -1720,6 +1820,9 @@ addLayer("q", {
 			"prestige-button",
 			"blank",
 			["display-text",
+				function() {return 'You have ' + formatWhole(player.g.power)+' Generator Power'},
+					{}],
+			["display-text",
 				function() {return 'You have ' + formatWhole(player.q.best)+' Best Quirks'},
 					{}],
 			["display-text",
@@ -1727,7 +1830,7 @@ addLayer("q", {
 					{}],
 			"blank",
 			["display-text",
-				function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(shiftDown?('Base Gain: (timeInRun^(quirkLayers-1))'):'generated by Quirk Layers')+'), which multiplies Point and Generator Power gain by ' + format(tmp.q.enEff)},
+				function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(tmp.nerdMode?('Base Gain: (timeInRun^(quirkLayers-1))'):'generated by Quirk Layers')+'), which multiplies Point and Generator Power gain by ' + format(tmp.q.enEff)},
 					{}],
 			"blank",
 			"milestones", "blank",
@@ -1795,14 +1898,22 @@ addLayer("q", {
 				done() { return player.q.total.gte(25) },
 				effectDescription: "Time, Space, & Super-Boosters reset nothing.",
 			},
+			6: {
+				unlocked() { return player.sg.unlocked },
+				requirementDescription: "1e22 Total Quirks",
+				done() { return player.q.total.gte(1e22) },
+				effectDescription: "Unlock Auto-Super Generators & Super-Generators reset nothing.",
+				toggles: [["sg", "auto"]],
+			},
 		},
 		upgrades: {
-			rows: 2,
+			rows: 3,
 			cols: 4,
 			11: {
 				title: "Quirk Central",
 				description: "Total Quirks multiply each Quirk Layer's production (boosted by Quirk Upgrades bought).",
 				cost() { return player.q.time.plus(1).pow(1.2).times(100) },
+				costFormula: "100*(time+1)^1.2",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1815,6 +1926,7 @@ addLayer("q", {
 				title: "Back To Row 2",
 				description: "Total Quirks multiply the Booster/Generator bases.",
 				cost() { return player.q.time.plus(1).pow(1.4).times(500) },
+				costFormula: "500*(time+1)^1.4",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1827,6 +1939,7 @@ addLayer("q", {
 				title: "Skip the Skip the Second",
 				description: "The Generator Power effect is raised to the power of 1.25.",
 				cost() { return player.q.time.plus(1).pow(1.8).times(750) },
+				costFormula: "750*(time+1)^1.8",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1836,6 +1949,7 @@ addLayer("q", {
 				title: "Row 4 Synergy",
 				description: "Hindrance Spirit & Quirks boost each other's gain.",
 				cost() { return player.q.time.plus(1).pow(2.4).times(1e6) },
+				costFormula: "1e6*(time+1)^2.4",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1851,6 +1965,7 @@ addLayer("q", {
 				title: "Quirk City",
 				description: "Super Boosters multiply each Quirk Layer's production.",
 				cost() { return player.q.time.plus(1).pow(3.2).times(1e8) },
+				costFormula: "1e8*(time+1)^3.2",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1863,6 +1978,7 @@ addLayer("q", {
 				title: "Infinite Possibilities",
 				description: "Total Quirks provide free Extra Time Capsules, Enhancers, & Space Buildings.",
 				cost() { return player.q.time.plus(1).pow(4.2).times(2e11) },
+				costFormula: "2e11*(time+1)^4.2",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1875,6 +1991,7 @@ addLayer("q", {
 				title: "The Waiting Game",
 				description: "The Quirk Energy effect is cubed.",
 				cost() { return player.q.time.plus(1).pow(5.4).times(5e19) },
+				costFormula: "5e19*(time+1)^5.4",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -1884,10 +2001,44 @@ addLayer("q", {
 				title: "Exponential Madness",
 				description: "The first Time Energy effect & the first Enhancer effect are raised ^7.5.",
 				cost() { return player.q.time.plus(1).pow(6.8).times(1e24) },
+				costFormula: "1e24*(time+1)^6.8",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 14)&&hasUpgrade("q", 22) },
+			},
+			31: {
+				title: "Scale Softening",
+				description: "Post-12 scaling for static layers in rows 2-3 starts later based on your Quirk Layers.",
+				cost() { return player.q.time.plus(1).pow(8.4).times(1e48) },
+				costFormula: "1e48*(time+1)^8.4",
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 21)&&hasUpgrade("q", 23) },
+				effect() { return player.q.buyables[11].sqrt().times(0.4) },
+				effectDisplay() { return "+"+format(this.effect()) },
+				formula: "sqrt(x)*0.4",
+			},
+			32: {
+				title: "Quinary Superspace",
+				description: "The Quinary Space Building's effect is twice as strong.",
+				cost() { return player.q.time.plus(1).pow(10).times(1e58) },
+				costFormula: "1e58*(time+1)^10",
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 22)&&hasUpgrade("q", 24) },
+			},
+			33: {
+				title: "Generated Progression",
+				description: "Unlock Super Generators.",
+				cost() { return player.q.time.plus(1).pow(12).times(1e81) },
+				costFormula: "1e81*(time+1)^12",
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 23)&&hasUpgrade("q", 31) },
 			},
 		},
 })
@@ -1994,6 +2145,11 @@ addLayer("a", {
 				name: "Hinder is Coming",
 				done() { return inChallenge("h", 11) && player.points.gte("1e7250") },
 				tooltip: 'Reach e7,250 Points in "Upgrade Desert"',
+			},
+			53: {
+				name: "Already????",
+				done() { return player.sg.unlocked },
+				tooltip: "Perform a Super-Generator reset. Reward: Get 2 extra Space.",
 			},
         },
         midsection: [

@@ -125,8 +125,8 @@ function loadVue() {
 			<span v-html="tmp[layer].challenges[data].challengeDescription"></span><br>
 			Goal: {{format(tmp[layer].challenges[data].goal)}} {{tmp[layer].challenges[data].currencyDisplayName ? tmp[layer].challenges[data].currencyDisplayName : "points"}}<br>
 			Reward: <span v-html="tmp[layer].challenges[data].rewardDescription"></span><br>
-			<span v-if="tmp[layer].challenges[data].rewardEffect"><span v-if="shiftDown" v-html="'Formula: '+(tmp[layer].challenges[data].formula?tmp[layer].challenges[data].formula:'???')"></span>
-			<span v-if="!shiftDown" v-html="'Currently: '+((tmp[layer].challenges[data].rewardDisplay) ? (tmp[layer].challenges[data].rewardDisplay) : format(tmp[layer].challenges[data].rewardEffect))"></span></span>
+			<span v-if="tmp[layer].challenges[data].rewardEffect"><span v-if="tmp.nerdMode" v-html="'Formula: '+(tmp[layer].challenges[data].formula?tmp[layer].challenges[data].formula:'???')"></span>
+			<span v-if="!tmp.nerdMode" v-html="'Currently: '+((tmp[layer].challenges[data].rewardDisplay) ? (tmp[layer].challenges[data].rewardDisplay) : format(tmp[layer].challenges[data].rewardEffect))"></span></span>
 		</div>
 		`
 	})
@@ -153,8 +153,8 @@ function loadVue() {
 			v-bind:style="[((!hasUpgrade(layer, data) && canAffordUpgrade(layer, data)) ? {'background-color': tmp[layer].color} : {}), tmp[layer].upgrades[data].style]">
 			<span v-if= "tmp[layer].upgrades[data].title"><h3 v-html="tmp[layer].upgrades[data].title"></h3><br></span>
 			<span v-html="tmp[layer].upgrades[data].description"></span>
-			<span v-if="tmp[layer].upgrades[data].effect"><br>{{(shiftDown&&!tmp[layer].upgrades[data].noFormula)?'Formula: ':'Currently: '}}<span v-if="shiftDown&&!tmp[layer].upgrades[data].noFormula" v-html="tmp[layer].upgrades[data].formula?tmp[layer].upgrades[data].formula:'???'"></span><span v-if="(!shiftDown)||tmp[layer].upgrades[data].noFormula" v-html="(tmp[layer].upgrades[data].effectDisplay) ? (tmp[layer].upgrades[data].effectDisplay) : format(tmp[layer].upgrades[data].effect)"></span></span>
-			<br><br>Cost: {{ formatWhole(tmp[layer].upgrades[data].cost) }} {{(tmp[layer].upgrades[data].currencyDisplayName ? tmp[layer].upgrades[data].currencyDisplayName : tmp[layer].resource)}}
+			<span v-if="tmp[layer].upgrades[data].effect"><br>{{(tmp.nerdMode&&!tmp[layer].upgrades[data].noFormula)?'Formula: ':'Currently: '}}<span v-if="tmp.nerdMode&&!tmp[layer].upgrades[data].noFormula" v-html="tmp[layer].upgrades[data].formula?tmp[layer].upgrades[data].formula:'???'"></span><span v-if="(!tmp.nerdMode)||tmp[layer].upgrades[data].noFormula" v-html="(tmp[layer].upgrades[data].effectDisplay) ? (tmp[layer].upgrades[data].effectDisplay) : format(tmp[layer].upgrades[data].effect)"></span></span>
+			<br><span v-if="tmp.nerdMode&&tmp[layer].upgrades[data].costFormula">Cost Formula: {{tmp[layer].upgrades[data].costFormula}}</span><span v-if="!tmp.nerdMode||!tmp[layer].upgrades[data].costFormula"><br>Cost: {{ formatWhole(tmp[layer].upgrades[data].cost) }} {{(tmp[layer].upgrades[data].currencyDisplayName ? tmp[layer].upgrades[data].currencyDisplayName : tmp[layer].resource)}}</span>
 		</button>
 		`
 	})
@@ -449,7 +449,6 @@ function loadVue() {
 			keepGoing,
 			VERSION,
 			LAYERS,
-			shiftDown,
 			hotkeys
 		},
 	})

@@ -438,7 +438,7 @@ function setClickableState(layer, id, state){
 }
 
 function upgradeEffect(layer, id){
-	return (tmp[layer].upgrades[id].effect)
+	return (tmp[layer].upgrades[id].effect);
 }
 
 function challengeEffect(layer, id){
@@ -651,7 +651,7 @@ function layOver(obj1, obj2) {
 document.onkeydown = function(e) {
 	if (player===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
-	shiftDown = player.tapNerd?((!(!e.shiftKey)) ? !shiftDown : shiftDown):(!(!e.shiftKey))
+	tmp.nerdMode = player.tapNerd?((!(!e.shiftKey)) ? !tmp.nerdMode : tmp.nerdMode):(!(!e.shiftKey))
 	let ctrlDown = e.ctrlKey
 	let key = e.key
 	if (ctrlDown) key = "ctrl+" + key
@@ -664,7 +664,7 @@ document.onkeydown = function(e) {
 }
 
 document.onkeyup = function(e) {
-	if (e.keyCode==16 && !player.tapNerd) shiftDown = false;
+	if (e.keyCode==16 && !player.tapNerd) tmp.nerdMode = false;
 }
 
 var onFocused = false
@@ -691,9 +691,10 @@ function costFormulaStatic(layer) {
 		exp = exp.times(10)
 		resDiv = resDiv.times(Decimal.pow(1225, 9))
 	}
-	if (player[layer].points.gte(12)) {
+	let scaleStart = (STATIC_SCALE_STARTS[String(tmp[layer].row-1)]?STATIC_SCALE_STARTS[String(tmp[layer].row+1)]():1);
+	if (player[layer].points.gte(scaleStart)) {
 		exp = exp.times(2);
-		resDiv = resDiv.times(12);
+		resDiv = resDiv.times(scaleStart);
 	}
 	
 	return "("+format(base)+"^(x^"+format(exp)+")"+(resDiv.eq(1)?"":(" / "+format(resDiv)))+")"+(mult.eq(1)?"":(mult.gt(1)?(" * ("+format(mult)+")"):(" / ("+format(mult.pow(-1))+")")))
@@ -702,10 +703,10 @@ function costFormulaStatic(layer) {
 function prestigeButtonText(layer)
 {
 	if(tmp[layer].type == "normal") {
-		if (shiftDown) return "Gain Formula: "+gainFormulaNormal(layer);
+		if (tmp.nerdMode) return "Gain Formula: "+gainFormulaNormal(layer);
 		else return `${ player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${ (tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAt) : format(tmp[layer].nextAt))} ${ tmp[layer].baseResource }` : ""}`
 	} else if(tmp[layer].type== "static") {
-		if (shiftDown) return "Cost Formula: "+costFormulaStatic(layer);
+		if (tmp.nerdMode) return "Cost Formula: "+costFormulaStatic(layer);
 		else return `${tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for "}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource}<br><br>${player[layer].points.lt(30) ? (tmp[layer].baseAmount.gte(tmp[layer].nextAt)&&(tmp[layer].canBuyMax !== undefined) && tmp[layer].canBuyMax?"Next:":"Req:") : ""} ${formatWhole(tmp[layer].baseAmount)} / ${(tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAtDisp) : format(tmp[layer].nextAtDisp))} ${ tmp[layer].baseResource }		
 		`
 	} else if(tmp[layer].type == "none")

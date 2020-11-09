@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9999999999"),
-	specialEndgameText: 'v0.4 Beta 4 Endgame: e8,800 Points',
+	specialEndgameText: 'v0.4 Beta 5 Endgame: e14,900 Points',
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.4",
-	beta: 4,
+	beta: 5,
 	name: "Hindered Quirkiness",
 }
 
@@ -43,6 +43,8 @@ function getPointGen() {
 	if (hasUpgrade("p", 22)) gain = gain.times(upgradeEffect("p", 22));
 	if (hasAchievement("a", 21)) gain = gain.times(1.1);
 	if (hasAchievement("a", 31)) gain = gain.times(1.5);
+	if (inChallenge("h", 22)) return gain.times(player.s.unlocked?buyableEffect("s", 11):1);
+	
 	if (player.b.unlocked) gain = gain.times(tmp.b.effect);
 	if (player.g.unlocked) gain = gain.times(tmp.g.powerEff);
 	if (player.t.unlocked) gain = gain.times(tmp.t.enEff);

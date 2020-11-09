@@ -14,6 +14,7 @@ for (item in noCall) {
 
 function setupTemp() {
 	tmp = {}
+	tmp.nerdMode = false
 	tmp.pointGen = {}
 	tmp.displayThings = []
 

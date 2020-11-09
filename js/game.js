@@ -1,5 +1,4 @@
 var player;
-var shiftDown = false;
 var needCanvasUpdate = true;
 var NaNalert = false;
 var gameEnded = false;
