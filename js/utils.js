@@ -414,7 +414,7 @@ function hasAchievement(layer, id){
 }
 
 function hasChallenge(layer, id){
-	return (player[layer].challenges[id])
+	return (player[layer].challenges[id]>=tmp[layer].challenges[id].completionLimit)
 }
 
 function challengeCompletions(layer, id){
@@ -455,6 +455,18 @@ function clickableEffect(layer, id){
 
 function achievementEffect(layer, id){
 	return (tmp[layer].achievements[id].effect)
+}
+
+function getImprovements(layer, id) {
+	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.rows*tmp[layer].impr.cols).plus(1).floor().max(0)):new Decimal(0);
+}
+
+function getNextImpr(layer, id) {
+	return layers[layer].impr.nextAt(id);
+}
+
+function improvementEffect(layer, id) {
+	return tmp[layer].impr[id].effect
 }
 
 function canAffordPurchase(layer, thing, cost) {
@@ -648,10 +660,13 @@ function layOver(obj1, obj2) {
 	}
 }
 
+var shiftHeld = false;
+
 document.onkeydown = function(e) {
 	if (player===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
-	tmp.nerdMode = player.tapNerd?((!(!e.shiftKey)) ? !tmp.nerdMode : tmp.nerdMode):(!(!e.shiftKey))
+	tmp.nerdMode = player.tapNerd?((!(!e.shiftKey)&&!shiftHeld) ? !tmp.nerdMode : tmp.nerdMode):(!(!e.shiftKey))
+	if (e.shiftKey) shiftHeld = true;
 	let ctrlDown = e.ctrlKey
 	let key = e.key
 	if (ctrlDown) key = "ctrl+" + key
@@ -665,6 +680,7 @@ document.onkeydown = function(e) {
 
 document.onkeyup = function(e) {
 	if (e.keyCode==16 && !player.tapNerd) tmp.nerdMode = false;
+	if (e.keyCode==16) shiftHeld = false;
 }
 
 var onFocused = false

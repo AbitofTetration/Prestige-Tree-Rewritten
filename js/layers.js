@@ -225,10 +225,8 @@ addLayer("b", {
         layerShown(){return player.p.unlocked},
 		automate() {},
 		resetsNothing() { return hasMilestone("t", 4) },
-		effectBase() {
-			let base = new Decimal(2);
-			
-			// ADD
+		addToBase() {
+			let base = new Decimal(0);
 			if (hasUpgrade("b", 12)) base = base.plus(upgradeEffect("b", 12));
 			if (hasUpgrade("b", 13)) base = base.plus(upgradeEffect("b", 13));
 			if (hasUpgrade("t", 11)) base = base.plus(upgradeEffect("t", 11));
@@ -236,11 +234,19 @@ addLayer("b", {
 			if (player.e.unlocked) base = base.plus(layers.e.buyables[11].effect().second);
 			if (player.s.unlocked) base = base.plus(buyableEffect("s", 12));
 			if (hasUpgrade("t", 25)) base = base.plus(upgradeEffect("t", 25));
+			return base;
+		},
+		effectBase() {
+			let base = new Decimal(2);
+			
+			// ADD
+			base = base.plus(tmp.b.addToBase);
 			
 			// MULTIPLY
 			if (player.sb.unlocked) base = base.times(tmp.sb.effect);
 			if (hasUpgrade("q", 12)) base = base.times(upgradeEffect("q", 12));
-			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12)
+			if (hasUpgrade("q", 34)) base = base.times(upgradeEffect("q", 34));
+			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12);
 			
 			return base;
 		},
@@ -704,7 +710,7 @@ addLayer("t", {
 		},
 		update(diff) {
 			if (player.t.unlocked) player.t.energy = player.t.energy.plus(this.effect().gain.times(diff)).min(this.effect().limit).max(0);
-			if (player.t.autoExt && hasMilestone("q", 1)) this.buyables[11].buyMax();
+			if (player.t.autoExt && hasMilestone("q", 1) && !inChallenge("h", 31)) this.buyables[11].buyMax();
 			if (player.t.auto && hasMilestone("q", 3)) doReset("t");
 		},
         row: 2, // Row the layer is in on the tree (0 is the first row)
@@ -860,19 +866,21 @@ addLayer("t", {
                     let data = tmp[this.layer].buyables[this.id]
 					let e = tmp.t.freeExtraTimeCapsules;
                     let display = ("Cost: " + formatWhole(data.cost) + " Boosters\n\
-                    Amount: " + formatWhole(player[this.layer].buyables[this.id])+(e.gt(0)?(" + "+formatWhole(e)):""))
+                    Amount: " + formatWhole(player[this.layer].buyables[this.id])+(e.gt(0)?(" + "+formatWhole(e)):""))+(inChallenge("h", 31)?("\nPurchases Left: "+String(10-player.h.chall31bought)):"")
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
                 canAfford() {
-                    return player.b.points.gte(tmp[this.layer].buyables[this.id].cost)},
+                    return player.b.points.gte(tmp[this.layer].buyables[this.id].cost) && (inChallenge("h", 31) ? player.h.chall31bought<10 : true)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
                     player.b.points = player.b.points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+					if (inChallenge("h", 31)) player.h.chall31bought++;
                 },
                 buyMax() {
 					if (!this.canAfford()) return;
+					if (inChallenge("h", 31)) return;
 					let tempBuy = player.b.points.plus(1).div(10).sub(1).max(0).root(1.2).div(0.4);
 					if (tempBuy.gte(25)) tempBuy = tempBuy.times(25).sqrt();
 					let target = tempBuy.plus(1).floor();
@@ -940,7 +948,7 @@ addLayer("e", {
         },
 		update(diff) {
 			if (hasMilestone("q", 1)) generatePoints("e", diff);
-			if (player.e.auto && hasMilestone("q", 1)) this.buyables[11].buyMax();
+			if (player.e.auto && hasMilestone("q", 1) && !inChallenge("h", 31)) this.buyables[11].buyMax();
 		},
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
@@ -1069,18 +1077,20 @@ addLayer("e", {
                     let data = tmp[this.layer].buyables[this.id]
                     return "Cost: " + formatWhole(data.cost) + " Enhance Points\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.e.freeEnh.gt(0)?(" + "+formatWhole(tmp.e.freeEnh)):"") + "\n\
-                   "+(tmp.nerdMode?(" Formula 1: 25^(x^1.1)\n\ Formula 2: x^0.8"):(" Boosts Prestige Point gain by " + format(data.effect.first) + "x and adds to the Booster/Generator base by " + format(data.effect.second)))
+                   "+(tmp.nerdMode?(" Formula 1: 25^(x^1.1)\n\ Formula 2: x^0.8"):(" Boosts Prestige Point gain by " + format(data.effect.first) + "x and adds to the Booster/Generator base by " + format(data.effect.second)))+(inChallenge("h", 31)?("\nPurchases Left: "+String(10-player.h.chall31bought)):"")
                 },
                 unlocked() { return player[this.layer].unlocked }, 
                 canAfford() {
-                    return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost)},
+                    return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost) && (inChallenge("h", 31) ? player.h.chall31bought<10 : true)},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
                     player[this.layer].points = player[this.layer].points.sub(cost)	
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+					if (inChallenge("h", 31)) player.h.chall31bought++;
                 },
                 buyMax() {
 					if (!this.canAfford()) return;
+					if (inChallenge("h", 31)) return;
 					let tempBuy = player[this.layer].points.max(1).log2().root(1.5)
 					if (tempBuy.gte(25)) tempBuy = tempBuy.times(25).sqrt();
 					let target = tempBuy.plus(1).floor();
@@ -1603,7 +1613,9 @@ addLayer("sg", {
 			return base;
 		},
 		effect() {
-			return Decimal.pow(this.effectBase(), player.sg.points).sub(1).max(0);
+			let eff = Decimal.pow(this.effectBase(), player.sg.points).sub(1).max(0);
+			if (tmp.h.challenges[31].unlocked) eff = eff.times(challengeEffect("h", 31));
+			return eff;
 		},
 		effectDescription() {
 			return "which are generating "+format(this.effect())+" Super Generator Power/sec"+(tmp.nerdMode?("\n ("+format(this.effectBase())+"x each)"):"")
@@ -1640,6 +1652,7 @@ addLayer("h", {
             unlocked: false,
 			points: new Decimal(0),
 			best: new Decimal(0),
+			chall31bought: 0,
 			first: 0,
         }},
         color: "#a14040",
@@ -1664,6 +1677,7 @@ addLayer("h", {
         doReset(resettingLayer){ 
 			player.q.time = new Decimal(0);
 			player.q.energy = new Decimal(0);
+			player.h.chall31bought = 0;
            if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
         layerShown(){return player.t.unlocked&&hasMilestone("q", 4)},
@@ -1696,8 +1710,12 @@ addLayer("h", {
 			if (inChallenge("h", 12)) div = div.times(player.q.time.sqrt().times(player.sb.points.pow(3).times(3).plus(1)).plus(1))
 			return div;
 		},
+		pointRoot31() {
+			let root = Decimal.add(2, Decimal.pow(challengeCompletions("h", 31), 1.5).div(16))
+			return root;
+		},
 		challenges: {
-			rows: 2,
+			rows: 3,
 			cols: 2,
 			11: {
 				name: "Upgrade Desert",
@@ -1754,6 +1772,19 @@ addLayer("h", {
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription: "<b>Prestige Boost</b>'s hardcap is now a softcap.",
+			},
+			31: {
+				name: "Timeless",
+				completionLimit: 1/0,
+				challengeDescription() {return "You can only buy 10 Enhancers & Extra Time Capsules (total), Enhancer/Extra Time Capsule automation is disabled, and Point generation is brought to the "+format(tmp.h.pointRoot31)+"th root<br>Completions: "+challengeCompletions("h", 31)},
+				unlocked() { return hasChallenge("h", 22) },
+				goal() { return Decimal.pow("1e50", Decimal.pow(challengeCompletions("h", 31), 2.5)).times("1e5325") },
+				currencyDisplayName: "points",
+				currencyInternalName: "points",
+				rewardDescription: "<b>Timeless</b> completions boost Super Generator Power gain based on your time in this Row 4 reset.",
+				rewardEffect() { return Decimal.div(9, Decimal.add(player.q.time, 1).cbrt()).plus(1).pow(challengeCompletions("h", 31)) },
+				rewardDisplay() { return format(this.rewardEffect())+"x" },
+				formula: "(9/cbrt(time+1)+1)^completions",
 			},
 		},
 })
@@ -1816,26 +1847,43 @@ addLayer("q", {
 			player.q.time = player.q.time.plus(diff);
 			if (tmp.q.enGainExp.gte(0)) player.q.energy = player.q.energy.plus(player.q.time.times(tmp.q.enGainMult).pow(tmp.q.enGainExp).times(diff));
 		},
-		tabFormat: ["main-display",
-			"prestige-button",
-			"blank",
-			["display-text",
-				function() {return 'You have ' + formatWhole(player.g.power)+' Generator Power'},
-					{}],
-			["display-text",
-				function() {return 'You have ' + formatWhole(player.q.best)+' Best Quirks'},
-					{}],
-			["display-text",
-				function() {return 'You have ' + formatWhole(player.q.total)+' Total Quirks'},
-					{}],
-			"blank",
-			["display-text",
-				function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(tmp.nerdMode?('Base Gain: (timeInRun^(quirkLayers-1))'):'generated by Quirk Layers')+'), which multiplies Point and Generator Power gain by ' + format(tmp.q.enEff)},
-					{}],
-			"blank",
-			"milestones", "blank",
-			"blank",
-			"buyables", "blank", "upgrades"],
+		tabFormat: {
+			"Main Tab": {
+				content: [
+					"main-display",
+					"prestige-button",
+					"blank",
+					["display-text",
+						function() {return 'You have ' + formatWhole(player.g.power)+' Generator Power'},
+							{}],
+					["display-text",
+						function() {return 'You have ' + formatWhole(player.q.best)+' Best Quirks'},
+							{}],
+					["display-text",
+						function() {return 'You have ' + formatWhole(player.q.total)+' Total Quirks'},
+							{}],
+					"blank",
+					["display-text",
+						function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(tmp.nerdMode?('Base Gain: (timeInRun^(quirkLayers-1))'):'generated by Quirk Layers')+'), which multiplies Point and Generator Power gain by ' + format(tmp.q.enEff)},
+							{}],
+					"blank",
+					"milestones", "blank",
+					"blank",
+					"buyables", "blank", "upgrades"],
+			},
+			Improvements: {
+				unlocked() { return hasUpgrade("q", 41) },
+				buttonStyle() { return {'background-color': '#f25ed7'} },
+				content: [
+					"main-display",
+					"blank",
+					["display-text",
+						function() {return 'You have ' + formatWhole(player.q.energy)+' Quirk Energy ('+(tmp.nerdMode?('Base Gain: (timeInRun^(quirkLayers-1))'):'generated by Quirk Layers')+'), which has provided the below Quirk Improvements'},
+							{}],
+					"blank",
+					"improvements"],
+			},
+		},
 		buyables: {
 			rows: 1,
 			cols: 1,
@@ -1907,7 +1955,7 @@ addLayer("q", {
 			},
 		},
 		upgrades: {
-			rows: 3,
+			rows: 4,
 			cols: 4,
 			11: {
 				title: "Quirk Central",
@@ -1918,7 +1966,7 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasChallenge("h", 11) },
-				effect() { return player.q.total.plus(1).log10().plus(1).pow(player.q.upgrades.length) },
+				effect() { return player.q.total.plus(1).log10().plus(1).pow(player.q.upgrades.length).pow(improvementEffect("q", 11)) },
 				effectDisplay() { return format(this.effect())+"x" },
 				formula: "(log(quirks+1)+1)^upgrades",
 			},
@@ -1931,7 +1979,7 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 11) },
-				effect() { return player.q.total.plus(1).log10().plus(1).pow(1.25) },
+				effect() { return player.q.total.plus(1).log10().plus(1).pow(1.25).times(improvementEffect("q", 12)) },
 				effectDisplay() { return format(this.effect())+"x" },
 				formula: "(log(x+1)+1)^1.25",
 			},
@@ -1955,8 +2003,8 @@ addLayer("q", {
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 12)||hasUpgrade("q", 13) },
 				effect() { return {
-					h: player.q.points.plus(1).cbrt(),
-					q: player.h.points.plus(1).root(4),
+					h: player.q.points.plus(1).cbrt().pow(improvementEffect("q", 13)),
+					q: player.h.points.plus(1).root(4).pow(improvementEffect("q", 13)),
 				}},
 				effectDisplay() { return "H: "+format(this.effect().h)+"x, Q: "+format(this.effect().q)+"x" },
 				formula: "H: cbrt(Q+1), Q: (H+1)^0.25",
@@ -2039,6 +2087,62 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 23)&&hasUpgrade("q", 31) },
+			},
+			34: {
+				title: "Booster Madness",
+				description: "Anything that adds to the Booster base also multiplies it at a reduced rate.",
+				cost() { return player.q.time.plus(1).pow(15).times(2.5e94) },
+				costFormula: "2.5e94*(time+1)^15",
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 24)&&hasUpgrade("q", 32) },
+				effect() { return tmp.b.addToBase.plus(1).root(2.5) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "(x+1)^0.4",
+			},
+			41: {
+				title: "Quirkier",
+				description: "Unlock Quirk Improvements.",
+				cost: new Decimal(1e125),
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 33) && hasUpgrade("q", 34) },
+			},
+		},
+		impr: {
+			amount() { return player.q.energy.div(1e130/99).plus(1).log10().div(2).sqrt().floor() },
+			nextAt(id=11) { return Decimal.pow(10, getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num).pow(2).times(2)).sub(1).times(1e130/99) },
+			resName: "quirk energy",
+			rows: 3,
+			cols: 3,
+			11: {
+				num: 1,
+				title: "Central Improvement",
+				description: "<b>Quirk Central</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 41) },
+				effect() { return Decimal.mul(0.1, getImprovements("q", 11)).plus(1) },
+				effectDisplay() { return "^"+format(this.effect()) },
+				formula: "1+0.1*x",
+			},
+			12: {
+				num: 2,
+				title: "Secondary Improvement",
+				description: "<b>Back to Row 2</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 41) },
+				effect() { return Decimal.mul(0.05, getImprovements("q", 12)).plus(1) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1+0.05*x",
+			},
+			13: {
+				num: 3,
+				title: "Level 4 Improvement",
+				description: "<b>Row 4 Synergy</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 41) },
+				effect() { return Decimal.mul(0.25, getImprovements("q", 13)).plus(1) },
+				effectDisplay() { return "^"+format(this.effect()) },
+				formula: "1+0.25*x",
 			},
 		},
 })

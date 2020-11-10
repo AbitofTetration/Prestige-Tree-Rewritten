@@ -204,6 +204,7 @@ function doReset(layer, force=false) {
 
 	updateTemp()
 	updateTemp()
+	updateTemp()
 }
 
 function resetRow(row) {
@@ -361,13 +362,13 @@ var interval = setInterval(function() {
 	if (gameEnded&&!player.keepGoing) return;
 	ticking = true
 	let now = Date.now()
-	let diff = (now - player.time) / 1e3
+	let diff = Math.max((now - player.time) / 1e3, 0)
 	if (player.offTime !== undefined && player.offTime !== null) {
 		if (player.offTime.remain > modInfo.offlineLimit * 3600000) player.offTime.remain = modInfo.offlineLimit * 3600000
 		if (player.offTime.remain > 0) {
 			let offlineDiff = Math.max(player.offTime.remain / 10, diff)
 			player.offTime.remain -= offlineDiff
-			diff += offlineDiff
+			diff += Math.max(offlineDiff, 0)
 		}
 		if (!player.offlineProd || player.offTime.remain <= 0) player.offTime = null;
 	}
