@@ -1374,6 +1374,13 @@ addLayer("s", {
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
                 style: {'height':'100px'},
+				sellOne() {
+					let amount = getBuyableAmount(this.layer, this.id)
+					if (!hasMilestone("q", 5) || amount.lt(1)) return;
+					setBuyableAmount(this.layer, this.id, amount.sub(1))
+                    player[this.layer].spent = player[this.layer].spent.sub(1).max(0);
+				},
+				canSellOne() { return hasMilestone("q", 5) },
 			},
 			12: {
 				title: "Secondary Space Building",
@@ -1402,6 +1409,13 @@ addLayer("s", {
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
                 style: {'height':'100px'},
+				sellOne() {
+					let amount = getBuyableAmount(this.layer, this.id)
+					if (!hasMilestone("q", 5) || amount.lt(1)) return;
+					setBuyableAmount(this.layer, this.id, amount.sub(1))
+                    player[this.layer].spent = player[this.layer].spent.sub(1).max(0);
+				},
+				canSellOne() { return hasMilestone("q", 5) },
 			},
 			13: {
 				title: "Tertiary Space Building",
@@ -1431,6 +1445,13 @@ addLayer("s", {
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
                 style: {'height':'100px'},
+				sellOne() {
+					let amount = getBuyableAmount(this.layer, this.id)
+					if (!hasMilestone("q", 5) || amount.lt(1)) return;
+					setBuyableAmount(this.layer, this.id, amount.sub(1))
+                    player[this.layer].spent = player[this.layer].spent.sub(1).max(0);
+				},
+				canSellOne() { return hasMilestone("q", 5) },
 			},
 			14: {
 				title: "Quaternary Space Building",
@@ -1463,6 +1484,13 @@ addLayer("s", {
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
                 style: {'height':'100px'},
+				sellOne() {
+					let amount = getBuyableAmount(this.layer, this.id)
+					if (!hasMilestone("q", 5) || amount.lt(1)) return;
+					setBuyableAmount(this.layer, this.id, amount.sub(1))
+                    player[this.layer].spent = player[this.layer].spent.sub(1).max(0);
+				},
+				canSellOne() { return hasMilestone("q", 5) },
 			},
 			15: {
 				title: "Quinary Space Building",
@@ -1493,6 +1521,13 @@ addLayer("s", {
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
                 style: {'height':'100px'},
+				sellOne() {
+					let amount = getBuyableAmount(this.layer, this.id)
+					if (!hasMilestone("q", 5) || amount.lt(1)) return;
+					setBuyableAmount(this.layer, this.id, amount.sub(1))
+                    player[this.layer].spent = player[this.layer].spent.sub(1).max(0);
+				},
+				canSellOne() { return hasMilestone("q", 5) },
 			},
 		},
 		milestones: {
@@ -1812,6 +1847,7 @@ addLayer("q", {
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
 			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).q);
+			mult = mult.times(improvementEffect("q", 33));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1841,7 +1877,7 @@ addLayer("q", {
 		enEff() {
 			let eff = player.q.energy.plus(1).pow(2);
 			if (hasUpgrade("q", 23)) eff = eff.pow(3);
-			return eff;
+			return eff.times(improvementEffect("q", 23));
 		},
 		update(diff) {
 			player.q.time = player.q.time.plus(diff);
@@ -1889,9 +1925,15 @@ addLayer("q", {
 			cols: 1,
 			11: {
 				title: "Quirk Layers",
+				costBase() {
+					let base = new Decimal(2);
+					if (hasUpgrade("q", 43)) base = base.sub(.25);
+					return base;
+				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
                     if (x.gte(20)) Decimal.pow(1.05, x.sub(20)).times(20)
-                    let cost = Decimal.pow(2, Decimal.pow(2, x).sub(1));
+					let base = this.costBase();
+                    let cost = Decimal.pow(base, Decimal.pow(base, x).sub(1));
                     return cost.floor()
                 },
 				display() { // Everything else displayed in the buyable button after the title
@@ -1944,7 +1986,7 @@ addLayer("q", {
 			5: {
 				requirementDescription: "25 Total Quirks",
 				done() { return player.q.total.gte(25) },
-				effectDescription: "Time, Space, & Super-Boosters reset nothing.",
+				effectDescription: "Time, Space, & Super-Boosters reset nothing, and you can destroy individual Space Buildings.",
 			},
 			6: {
 				unlocked() { return player.sg.unlocked },
@@ -2018,7 +2060,7 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 11)&&hasUpgrade("q", 13) },
-				effect() { return Decimal.pow(1.25, player.sb.points) },
+				effect() { return Decimal.pow(1.25, player.sb.points).pow(improvementEffect("q", 21)) },
 				effectDisplay() { return format(this.effect())+"x" },
 				formula: "1.25^x",
 			},
@@ -2031,7 +2073,7 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 12)&&hasUpgrade("q", 14) },
-				effect() { return player.q.total.plus(1).log10().sqrt().floor() },
+				effect() { return player.q.total.plus(1).log10().sqrt().times(improvementEffect("q", 22)).floor() },
 				effectDisplay() { return "+"+formatWhole(this.effect()) },
 				formula: "floor(sqrt(log(x+1)))",
 			},
@@ -2064,7 +2106,7 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 21)&&hasUpgrade("q", 23) },
-				effect() { return player.q.buyables[11].sqrt().times(0.4) },
+				effect() { return player.q.buyables[11].sqrt().times(0.4).times(improvementEffect("q", 31)) },
 				effectDisplay() { return "+"+format(this.effect()) },
 				formula: "sqrt(x)*0.4",
 			},
@@ -2097,7 +2139,7 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 24)&&hasUpgrade("q", 32) },
-				effect() { return tmp.b.addToBase.plus(1).root(2.5) },
+				effect() { return tmp.b.addToBase.plus(1).root(2.5).times(improvementEffect("q", 32)) },
 				effectDisplay() { return format(this.effect())+"x" },
 				formula: "(x+1)^0.4",
 			},
@@ -2110,10 +2152,37 @@ addLayer("q", {
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 33) && hasUpgrade("q", 34) },
 			},
+			42: {
+				title: "Improvement Boost",
+				description: "Unlock 3 more Quirk Improvements.",
+				cost: new Decimal(1e150),
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 41) },
+			},
+			43: {
+				title: "More Layers",
+				description: "Quirk Layers cost scale 25% slower.",
+				cost: new Decimal(1e175),
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 42) },
+			},
+			44: {
+				title: "Improvements Galore",
+				description: "Unlock another 3 Quirk Improvements.",
+				cost: new Decimal(1e290),
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
+				unlocked() { return hasUpgrade("q", 43) },
+			},
 		},
 		impr: {
-			amount() { return player.q.energy.div(1e130/99).plus(1).log10().div(2).sqrt().floor() },
-			nextAt(id=11) { return Decimal.pow(10, getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num).pow(2).times(2)).sub(1).times(1e130/99) },
+			amount() { return player.q.energy.div(1e128).plus(1).log10().div(2).sqrt().floor() },
+			nextAt(id=11) { return Decimal.pow(10, getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num).pow(2).times(2)).sub(1).times(1e128) },
 			resName: "quirk energy",
 			rows: 3,
 			cols: 3,
@@ -2143,6 +2212,60 @@ addLayer("q", {
 				effect() { return Decimal.mul(0.25, getImprovements("q", 13)).plus(1) },
 				effectDisplay() { return "^"+format(this.effect()) },
 				formula: "1+0.25*x",
+			},
+			21: {
+				num: 4,
+				title: "Developmental Improvement",
+				description: "<b>Quirk City</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 42) },
+				effect() { return Decimal.mul(1.5, getImprovements("q", 21)).plus(1) },
+				effectDisplay() { return "^"+format(this.effect()) },
+				formula: "1+1.5*x",
+			},
+			22: {
+				num: 5,
+				title: "Transfinite Improvement",
+				description: "<b>Infinite Possibilities</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 42) },
+				effect() { return Decimal.mul(0.2, getImprovements("q", 22)).plus(1) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1+0.2*x",
+			},
+			23: {
+				num: 6,
+				title: "Energy Improvement",
+				description: "The Quirk Energy effect is stronger.",
+				unlocked() { return hasUpgrade("q", 42) },
+				effect() { return Decimal.pow(1e25, Decimal.pow(getImprovements("q", 23), 1.5)) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1e25^(x^1.5)",
+			},
+			31: {
+				num: 7,
+				title: "Scale Improvement",
+				description: "<b>Scale Softening</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 44) },
+				effect() { return Decimal.mul(0.5, getImprovements("q", 31)).plus(1) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1+0.5*x",
+			},
+			32: {
+				num: 8,
+				title: "Booster Improvement",
+				description: "<b>Booster Madness</b> is stronger.",
+				unlocked() { return hasUpgrade("q", 44) },
+				effect() { return Decimal.mul(0.2, getImprovements("q", 32)).plus(1) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1+0.2*x",
+			},
+			33: {
+				num: 9,
+				title: "Quirk Improvement",
+				description: "Quirk gain is stronger.",
+				unlocked() { return hasUpgrade("q", 44) },
+				effect() { return Decimal.pow(1e8, Decimal.pow(getImprovements("q", 33), 1.2)) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "1e8^(x^1.2)",
 			},
 		},
 })

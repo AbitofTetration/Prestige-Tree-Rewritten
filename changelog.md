@@ -1,9 +1,10 @@
 # The Prestige Tree: Rewritten changelog (major updates only):
 
 ### v0.4: Hindered Quirkiness
-- Ported the "H", "Q", "SG", & "SS" layers
+- Ported the "H", "Q", & "SG" layers
 - Added the next section of achievements
 - Minor bugfixes/QoL improvements were made
+- Added Quirk Improvements
 
 ### v0.3: Enhanced Spacetime - 11/4/20
 - Ported the "T", "E", "S", & "SB" layers
