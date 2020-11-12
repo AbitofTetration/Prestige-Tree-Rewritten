@@ -581,8 +581,9 @@ ul {
 }
 
 .overlayThing {
-	pointer-events:auto;
+	pointer-events: auto;
 	background-color: var(--background);
+	box-shadow: 0px 0px 5px 5px var(--background);
 }
 
 .sideLayers {

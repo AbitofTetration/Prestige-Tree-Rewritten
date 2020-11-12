@@ -14,7 +14,6 @@
 	<script type="text/javascript" src="js/utils.js"></script>
 	<script type="text/javascript" src="js/v.js"></script>
 	<script type="text/javascript" src="js/canvas.js"></script>
-
 </head>
 <body onload="load()">
 	<div id="app">
@@ -83,7 +82,7 @@
 			<span v-for="layer in LAYERS"><span v-if="player[layer].first!==undefined && player[layer].unlocked">First {{layer}} reset: {{formatTime(player[layer].first)}}<br></span></span><br>
 			<h3>Hotkeys</h3><br>
 			<span v-for="key in hotkeys" v-if="player[key.layer].unlocked"><br>{{key.description}}</span>
-			<br>Press Shift to Show Formulas
+			<br>Press - to Show Formulas
 		</div>
 		<div v-if="player.tab=='options'" class="col right">
 			<button class="back" onclick="showTab('tree')">←</button><br>
@@ -105,12 +104,13 @@
 				</tr>
 					<tr>
 						<td><button class="opt" onclick="toggleOpt('hideChallenges')">Completed Challenges: {{ player.hideChallenges?"HIDDEN":"SHOWN" }}</button></td>
-					<!--	<td><button class="opt" onclick="toggleOpt('oldStyle')">Style: {{ player.oldStyle?"v1.0":"NEW" }}</button></td>-->
+						<td><button class="opt" onclick="toggleOpt('tapNerd')">"Nerd Mode" Activation: {{player.tapNerd?"ON TAP":"ON HOLD"}}</button></td>
+						<!--<td><button class="opt" onclick="toggleOpt('oldStyle')">Style: {{ player.oldStyle?"v1.0":"NEW" }}</button></td>-->
 				</tr> 
 			</table>
 		</div>
 		<div id="treeOverlay" class="treeOverlay" v-if="player.tab!='gameEnded'" onscroll="resizeCanvas()" v-bind:class="{ fullWidth: player.tab == 'tree', col: player.tab != 'tree', left: player.tab != 'tree'}">
-			<div id="version" class="overlayThing" style="margin-right: 13px">{{VERSION.withoutName}}</div>
+			<div id="version" class="overlayThing" style="margin-right: 25px">{{VERSION.withoutName}}</div>
 			<img id="optionWheel"  class="overlayThing" v-if="player.tab!='options'" src="options_wheel.png" onclick="showTab('options')"></img>
 			<div id="info" v-if="player.tab!='info'"  class="overlayThing" onclick="showTab('info')"><br>i</div>
 			<div id="discord" class="overlayThing">
@@ -125,19 +125,19 @@
 				<span v-if="player.devSpeed && player.devSpeed != 1" class="overlayThing">
 					<br>Dev Speed: {{format(player.devSpeed)}}x<br>
 				</span>
-				<span v-if="player.offTime !== undefined"  class="overlayThing">
-					<br>Offline Time: {{formatTime(player.offTime.remain)}}<br>
+				<span v-if="player.offTime !== undefined && player.offTime !== null"  class="overlayThing">
+					<br>Offline Time: {{formatTime(player.offTime?player.offTime.remain:0)}}<br>
 				</span>
 				<span v-if="!player.keepGoing" class="overlayThing">
 					<br><span v-if="modInfo.specialEndgameText">{{modInfo.specialEndgameText}}</span><span v-if="!modInfo.specialEndgameText">Reach {{formatWhole(modInfo.endgame)+" "+modInfo.pointsName}} to beat the game!</span><br>
 				</span>
 				<br>
-				<span v-if="player.points.lt('1e1000')"  class="overlayThing">You have </span>
-				<h2  class="overlayThing" id="points">{{format(player.points)}}</h2>
-				<span v-if="player.points.lt('1e1e6')"  class="overlayThing"> {{modInfo.pointsName}}</span>
+				<span v-if="player.points.lt('1e1000')">You have </span>
+				<h2 id="points">{{format(player.points)}}</h2>
+				<span v-if="player.points.lt('1e1e6')"> {{modInfo.pointsName}}</span>
 				<br>
-				<span v-if="canGenPoints()"  class="overlayThing">({{format(getPointGen())}}/sec)</span>
-				<div v-for="thing in tmp.displayThings" class="overlayThing"><span v-if="thing" v-html="thing"></span></div>
+				<span v-if="canGenPoints()">({{format(getPointGen())}}/sec)</span>
+				<div v-for="thing in tmp.displayThings"><span v-if="thing" v-html="thing"></span></div>
 			</div>
 			<div class="sideLayers" >
 				<div v-for="node in OTHER_LAYERS['side']"><layer-node :layer='node.layer' :abb='tmp[node.layer].symbol' :size="'small'"></layer-node><br><button class='smallNode hidden'></button></div>
@@ -151,8 +151,8 @@
 				<span v-if="player.devSpeed && player.devSpeed != 1" class="overlayThing">
 					<br>Dev Speed: {{format(player.devSpeed)}}x<br>
 				</span>
-				<span v-if="player.offTime !== undefined"  class="overlayThing">
-					<br>Offline Time: {{formatTime(player.offTime.remain)}}<br>
+				<span v-if="player.offTime !== undefined && player.offTime !== null"  class="overlayThing">
+					<br>Offline Time: {{formatTime(player.offTime?player.offTime.remain:0)}}<br>
 				</span>
 				<span v-if="false && !player.keepGoing"  class="overlayThing">
 					<br>Reach {{formatWhole(ENDGAME)}} to beat the game!<br>

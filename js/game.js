@@ -1,5 +1,4 @@
 var player;
-var shiftDown = false;
 var needCanvasUpdate = true;
 var NaNalert = false;
 var gameEnded = false;
@@ -114,10 +113,13 @@ function rowReset(row, layer) {
 function layerDataReset(layer, keep = []) {
 	let storedData = {unlocked: player[layer].unlocked, first: player[layer].first} // Always keep unlocked & time unlocked
 	if (player[layer].auto) storedData.auto = player[layer].auto;
+	if (player[layer].autoExt) storedData.autoExt = player[layer].autoExt; // idk I don't feel like generalizing this
 
 	for (thing in keep) {
-		if (player[layer][keep[thing]] !== undefined)
-			storedData[keep[thing]] = player[layer][keep[thing]]
+		if (player[layer][keep[thing]] !== undefined && player[layer][keep[thing]] !== null) {
+			if (player[layer][keep[thing]] instanceof Decimal) storedData[keep[thing]] = new Decimal(JSON.parse(JSON.stringify(player[layer][keep[thing]])));
+			else storedData[keep[thing]] = player[layer][keep[thing]];
+		}
 	}
 
 	layOver(player[layer], layers[layer].startData());
@@ -202,6 +204,7 @@ function doReset(layer, force=false) {
 
 	updateTemp()
 	updateTemp()
+	updateTemp()
 }
 
 function resetRow(row) {
@@ -225,12 +228,15 @@ function startChallenge(layer, x) {
 	if (!player[layer].unlocked) return
 	if (player[layer].activeChallenge == x) {
 		completeChallenge(layer, x)
-		delete player[layer].activeChallenge
+		player[layer].activeChallenge = null;
 	} else {
 		enter = true
 	}	
 	doReset(layer, true)
-	if(enter) player[layer].activeChallenge = x
+	if(enter) {
+		player[layer].activeChallenge = x
+		if (layers[layer].challenges[x].onStart) layers[layer].challenges[x].onStart(true);
+	}
 
 	updateChallengeTemp(layer)
 }
@@ -264,7 +270,7 @@ function completeChallenge(layer, x) {
 	var x = player[layer].activeChallenge
 	if (!x) return
 	if (! canCompleteChallenge(layer, x)){
-		delete player[layer].activeChallenge
+		player[layer].activeChallenge = null;
 		return
 	}
 	if (player[layer].challenges[x] < tmp[layer].challenges[x].completionLimit) {
@@ -272,7 +278,7 @@ function completeChallenge(layer, x) {
 		player[layer].challenges[x] += 1
 		if (layers[layer].challenges[x].onComplete) layers[layer].challenges[x].onComplete()
 	}
-	delete player[layer].activeChallenge
+	player[layer].activeChallenge = null;
 	updateChallengeTemp(layer)
 }
 
@@ -356,15 +362,15 @@ var interval = setInterval(function() {
 	if (gameEnded&&!player.keepGoing) return;
 	ticking = true
 	let now = Date.now()
-	let diff = (now - player.time) / 1e3
-	if (player.offTime !== undefined) {
+	let diff = Math.max((now - player.time) / 1e3, 0)
+	if (player.offTime !== undefined && player.offTime !== null) {
 		if (player.offTime.remain > modInfo.offlineLimit * 3600000) player.offTime.remain = modInfo.offlineLimit * 3600000
 		if (player.offTime.remain > 0) {
 			let offlineDiff = Math.max(player.offTime.remain / 10, diff)
 			player.offTime.remain -= offlineDiff
-			diff += offlineDiff
+			diff += Math.max(offlineDiff, 0)
 		}
-		if (!player.offlineProd || player.offTime.remain <= 0) delete player.offTime
+		if (!player.offlineProd || player.offTime.remain <= 0) player.offTime = null;
 	}
 	if (player.devSpeed) diff *= player.devSpeed
 	player.time = now

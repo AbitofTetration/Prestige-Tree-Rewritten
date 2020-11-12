@@ -93,6 +93,7 @@ function startPlayerBase() {
 		keepGoing: false,
 		hasNaN: false,
 		hideChallenges: false,
+		tapNerd: false,
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -226,7 +227,7 @@ function load() {
 
 	player.tab = "tree"
 	if (player.offlineProd) {
-		if (player.offTime === undefined) player.offTime = { remain: 0 }
+		if (player.offTime === undefined || player.offTime === null) player.offTime = { remain: 0 }
 		player.offTime.remain += (Date.now() - player.time) / 1000
 	}
 	player.time = Date.now();
@@ -318,7 +319,7 @@ function switchTheme() {
 	if (player.theme === undefined) player.theme = themes[1]
 	else {
 		player.theme = themes[Object.keys(themes)[player.theme] + 1]
-		if (!player.theme) delete player.theme
+		if (!player.theme) player.theme = null;
 	}
 	changeTheme()
 	resizeCanvas()
@@ -413,7 +414,7 @@ function hasAchievement(layer, id){
 }
 
 function hasChallenge(layer, id){
-	return (player[layer].challenges[id])
+	return (player[layer].challenges[id]>=tmp[layer].challenges[id].completionLimit)
 }
 
 function challengeCompletions(layer, id){
@@ -437,11 +438,11 @@ function setClickableState(layer, id, state){
 }
 
 function upgradeEffect(layer, id){
-	return (tmp[layer].upgrades[id].effect)
+	return (tmp[layer].upgrades[id].effect);
 }
 
 function challengeEffect(layer, id){
-	return (tmp[layer].challenges[id].effect)
+	return (tmp[layer].challenges[id].rewardEffect)
 }
 
 function buyableEffect(layer, id){
@@ -454,6 +455,18 @@ function clickableEffect(layer, id){
 
 function achievementEffect(layer, id){
 	return (tmp[layer].achievements[id].effect)
+}
+
+function getImprovements(layer, id) {
+	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.rows*tmp[layer].impr.cols).plus(1).floor().max(0)):new Decimal(0);
+}
+
+function getNextImpr(layer, id) {
+	return layers[layer].impr.nextAt(id);
+}
+
+function improvementEffect(layer, id) {
+	return tmp[layer].impr[id].effect
 }
 
 function canAffordPurchase(layer, thing, cost) {
@@ -565,7 +578,7 @@ function showTab(name) {
 		onTreeTab = toTreeTab
 		resizeCanvas()
 	}
-	delete player.notify[name]
+	player.notify[name] = null;
 }
 
 function notifyLayer(name) {
@@ -647,12 +660,15 @@ function layOver(obj1, obj2) {
 	}
 }
 
+var minusHeld = false;
+
 document.onkeydown = function(e) {
 	if (player===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
-	shiftDown = !(!e.shiftKey)
 	let ctrlDown = e.ctrlKey
 	let key = e.key
+	tmp.nerdMode = player.tapNerd?((e.key=="-"&&!minusHeld) ? !tmp.nerdMode : tmp.nerdMode):(e.key=="-")
+	if (e.shiftKey) minusHeld = true;
 	if (ctrlDown) key = "ctrl+" + key
 	if (onFocused) return
 	if (ctrlDown && hotkeys[key]) e.preventDefault()
@@ -663,7 +679,8 @@ document.onkeydown = function(e) {
 }
 
 document.onkeyup = function(e) {
-	if (e.keyCode==16) shiftDown = false;
+	if (e.keyCode==189 && !player.tapNerd) tmp.nerdMode = false;
+	if (e.keyCode==189) minusHeld = false;
 }
 
 var onFocused = false
@@ -690,9 +707,10 @@ function costFormulaStatic(layer) {
 		exp = exp.times(10)
 		resDiv = resDiv.times(Decimal.pow(1225, 9))
 	}
-	if (player[layer].points.gte(12)) {
+	let scaleStart = (STATIC_SCALE_STARTS[String(tmp[layer].row-1)]?STATIC_SCALE_STARTS[String(tmp[layer].row+1)]():1);
+	if (player[layer].points.gte(scaleStart)) {
 		exp = exp.times(2);
-		resDiv = resDiv.times(12);
+		resDiv = resDiv.times(scaleStart);
 	}
 	
 	return "("+format(base)+"^(x^"+format(exp)+")"+(resDiv.eq(1)?"":(" / "+format(resDiv)))+")"+(mult.eq(1)?"":(mult.gt(1)?(" * ("+format(mult)+")"):(" / ("+format(mult.pow(-1))+")")))
@@ -701,10 +719,10 @@ function costFormulaStatic(layer) {
 function prestigeButtonText(layer)
 {
 	if(tmp[layer].type == "normal") {
-		if (shiftDown) return "Gain Formula: "+gainFormulaNormal(layer);
+		if (tmp.nerdMode) return "Gain Formula: "+gainFormulaNormal(layer);
 		else return `${ player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${ (tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAt) : format(tmp[layer].nextAt))} ${ tmp[layer].baseResource }` : ""}`
 	} else if(tmp[layer].type== "static") {
-		if (shiftDown) return "Cost Formula: "+costFormulaStatic(layer);
+		if (tmp.nerdMode) return "Cost Formula: "+costFormulaStatic(layer);
 		else return `${tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for "}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource}<br><br>${player[layer].points.lt(30) ? (tmp[layer].baseAmount.gte(tmp[layer].nextAt)&&(tmp[layer].canBuyMax !== undefined) && tmp[layer].canBuyMax?"Next:":"Req:") : ""} ${formatWhole(tmp[layer].baseAmount)} / ${(tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAtDisp) : format(tmp[layer].nextAtDisp))} ${ tmp[layer].baseResource }		
 		`
 	} else if(tmp[layer].type == "none")
