@@ -8,14 +8,12 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e9999999999"),
-	specialEndgameText: 'v0.4 Beta 7 Endgame: e23,450 Points',
+	endgame: new Decimal("1e23450"),
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.4",
-	beta: 7,
 	name: "Hindered Quirkiness",
 }
 

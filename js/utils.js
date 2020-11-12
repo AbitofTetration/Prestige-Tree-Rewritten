@@ -660,15 +660,15 @@ function layOver(obj1, obj2) {
 	}
 }
 
-var shiftHeld = false;
+var minusHeld = false;
 
 document.onkeydown = function(e) {
 	if (player===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
-	tmp.nerdMode = player.tapNerd?((!(!e.shiftKey)&&!shiftHeld) ? !tmp.nerdMode : tmp.nerdMode):(!(!e.shiftKey))
-	if (e.shiftKey) shiftHeld = true;
 	let ctrlDown = e.ctrlKey
 	let key = e.key
+	tmp.nerdMode = player.tapNerd?((e.key=="-"&&!minusHeld) ? !tmp.nerdMode : tmp.nerdMode):(e.key=="-")
+	if (e.shiftKey) minusHeld = true;
 	if (ctrlDown) key = "ctrl+" + key
 	if (onFocused) return
 	if (ctrlDown && hotkeys[key]) e.preventDefault()
@@ -679,8 +679,8 @@ document.onkeydown = function(e) {
 }
 
 document.onkeyup = function(e) {
-	if (e.keyCode==16 && !player.tapNerd) tmp.nerdMode = false;
-	if (e.keyCode==16) shiftHeld = false;
+	if (e.keyCode==189 && !player.tapNerd) tmp.nerdMode = false;
+	if (e.keyCode==189) minusHeld = false;
 }
 
 var onFocused = false

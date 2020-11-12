@@ -2378,6 +2378,11 @@ addLayer("a", {
 				done() { return player.sg.unlocked },
 				tooltip: "Perform a Super-Generator reset. Reward: Get 2 extra Space.",
 			},
+			54: {
+				name: "Super Layers are Pointless",
+				done() { return player.sg.best.eq(0) && player.sb.best.eq(0) && player.points.gte("1e15500") },
+				tooltip: "Reach 1e15,500 Points without Super-Boosters & Super-Generators.",
+			},
         },
         midsection: [
             "achievements",

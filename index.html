@@ -82,7 +82,7 @@
 			<span v-for="layer in LAYERS"><span v-if="player[layer].first!==undefined && player[layer].unlocked">First {{layer}} reset: {{formatTime(player[layer].first)}}<br></span></span><br>
 			<h3>Hotkeys</h3><br>
 			<span v-for="key in hotkeys" v-if="player[key.layer].unlocked"><br>{{key.description}}</span>
-			<br>Press Shift to Show Formulas
+			<br>Press - to Show Formulas
 		</div>
 		<div v-if="player.tab=='options'" class="col right">
 			<button class="back" onclick="showTab('tree')">←</button><br>
@@ -105,7 +105,7 @@
 					<tr>
 						<td><button class="opt" onclick="toggleOpt('hideChallenges')">Completed Challenges: {{ player.hideChallenges?"HIDDEN":"SHOWN" }}</button></td>
 						<td><button class="opt" onclick="toggleOpt('tapNerd')">"Nerd Mode" Activation: {{player.tapNerd?"ON TAP":"ON HOLD"}}</button></td>
-					<!--	<td><button class="opt" onclick="toggleOpt('oldStyle')">Style: {{ player.oldStyle?"v1.0":"NEW" }}</button></td>-->
+						<!--<td><button class="opt" onclick="toggleOpt('oldStyle')">Style: {{ player.oldStyle?"v1.0":"NEW" }}</button></td>-->
 				</tr> 
 			</table>
 		</div>
