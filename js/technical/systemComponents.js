@@ -113,8 +113,8 @@ var systemComponents = {
 		<span v-if="player.devSpeed && player.devSpeed != 1" class="overlayThing">
 			<br>Dev Speed: {{format(player.devSpeed)}}x<br>
 		</span>
-		<span v-if="player.offTime !== undefined"  class="overlayThing">
-			<br>Offline Time: {{formatTime(player.offTime.remain)}}<br>
+		<span v-if="player.offTime !== undefined && player.offTime !== null"  class="overlayThing">
+			<br>Offline Time: {{formatTime(player.offTime?player.offTime.remain:0)}}<br>
 		</span>
 		<span v-if="false && !player.keepGoing"  class="overlayThing">
 			<br>Reach {{formatWhole(ENDGAME)}} to beat the game!<br>
