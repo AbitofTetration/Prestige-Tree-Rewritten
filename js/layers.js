@@ -677,6 +677,7 @@ addLayer("t", {
 			if (hasUpgrade("t", 21)) mult = mult.times(100);
 			if (hasUpgrade("t", 22)) mult = mult.times(upgradeEffect("t", 22));
 			if (player.h.unlocked) mult = mult.times(tmp.h.effect);
+			if (player.o.unlocked) mult = mult.times(tmp.o.solEnEff2);
 			return mult;
 		},
 		enGainMult() {
@@ -1129,6 +1130,7 @@ addLayer("s", {
 			spent: new Decimal(0),
 			first: 0,
 			auto: false,
+			autoBld: false,
         }},
         color: "#dfdfdf",
         requires() { return new Decimal(1e120).times(Decimal.pow("1e180", Decimal.pow(player[this.layer].unlockOrder, 1.415038))) }, // Can be a function that takes requirement increases into account
@@ -1137,7 +1139,7 @@ addLayer("s", {
         baseAmount() {return player.points}, // Get the current amount of baseResource
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent: new Decimal(1.85), // Prestige currency exponent
-        base: new Decimal(1e15),
+        base() { return new Decimal(hasUpgrade("ss", 11)?1e10:1e15) },
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
             return mult
@@ -1165,6 +1167,7 @@ addLayer("s", {
 			let space = player.s.best.pow(1.1).times(3);
 			if (hasUpgrade("s", 13)) space = space.plus(2);
 			if (hasAchievement("a", 53)) space = space.plus(2);
+			if (player.ss.unlocked) space = space.plus(tmp.ss.eff1);
 			
 			if (inChallenge("h", 21)) space = space.div(10);
 			return space.floor().sub(player.s.spent).max(0);
@@ -1228,11 +1231,13 @@ addLayer("s", {
 			let pow = new Decimal(1);
 			if (hasUpgrade("s", 21)) pow = pow.plus(0.08);
 			if (hasChallenge("h", 21)) pow = pow.plus(challengeEffect("h", 21).div(100));
+			if (player.ss.unlocked) pow = pow.plus(tmp.ss.eff2);
 			if (inChallenge("h", 21)) pow = pow.sub(0.9);
 			return pow;
 		},
 		update(diff) {
 			if (player.s.auto && hasMilestone("q", 3)) doReset("s");
+			if (player.s.autoBld && hasMilestone("q", 7)) for (let i=5;i>=1;i--) layers.s.buyables[10+i].buyMax();
 		},
 		upgrades: {
 			rows: 2,
@@ -1334,6 +1339,7 @@ addLayer("s", {
 		divBuildCosts() {
 			let div = new Decimal(1);
 			if (hasUpgrade("s", 23) && player.t.unlocked) div = div.times(1e20);
+			if (player.ss.unlocked) div = div.times(tmp.ss.eff3);
 			return div;
 		},
 		buyables: {
@@ -1372,7 +1378,13 @@ addLayer("s", {
 					player.s.spent = player.s.spent.plus(1);
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
-                buyMax() {}, // You'll have to handle this yourself if you want
+				target() { return player.g.power.times(tmp.s.divBuildCosts).div(tmp.s.buildingBaseCosts[this.id]).max(1).log(tmp.s.buildingBaseCosts[this.id]).root(1.35).plus(1).floor().min(player[this.layer].buyables[this.id].plus(layers.s.space())) }, 
+                buyMax() {
+					if (!this.canAfford() || !this.unlocked()) return;
+					let target = this.target();
+					player.s.spent = player.s.spent.plus(target.sub(player[this.layer].buyables[this.id]))
+					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
+				}, 
                 style: {'height':'100px'},
 				sellOne() {
 					let amount = getBuyableAmount(this.layer, this.id)
@@ -1407,7 +1419,13 @@ addLayer("s", {
 					player.s.spent = player.s.spent.plus(1);
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
-                buyMax() {}, // You'll have to handle this yourself if you want
+				target() { return player.g.power.times(tmp.s.divBuildCosts).div(tmp.s.buildingBaseCosts[this.id]).max(1).log(tmp.s.buildingBaseCosts[this.id]).root(1.35).plus(1).floor().min(player[this.layer].buyables[this.id].plus(layers.s.space())) }, 
+                buyMax() {
+					if (!this.canAfford() || !this.unlocked()) return;
+					let target = this.target();
+					player.s.spent = player.s.spent.plus(target.sub(player[this.layer].buyables[this.id]))
+					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
+				}, 
                 style: {'height':'100px'},
 				sellOne() {
 					let amount = getBuyableAmount(this.layer, this.id)
@@ -1443,7 +1461,13 @@ addLayer("s", {
 					player.s.spent = player.s.spent.plus(1);
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
-                buyMax() {}, // You'll have to handle this yourself if you want
+                target() { return player.g.power.times(tmp.s.divBuildCosts).div(tmp.s.buildingBaseCosts[this.id]).max(1).log(tmp.s.buildingBaseCosts[this.id]).root(1.35).plus(1).floor().min(player[this.layer].buyables[this.id].plus(layers.s.space())) }, 
+                buyMax() {
+					if (!this.canAfford() || !this.unlocked()) return;
+					let target = this.target();
+					player.s.spent = player.s.spent.plus(target.sub(player[this.layer].buyables[this.id]))
+					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
+				}, 
                 style: {'height':'100px'},
 				sellOne() {
 					let amount = getBuyableAmount(this.layer, this.id)
@@ -1482,7 +1506,13 @@ addLayer("s", {
 					player.s.spent = player.s.spent.plus(1);
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
-                buyMax() {}, // You'll have to handle this yourself if you want
+                target() { return player.g.power.times(tmp.s.divBuildCosts).pow(hasUpgrade("s", 15)?3:1).div(tmp.s.buildingBaseCosts[this.id]).max(1).log(tmp.s.buildingBaseCosts[this.id]).root(1.35).plus(1).floor().min(player[this.layer].buyables[this.id].plus(layers.s.space())) }, 
+                buyMax() {
+					if (!this.canAfford() || !this.unlocked()) return;
+					let target = this.target();
+					player.s.spent = player.s.spent.plus(target.sub(player[this.layer].buyables[this.id]))
+					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
+				}, 
                 style: {'height':'100px'},
 				sellOne() {
 					let amount = getBuyableAmount(this.layer, this.id)
@@ -1519,7 +1549,13 @@ addLayer("s", {
 					player.s.spent = player.s.spent.plus(1);
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
-                buyMax() {}, // You'll have to handle this yourself if you want
+                target() { return player.g.power.times(tmp.s.divBuildCosts).div(tmp.s.buildingBaseCosts[this.id]).max(1).log(tmp.s.buildingBaseCosts[this.id]).root(1.35).plus(1).floor().min(player[this.layer].buyables[this.id].plus(layers.s.space())) }, 
+                buyMax() {
+					if (!this.canAfford() || !this.unlocked()) return;
+					let target = this.target();
+					player.s.spent = player.s.spent.plus(target.sub(player[this.layer].buyables[this.id]))
+					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
+				}, 
                 style: {'height':'100px'},
 				sellOne() {
 					let amount = getBuyableAmount(this.layer, this.id)
@@ -1581,7 +1617,7 @@ addLayer("sb", {
 		update(diff) {
 			if (player.sb.auto && hasMilestone("q", 4)) doReset("sb");
 		},
-		canBuyMax() { return false },
+		canBuyMax() { return hasMilestone("q", 7) },
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
             {key: "B", description: "Press Shift+B to perform a super booster reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
@@ -1592,6 +1628,8 @@ addLayer("sb", {
 		effectBase() {
 			let base = new Decimal(5);
 			if (hasChallenge("h", 12)) base = base.plus(.25);
+			
+			if (player.o.unlocked) base = base.times(buyableEffect("o", 12));
 			return base;
 		},
 		effect() {
@@ -1635,7 +1673,7 @@ addLayer("sg", {
 			player.sg.power = player.sg.power.plus(tmp.sg.effect.times(diff));
 			if (hasMilestone("q", 6) && player.sg.auto) doReset("sg");
 		},
-		canBuyMax() { return false },
+		canBuyMax() { return hasMilestone("q", 7) },
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
             {key: "G", description: "Press Shift+G to perform a super generator reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
@@ -1868,6 +1906,7 @@ addLayer("q", {
 			let mult = new Decimal(1);
 			if (hasUpgrade("q", 11)) mult = mult.times(upgradeEffect("q", 11));
 			if (hasUpgrade("q", 21)) mult = mult.times(upgradeEffect("q", 21));
+			if (player.o.unlocked) mult = mult.times(buyableEffect("o", 12));
 			return mult;
 		},
 		enGainExp() {
@@ -1994,6 +2033,13 @@ addLayer("q", {
 				done() { return player.q.total.gte(1e22) },
 				effectDescription: "Unlock Auto-Super Generators & Super-Generators reset nothing.",
 				toggles: [["sg", "auto"]],
+			},
+			7: {
+				unlocked() { return hasAchievement("a", 61) },
+				requirementDescription: "1e60 Total Quirks",
+				done() { return player.q.total.gte(1e60) },
+				effectDescription: "You can buy max Super Boosters & Super Generators, and unlock Auto-Space Buildings.",
+				toggles: [["s", "autoBld"]],
 			},
 		},
 		upgrades: {
@@ -2270,6 +2316,227 @@ addLayer("q", {
 		},
 })
 
+addLayer("o", {
+	name: "solarity", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "O", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        startData() { return {
+            unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			total: new Decimal(0),
+			energy: new Decimal(0),
+			first: 0,
+        }},
+		increaseUnlockOrder: ["ss"],
+		roundUpCost: true,
+        color: "#faf9b4",
+		nodeStyle() {return {
+			"background": (player.o.unlocked||canReset("o"))?"radial-gradient(#b4fadc, #faf9b4)":"#bf8f8f" ,
+        }},
+		componentStyles: {
+			"prestige-button"() {return { "background": canReset("o")?"radial-gradient(#b4fadc, #faf9b4)":"#bf8f8f" }},
+		},
+        requires() { return new Decimal(player.o.unlockOrder>0?(1/0):14).sub(tmp.o.solEnEff) }, // Can be a function that takes requirement increases into account
+        resource: "solarity", // Name of prestige currency
+        baseResource: "super boosters", // Name of resource prestige is based on
+        baseAmount() {return player.sb.points}, // Get the current amount of baseResource
+        type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+        exponent: new Decimal(10), // Prestige currency exponent
+        gainMult() { // Calculate the multiplier for main currency from bonuses
+            mult = buyableEffect("o", 11);
+            return mult
+        },
+        gainExp() { // Calculate the exponent on main currency from bonuses
+            return new Decimal(1)
+        },
+        row: 3, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "o", description: "Press O to Solarity Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+        doReset(resettingLayer){ 
+			player.q.time = new Decimal(0);
+			player.q.energy = new Decimal(0);
+			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+        layerShown(){return player.sb.unlocked&&player.h.unlocked },
+        branches: ["sb", "t"],
+		effect() { return player.o.points.plus(1).log10().div(100) },
+		solEnGain() { return player.t.energy.max(1).pow(tmp.o.effect).sub(1) },
+		solEnEff() { return Decimal.sub(4, Decimal.div(4, player.o.energy.plus(1).log10().plus(1))) },
+		solEnEff2() { return player.o.energy.plus(1).pow(2) },
+		effectDescription() { return "which are generating "+(tmp.nerdMode?("(timeEnergy^"+format(tmp.o.effect)+"-1)"):format(tmp.o.solEnGain))+" Solar Energy every second." },
+		update(diff) {
+			player.o.energy = player.o.energy.plus(tmp.o.solEnGain.times(diff));
+		},
+		tabFormat: ["main-display",
+			"prestige-button",
+			"resource-display",
+			"blank",
+			["display-text",
+				function() {return 'You have ' + format(player.o.energy) + ' Solar Energy, which is reducing the Solarity requirement by '+format(tmp.o.solEnEff)+' and multiplies the Time Energy limit by '+format(tmp.o.solEnEff2)+'.'},
+					{}],
+			"blank",
+			"buyables",
+		],
+		buyables: {
+			rows: 1,
+			cols: 3,
+			11: {
+				title: "Solar Cores",
+				gain() { return player.o.points.div(2).root(1.5).floor() },
+				effect() { return player[this.layer].buyables[this.id].plus(1).log10().plus(1) },
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id]
+                    let display = ("Sacrifice all of your Solarity for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Solar Cores\n"+
+					"Req: 2 Solarity\n"+
+					"Amount: " + formatWhole(player[this.layer].buyables[this.id]))+"\n"+
+					(tmp.nerdMode?("Formula: log(x+1)+1"):("Effect: Multiplies Solarity gain by "+format(tmp[this.layer].buyables[this.id].effect)))
+					return display;
+                },
+                unlocked() { return player[this.layer].unlocked }, 
+                canAfford() { return player.o.points.gte(2) },
+                buy() { 
+                    player.o.points = new Decimal(0);
+					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
+                },
+                buyMax() {
+					// I'll do this later ehehe
+				},
+                style: {'height':'140px', 'width':'140px'},
+			},
+			12: {
+				title: "Tachoclinal Plasma",
+				gain() { return player.o.points.div(100).times(player.o.energy.div(2500)).root(3.5).floor() },
+				effect() { return player[this.layer].buyables[this.id].plus(1).log10().plus(1).log10().times(10).plus(1) },
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id]
+                    let display = ("Sacrifice all of your Solarity & Solar Energy for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Tachoclinal Plasma\n"+
+					"Req: 100 Solarity & 2,500 Solar Energy\n"+
+					"Amount: " + formatWhole(player[this.layer].buyables[this.id]))+"\n"+
+					(tmp.nerdMode?("Formula: log(log(x+1)+1)*10+1"):("Effect: Multiplies the Super Booster base and each Quirk Layer by "+format(tmp[this.layer].buyables[this.id].effect)))
+					return display;
+                },
+                unlocked() { return player[this.layer].unlocked }, 
+                canAfford() { return player.o.points.gte(100)&&player.o.energy.gte(2500) },
+                buy() { 
+                    player.o.points = new Decimal(0);
+					player.o.energy = new Decimal(0);
+					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
+                },
+                buyMax() {
+					// I'll do this later ehehe
+				},
+                style: {'height':'140px', 'width':'140px'},
+			},
+		},
+})
+
+addLayer("ss", {
+        name: "subspace", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "SS", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 3, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        startData() { return {
+            unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			subspace: new Decimal(0),
+			first: 0,
+        }},
+        color: "#fff9e8",
+        requires() { return new Decimal(player[this.layer].unlockOrder>0?(1/0):28) }, // Can be a function that takes requirement increases into account
+		roundUpCost: true,
+        resource: "subspace energy", // Name of prestige currency
+        baseResource: "space energy", // Name of resource prestige is based on
+        baseAmount() {return player.s.points}, // Get the current amount of baseResource
+        type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+        exponent: new Decimal(1.1), // Prestige currency exponent
+		base: new Decimal(1.15),
+        gainMult() { // Calculate the multiplier for main currency from bonuses
+            mult = new Decimal(1)
+            return mult
+        },
+        gainExp() { // Calculate the exponent on main currency from bonuses
+            return new Decimal(1)
+        },
+		canBuyMax() { return false },
+		effect() { 
+			let gain = Decimal.pow(2, player.ss.points).sub(1);
+			if (hasUpgrade("ss", 13)) gain = gain.times(upgradeEffect("ss", 13));
+			return gain;
+		},
+		effectDescription() {
+			return "which are generating "+format(tmp.ss.effect)+" Subspace/sec"
+		},
+		update(diff) {
+			if (player.ss.unlocked) player.ss.subspace = player.ss.subspace.plus(tmp.ss.effect.times(diff));
+		},
+        row: 3, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "S", description: "Press Shift+S to Subspace Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+		resetsNothing() { return false },
+		effPow() {
+			let pow = new Decimal(1);
+			if (hasUpgrade("ss", 12)) pow = pow.times(upgradeEffect("ss", 12));
+			return pow;
+		},
+		eff1() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).log10().pow(3).times(100).floor() },
+		eff2() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).log10().plus(1).log10().div(6) },
+		eff3() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).pow(1e3) },
+		tabFormat: ["main-display",
+			"prestige-button",
+			"resource-display",
+			"blank",
+			["display-text",
+				function() {return 'You have ' + format(player.ss.subspace) + ' Subspace, which is providing '+formatWhole(tmp.ss.eff1)+' extra Space, makes Space Buildings '+format(tmp.ss.eff2.times(100))+'% stronger, and cheapens Space Buildings by '+format(tmp.ss.eff3)+'x.'},
+					{}],
+			"blank",
+			"upgrades",
+		],
+        increaseUnlockOrder: ["o"],
+        doReset(resettingLayer){ 
+			let keep = [];
+            if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+        layerShown(){return player.s.unlocked&&player.h.unlocked},
+        branches: ["s"],
+		upgrades: {
+			rows: 1,
+			cols: 3,
+			11: {
+				title: "Spatial Awakening",
+				description: "The Space Energy cost base is reduced (1e15 -> 1e10).",
+				cost: new Decimal(180),
+				currencyDisplayName: "subspace",
+				currencyInternalName: "subspace",
+				currencyLayer: "ss",
+				unlocked() { return player.ss.unlocked },
+			},
+			12: {
+				title: "Subspatial Awakening",
+				description: "Subspace Energy boosts all Subspace effects.",
+				cost: new Decimal(2),
+				unlocked() { return hasUpgrade("ss", 11) },
+				effect() { return player.ss.points.div(2.5).plus(1).sqrt() },
+				effectDisplay() { return format(this.effect().sub(1).times(100))+"% stronger" },
+				formula: "sqrt(x/2.5)*100",
+			},
+			13: {
+				title: "Emissary of Smash",
+				description: "Quirks boost Subspace gain.",
+				cost: new Decimal(1e3),
+				currencyDisplayName: "subspace",
+				currencyInternalName: "subspace",
+				currencyLayer: "ss",
+				unlocked() { return hasUpgrade("ss", 11) },
+				effect() { return player.q.points.plus(1).log10().div(10).plus(1) },
+				effectDisplay() { return format(this.effect())+"x" },
+				formula: "log(x+1)/10+1",
+			},
+		},
+})
+
 addLayer("a", {
         startData() { return {
             unlocked: true,
@@ -2281,7 +2548,7 @@ addLayer("a", {
             return ("Achievements")
         },
         achievements: {
-            rows: 5,
+            rows: 6,
             cols: 4,
             11: {
                 name: "All that progress is gone!",
@@ -2382,6 +2649,11 @@ addLayer("a", {
 				name: "Super Layers are Pointless",
 				done() { return player.sg.best.eq(0) && player.sb.best.eq(0) && player.points.gte("1e15500") },
 				tooltip: "Reach 1e15,500 Points without Super-Boosters & Super-Generators.",
+			},
+			61: {
+				name: "Quite Specific",
+				done() { return player.ss.unlocked || player.o.unlocked },
+				tooltip: "Perform a Solarity reset or a Subspace reset. Reward: Unlock a new Quirk milestone.",
 			},
         },
         midsection: [

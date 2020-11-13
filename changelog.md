@@ -1,5 +1,10 @@
 # The Prestige Tree: Rewritten changelog (major updates only):
 
+### v0.5: Subsolar
+- Ported the "SS" layer and added the "O" layer
+- Added the next section of achievements
+- Minor bugfixes/QoL improvements were made
+
 ### v0.4: Hindered Quirkiness
 - Ported the "H", "Q", & "SG" layers
 - Added the next section of achievements

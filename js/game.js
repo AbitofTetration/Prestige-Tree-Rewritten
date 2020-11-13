@@ -114,6 +114,7 @@ function layerDataReset(layer, keep = []) {
 	let storedData = {unlocked: player[layer].unlocked, first: player[layer].first} // Always keep unlocked & time unlocked
 	if (player[layer].auto) storedData.auto = player[layer].auto;
 	if (player[layer].autoExt) storedData.autoExt = player[layer].autoExt; // idk I don't feel like generalizing this
+	if (player[layer].autoBld) storedData.autoBld = player[layer].autoBld; // idk I don't feel like generalizing this
 
 	for (thing in keep) {
 		if (player[layer][keep[thing]] !== undefined && player[layer][keep[thing]] !== null) {

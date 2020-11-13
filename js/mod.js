@@ -8,13 +8,15 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e23450"),
+	endgame: new Decimal("1e999999999999999999"),
+	specialEndgameText: "v0.5 Beta 1 Endgame: 1e30,000 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.4",
-	name: "Hindered Quirkiness",
+	num: "0.5",
+	beta: 1,
+	name: "Subsolar",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
