@@ -7,7 +7,7 @@ function exponentialFormat(num, precision) {
 		m = new Decimal(1)
 		e = e.add(1)
 	}
-	e = (e.gte(10000) ? commaFormat(e, 0) : e.toStringWithDecimalPlaces(0))
+	e = (e.gte(1000) ? commaFormat(e, 0) : e.toStringWithDecimalPlaces(0))
 	return m.toStringWithDecimalPlaces(precision)+"e"+e
 }
 
@@ -46,7 +46,10 @@ function format(decimal, precision=2) {
 		var slog = decimal.slog()
 		if (slog.gte(1e3)) return "10^^" + formatWhole(slog)
 		else return "10^^" + regularFormat(slog, 3)
-	} else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
+	} else if (decimal.gte("eee100000")) return "eee"+exponentialFormat(decimal.log10().log10().log10(), 3)
+	else if (decimal.gte("ee100000")) return "ee"+exponentialFormat(decimal.log10().log10(), 3)
+	else if (decimal.gte("1e100000")) return "e"+exponentialFormat(decimal.log10(), 3)
+	else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
 	else return regularFormat(decimal, precision)
