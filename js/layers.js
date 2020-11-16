@@ -1211,6 +1211,7 @@ addLayer("s", {
 			if (hasUpgrade("s", 11)) x = x.plus(1);
 			if (hasUpgrade("s", 22)) x = x.plus(upgradeEffect("s", 22));
 			if (hasUpgrade("q", 22)) x = x.plus(upgradeEffect("q", 22));
+			if (hasUpgrade("ss", 31)) x = x.plus(upgradeEffect("ss", 31));
 			return x;
 		},
 		freeSpaceBuildings1to4() {
@@ -1690,6 +1691,7 @@ addLayer("sg", {
 		resetsNothing() { return hasMilestone("q", 6) },
 		effectBase() {
 			let base = new Decimal(5);
+			if (hasUpgrade("ss", 32)) base = base.plus(upgradeEffect("ss", 32));
 			return base;
 		},
 		effect() {
@@ -1712,7 +1714,7 @@ addLayer("sg", {
 			"prestige-button",
 			"blank",
 			["display-text",
-				function() {return 'You have ' + format(player.sg.power) + ' Super Generator Power, which multiplies the Generator base by '+format(tmp.sg.enEff)+'x'},
+				function() {return 'You have ' + format(player.sg.power) + ' Super Generator Power, which multiplies the Generator base by '+format(tmp.sg.enEff)+'x'+(tmp.nerdMode?(" (sqrt(x+1))"):"")},
 					{}]],
 		startData() { return {
 			unlocked: false,
@@ -1861,8 +1863,8 @@ addLayer("h", {
 				goal() { return Decimal.pow("1e50", Decimal.pow(challengeCompletions("h", 31), 2.5)).times("1e5325") },
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
-				rewardDescription: "<b>Timeless</b> completions boost Super Generator Power gain based on your time in this Row 4 reset.",
-				rewardEffect() { return Decimal.div(9, Decimal.add(player.q.time, 1).cbrt().pow(hasUpgrade("ss", 23)?(-1):1)).plus(1).pow(challengeCompletions("h", 31)) },
+				rewardDescription() { return "<b>Timeless</b> completions boost Super Generator Power gain based on your time "+(hasUpgrade("ss", 33)?"playing this game.":"in this Row 4 reset.") },
+				rewardEffect() { return Decimal.div(9, Decimal.add((hasUpgrade("ss", 33)?(player.timePlayed||0):player.q.time), 1).cbrt().pow(hasUpgrade("ss", 23)?(-1):1)).plus(1).pow(challengeCompletions("h", 31)) },
 				rewardDisplay() { return format(this.rewardEffect())+"x" },
 				formula() { return "(9"+(hasUpgrade("ss", 23)?"*":"/")+"cbrt(time+1)+1)^completions" },
 			},
@@ -2381,6 +2383,11 @@ addLayer("o", {
 		update(diff) {
 			player.o.energy = player.o.energy.plus(tmp.o.solEnGain.times(diff));
 		},
+		solPow() {
+			let pow = new Decimal(1);
+			if (hasUpgrade("ss", 33)) pow = pow.plus(upgradeEffect("ss", 33));
+			return pow;
+		},
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
@@ -2389,6 +2396,9 @@ addLayer("o", {
 				function() {return 'You have ' + format(player.o.energy) + ' Solar Energy, which is reducing the Solarity requirement by '+format(tmp.o.solEnEff)+(tmp.nerdMode?(" (4-4/(log(x+1)+1))"):"")+' and multiplies the Time Energy limit by '+format(tmp.o.solEnEff2)+'.'+(tmp.nerdMode?(" (x+1)^2"):"")},
 					{}],
 			"blank",
+			["display-text",
+				function() { return "<b>Solar Power: "+format(tmp.o.solPow.times(100))+"%</b><br>" },
+					{}],
 			"buyables",
 		],
 		buyables: {
@@ -2397,7 +2407,7 @@ addLayer("o", {
 			11: {
 				title: "Solar Cores",
 				gain() { return player.o.points.div(2).root(1.5).floor() },
-				effect() { return hasUpgrade("ss", 22)?(player[this.layer].buyables[this.id].plus(1).cbrt()):(player[this.layer].buyables[this.id].plus(1).log10().plus(1)) },
+				effect() { return hasUpgrade("ss", 22)?(player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).cbrt()):(player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1)) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Solar Cores\n"+
@@ -2420,7 +2430,7 @@ addLayer("o", {
 			12: {
 				title: "Tachoclinal Plasma",
 				gain() { return player.o.points.div(100).times(player.o.energy.div(2500)).root(3.5).floor() },
-				effect() { return player[this.layer].buyables[this.id].plus(1).log10().plus(1).log10().times(10).plus(1) },
+				effect() { return player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10().times(10).plus(1) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity & Solar Energy for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Tachoclinal Plasma\n"+
@@ -2439,12 +2449,12 @@ addLayer("o", {
                 buyMax() {
 					// I'll do this later ehehe
 				},
-                style: {'height':'140px', 'width':'140px'},
+                style: {'height':'140px', 'width':'140px', 'font-size':'9px'},
 			},
 			13: {
 				title: "Convectional Energy",
 				gain() { return player.o.points.div(1e3).times(player.o.energy.div(2e5)).times(player.ss.subspace.div(10)).root(6.5).floor() },
-				effect() { return player[this.layer].buyables[this.id].plus(1).log10().plus(1).pow(2.5) },
+				effect() { return player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).pow(2.5) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity, Solar Energy, & Subspace for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Convectional Energy\n"+
@@ -2497,14 +2507,19 @@ addLayer("ss", {
             return new Decimal(1)
         },
 		canBuyMax() { return false },
+		effBase() {
+			let base = new Decimal(2);
+			if (hasUpgrade("ss", 32)) base = base.plus(upgradeEffect("ss", 32));
+			return base;
+		},
 		effect() { 
-			let gain = Decimal.pow(2, player.ss.points).sub(1);
+			let gain = Decimal.pow(tmp.ss.effBase, player.ss.points).sub(1);
 			if (hasUpgrade("ss", 13)) gain = gain.times(upgradeEffect("ss", 13));
 			if (player.o.unlocked) gain = gain.times(buyableEffect("o", 13));
 			return gain;
 		},
 		effectDescription() {
-			return "which are generating "+format(tmp.ss.effect)+" Subspace/sec"+(tmp.nerdMode?("\n\(2x each)"):"")
+			return "which are generating "+format(tmp.ss.effect)+" Subspace/sec"+(tmp.nerdMode?("\n\("+format(tmp.ss.effBase)+"x each)"):"")
 		},
 		update(diff) {
 			if (player.ss.unlocked) player.ss.subspace = player.ss.subspace.plus(tmp.ss.effect.times(diff));
@@ -2540,7 +2555,7 @@ addLayer("ss", {
         layerShown(){return player.s.unlocked&&player.h.unlocked},
         branches: ["s"],
 		upgrades: {
-			rows: 2,
+			rows: 3,
 			cols: 3,
 			11: {
 				title: "Spatial Awakening",
@@ -2598,6 +2613,42 @@ addLayer("ss", {
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
 				unlocked() { return hasUpgrade("ss", 21)&&player.o.unlocked },
+			},
+			31: {
+				title: "No More Progress",
+				description: "Unspent Space provides free Space Buildings.",
+				cost: new Decimal(42),
+				currencyDisplayName: "space energy",
+				currencyInternalName: "points",
+				currencyLayer: "s",
+				unlocked() { return hasUpgrade("ss", 22)||hasUpgrade("ss", 23) },
+				effect() { return tmp.s.space.plus(1).cbrt().sub(1).floor() },
+				effectDisplay() { return "+"+formatWhole(this.effect()) },
+				formula: "cbrt(x+1)-1",
+			},
+			32: {
+				title: "Beyond Infinity",
+				description: "Add to the Subspace Energy & Super-Generator bases based on your Quirk Layers.",
+				cost: new Decimal(43),
+				currencyDisplayName: "space energy",
+				currencyInternalName: "points",
+				currencyLayer: "s",
+				unlocked() { return hasUpgrade("ss", 31) },
+				effect() { return player.q.buyables[11].sqrt().div(1.25) },
+				effectDisplay() { return "+"+format(this.effect()) },
+				formula: "sqrt(x)/1.25",
+			},
+			33: {
+				title: "Timeless Solarity",
+				description: "<b>Timeless</b>'s effect is now based on your total time playing this game, and Solar Cores boost Solar Power.",
+				cost: new Decimal(2.5e7),
+				currencyDisplayName: "subspace",
+				currencyInternalName: "subspace",
+				currencyLayer: "ss",
+				unlocked() { return hasUpgrade("ss", 23)&&hasUpgrade("ss", 31) },
+				effect() { return player.o.buyables[11].plus(1).log10().div(10) },
+				effectDisplay() { return "+"+format(this.effect().times(100))+"%" },
+				formula: "log(x+1)*10",
 			},
 		},
 })
@@ -2725,10 +2776,12 @@ addLayer("a", {
 				done() { return player.ss.unlocked && player.o.unlocked },
 				tooltip: "Perform a Solarity & Subspace reset. Reward: Both Solarity & Subspace behave as if you chose them first",
 			},
+			63: {
+				name: "Spaceless",
+				done() { return inChallenge("h", 21) && player.g.best.eq(0) && player.points.gte("1e25000") },
+				tooltip: 'Reach 1e25,000 Points in "Out of Room" without any Generators.',
+			},
         },
-        midsection: [
-            "achievements",
-		],
 		update(diff) {	// Added this section to call adjustNotificationTime every tick, to reduce notification timers
 			adjustNotificationTime(diff);
 		},	

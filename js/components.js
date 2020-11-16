@@ -403,7 +403,7 @@ function loadVue() {
 		<span v-for="row in data"><table>
 			<td v-for="node in row">
 				<layer-node v-if="tmp[node].isLayer" :layer='node' :abb='tmp[node].symbol'></layer-node>
-				<button-node v-else :layer='node' :abb='tmp[node].symbol'></layer-node>
+				<button-node v-else :layer='node' :abb='tmp[node].symbol'></button-node>
 			</td>
 			<tr><table><button class="treeNode hidden"></button></table></tr>
 		</span></div>
