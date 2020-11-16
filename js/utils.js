@@ -101,6 +101,11 @@ function startPlayerBase() {
 		hasNaN: false,
 		hideChallenges: false,
 		tapNerd: false,
+		optTab: "mainOpt",
+		slightGlow: "normal",
+		redGlowActive: true,
+		spaceGlow: "normal",
+		solGlow: "normal",
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -249,6 +254,7 @@ function load() {
 	setupTemp();
 	updateTemp();
 	updateTemp();
+	updateTemp();
 	loadVue();
 }
 
@@ -375,6 +381,40 @@ function toggleOpt(name) {
 	player[name] = !player[name]
 	if (name == "hqTree") changeTreeQuality()
 	if (name == "oldStyle") updateStyle()
+}
+
+function adjustGlow(type) {
+	let glowData = {
+		slight() { return ["normal", "never"] },
+		space() { 
+			let data = ["normal", "2+", "3"];
+			if (hasUpgrade("s", 14)) {
+				data[2] = "3+"
+				data.push("4")
+				if (hasUpgrade("s", 25)) {
+					data[3] = "4+"
+					data.push("5")
+				}
+			}
+			data.push("never")
+			return data;
+		},
+		sol() { 
+			let data = ["normal", "solar cores onward"]
+			if (player.ss.unlocked) {
+				data.push("tachoclinal plasma onward")
+				if (hasUpgrade("ss", 41)) {
+					data.push("convectional energy onward")
+					data.push("coronal waves")
+				} else data.push("convectional energy")
+			} else data.push("tachoclinal plasma")
+			data.push("never")
+			return data;
+		},
+	}
+	let data = glowData[type]()
+	let index = data.indexOf(player[type+"Glow"]);
+	player[type+"Glow"] = data[(index+1)%data.length]
 }
 
 var styleCooldown = 0;
@@ -645,7 +685,8 @@ function layOver(obj1, obj2) {
 }
 
 function prestigeNotify(layer) {
-	if (layers[layer].prestigeNotify) return layers[layer].prestigeNotify()
+	if (player.slightGlow=="never") return false;
+	else if (layers[layer].prestigeNotify) return layers[layer].prestigeNotify()
 	else if (tmp[layer].autoPrestige || tmp[layer].passiveGeneration) return false
 	else if (tmp[layer].type == "static") return tmp[layer].canReset
 	else if (tmp[layer].type == "normal") return (tmp[layer].canReset && (tmp[layer].resetGain.gte(player[layer].points.div(10))))

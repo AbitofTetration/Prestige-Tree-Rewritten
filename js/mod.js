@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e999999999999999999"),
-	specialEndgameText: "v0.5 Beta 4 Endgame: 1e88,888 Points",
+	specialEndgameText: "v0.5 Beta 5 Endgame: e104,000 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.5",
-	beta: 4,
+	beta: 5,
 	name: "Subsolar",
 }
 
