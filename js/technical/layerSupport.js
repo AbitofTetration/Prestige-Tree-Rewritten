@@ -1,5 +1,9 @@
 var layers = {}
 
+const decimalZero = new Decimal(0)
+const decimalOne = new Decimal(1)
+const decimalNaN = new Decimal(NaN)
+
 function layerShown(layer){
     return layers[layer].layerShown();
 }
@@ -120,6 +124,12 @@ function updateLayers(){
                     layers[layer].infoboxes[thing].unlocked = true
             }  
         }
+        
+        if (layers[layer].startData) {
+            data = layers[layer].startData()
+            if (data.best !== undefined && data.showBest === undefined) layers[layer].showBest = true
+            if (data.total !== undefined && data.showTotal === undefined) layers[layer].showTotal = true
+        }
 
         if(!layers[layer].componentStyles) layers[layer].componentStyles = {}
         if(layers[layer].symbol === undefined) layers[layer].symbol = layer.charAt(0).toUpperCase() + layer.slice(1)
@@ -145,16 +155,32 @@ function updateLayers(){
     }
     for (row in OTHER_LAYERS) {
         OTHER_LAYERS[row].sort((a, b) => (a.position > b.position) ? 1 : -1)
+        for (layer in OTHER_LAYERS[row])
+            OTHER_LAYERS[row][layer] = OTHER_LAYERS[row][layer].layer 
     }
     for (row in TREE_LAYERS) {
         TREE_LAYERS[row].sort((a, b) => (a.position > b.position) ? 1 : -1)
+            for (layer in TREE_LAYERS[row])
+            TREE_LAYERS[row][layer] = TREE_LAYERS[row][layer].layer
     }
+    let treeLayers2 = []
+    for (x = 0; x < maxRow + 1; x++) {
+        if (TREE_LAYERS[x]) treeLayers2.push(TREE_LAYERS[x])
+    }
+    TREE_LAYERS = treeLayers2
     updateHotkeys()
 }
 
 function addLayer(layerName, layerData){ // Call this to add layers from a different file!
     layers[layerName] = layerData
+    layers[layerName].isLayer = true
 }
+
+function addNode(layerName, layerData){ // Does the same thing
+    layers[layerName] = layerData
+    layers[layerName].isLayer = false
+}
+
 
 // If data is a function, return the result of calling it. Otherwise, return the data.
 function readData(data, args=null){
@@ -177,3 +203,14 @@ const UP = 0
 const DOWN = 1
 const LEFT = 2
 const RIGHT = 3
+
+
+addLayer("info-tab", {
+    tabFormat: ["info-tab"],
+    row: "otherside"
+})
+
+addLayer("options-tab", {
+    tabFormat: ["options-tab"],
+    row: "otherside"
+})

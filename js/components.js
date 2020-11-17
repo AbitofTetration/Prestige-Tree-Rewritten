@@ -72,7 +72,7 @@ function loadVue() {
 	Vue.component('infobox', {
 		props: ['layer', 'data'],
 		template: `
-		<div class="story instant" v-if="tmp[layer].infoboxes && tmp[layer].infoboxes[data]!== undefined && tmp[layer].infoboxes[data].unlocked" v-bind:style="{'border-color': tmp[layer].color, 'border-radius': player.infoboxes[layer][data] ? 0 : '8px'}, tmp[layer].infoboxes[data].style">
+		<div class="story instant" v-if="tmp[layer].infoboxes && tmp[layer].infoboxes[data]!== undefined && tmp[layer].infoboxes[data].unlocked" v-bind:style="[{'border-color': tmp[layer].color, 'border-radius': player.infoboxes[layer][data] ? 0 : '8px'}, tmp[layer].infoboxes[data].style]">
 			<button class="story-title" v-bind:style="[{'background-color': tmp[layer].color}, tmp[layer].infoboxes[data].titleStyle]"
 				v-on:click="player.infoboxes[layer][data] = !player.infoboxes[layer][data]">
 				<span class="story-toggle">{{player.infoboxes[layer][data] ? "+" : "-"}}</span>
@@ -246,8 +246,8 @@ function loadVue() {
 		<div style="margin-top: -13px">
 			<span v-if="tmp[layer].type=='normal' && tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3)"><br>You have {{formatWhole(tmp[layer].baseAmount)}} {{tmp[layer].baseResource}}</span>
 			<br><br>
-			<span v-if="player[layer].best != undefined">Your best {{tmp[layer].resource}} is {{formatWhole(player[layer].best)}}<br></span>
-			<span v-if="player[layer].total != undefined">You have made a total of {{formatWhole(player[layer].total)}} {{tmp[layer].resource}}<br></span>
+			<span v-if="tmp[layer].showBest">Your best {{tmp[layer].resource}} is {{formatWhole(player[layer].best)}}<br></span>
+			<span v-if="tmp[layer].showTotal">You have made a total of {{formatWhole(player[layer].total)}} {{tmp[layer].resource}}<br></span>
 		</div>
 		`
 	})
@@ -342,7 +342,9 @@ function loadVue() {
 			<div class="upgTable">
 				<tab-buttons :layer="layer" :data="tmp[layer].microtabs[data]" :name="data" v-bind:style="tmp[layer].componentStyles['tab-buttons']"></tab-buttons>
 			</div>
-			<column v-bind:style="tmp[layer].microtabs[data][player.subtabs[layer][data]].style" :layer="layer" :data="tmp[layer].microtabs[data][player.subtabs[layer][data]].content"></column>
+			<layer-tab v-if="tmp[layer].microtabs[data][player.subtabs[layer][data]].embedLayer" :layer="tmp[layer].microtabs[data][player.subtabs[layer][data]].embedLayer" ></layer-tab>
+
+			<column v-else v-bind:style="tmp[layer].microtabs[data][player.subtabs[layer][data]].style" :layer="layer" :data="tmp[layer].microtabs[data][player.subtabs[layer][data]].content"></column>
 		</div>
 		`
 	})
@@ -394,6 +396,20 @@ function loadVue() {
 		`
 	})
 
+	// Data is an array with the structure of the tree
+	Vue.component('tree', {
+		props: ['layer', 'data'],
+		template: `<div>
+		<span v-for="row in data"><table>
+			<td v-for="node in row">
+				<layer-node v-if="tmp[node].isLayer" :layer='node' :abb='tmp[node].symbol'></layer-node>
+				<button-node v-else :layer='node' :abb='tmp[node].symbol'></button-node>
+			</td>
+			<tr><table><button class="treeNode hidden"></button></table></tr>
+		</span></div>
+
+	`
+	})
 
 	// These are for buyables, data is the id of the corresponding buyable
 	Vue.component('sell-one', {
@@ -409,47 +425,15 @@ function loadVue() {
 	`
 	})
 
-	// NOT FOR USE IN STANDARD TAB FORMATTING
-	Vue.component('tab-buttons', {
-		props: ['layer', 'data', 'name'],
-		template: `
-			<div class="upgRow">
-				<div v-for="tab in Object.keys(data)">
-					<button v-if="data[tab].unlocked == undefined || data[tab].unlocked" class="tabButton" v-bind:style="[{'border-color': tmp[layer].color}, tmp[layer].componentStyles['tab-button'], data[tab].buttonStyle]" v-on:click="player.subtabs[layer][name] = tab">{{tab}}</button>
-				</div>
-			</div>
-		`
-	})
+	// SYSTEM COMPONENTS
 
-	Vue.component('layer-node', {
-		props: ['layer', 'abb', 'size'],
-		template: `
-		<button v-if="nodeShown(layer)"
-			v-bind:id="layer"
-			v-on:click="function() {
-				showTab(layer)
-			}"
-			v-bind:tooltip="
-				player[layer].unlocked ? (tmp[layer].tooltip ? tmp[layer].tooltip : formatWhole(player[layer].points) + ' ' + tmp[layer].resource)
-				: (tmp[layer].tooltipLocked ? tmp[layer].tooltipLocked : 'Reach ' + formatWhole(tmp[layer].requires) + ' ' + tmp[layer].baseResource + ' to unlock (You have ' + formatWhole(tmp[layer].baseAmount) + ' ' + tmp[layer].baseResource + ')')
-			"
-			v-bind:class="{
-				treeNode: size != 'small',
-				smallNode: size == 'small',
-				[layer]: true,
-				ghost: tmp[layer].layerShown == 'ghost',
-				hidden: !tmp[layer].layerShown,
-				locked: !player[layer].unlocked && !tmp[layer].baseAmount.gte(tmp[layer].requires),
-				notify: tmp[layer].notify,
-				can: player[layer].unlocked||tmp[layer].baseAmount.gte(tmp[layer].requires),
-			}"
-			v-bind:style="[layerunlocked(layer) ? {
-				'background-color': tmp[layer].color,
-			} : {}, tmp[layer].nodeStyle]">
-			{{abb}}
-		</button>
-		`
-	})
+	Vue.component('tab-buttons', systemComponents['tab-buttons'])
+	Vue.component('button-node', systemComponents['button-node'])
+	Vue.component('layer-node', systemComponents['layer-node'])
+	Vue.component('layer-tab', systemComponents['layer-tab'])
+	Vue.component('overlay-head', systemComponents['overlay-head'])
+	Vue.component('info-tab', systemComponents['info-tab'])
+	Vue.component('options-tab', systemComponents['options-tab'])
 
 
 	app = new Vue({
@@ -475,6 +459,14 @@ function loadVue() {
 			startChallenge,
 			milestoneShown,
 			keepGoing,
+			hasUpgrade,
+			hasMilestone,
+			hasAchievement,
+			hasChallenge,
+			maxedChallenge,
+			canAffordUpgrade,
+			subtabShouldNotify,
+			subtabResetNotify,
 			VERSION,
 			LAYERS,
 			hotkeys
