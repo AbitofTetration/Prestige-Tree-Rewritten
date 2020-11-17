@@ -810,8 +810,8 @@ document.onkeydown = function(e) {
 }
 
 document.onkeyup = function(e) {
-	if (e.keyCode==189 && !player.tapNerd) tmp.nerdMode = false;
-	if (e.keyCode==189) minusHeld = false;
+	if (e.key=="-" && !player.tapNerd) tmp.nerdMode = false;
+	if (e.key=="-") minusHeld = false;
 }
 
 var onFocused = false
