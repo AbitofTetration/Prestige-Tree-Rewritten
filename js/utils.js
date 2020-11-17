@@ -733,6 +733,7 @@ function layerunlocked(layer) {
 function keepGoing() {
 	player.keepGoing = true;
 	needCanvasUpdate = true;
+	player.tab = layoutInfo.startTab;
 }
 
 function toNumber(x) {

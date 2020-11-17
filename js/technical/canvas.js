@@ -1,7 +1,7 @@
 var canvas;
 var ctx;
 
-window.addEventListener("resize", (_=>resizeCanvas()));
+window.addEventListener("resize", resizeCanvas);
 
 function retrieveCanvasData() {
 	let treeCanv = document.getElementById("treeCanvas")
@@ -19,7 +19,7 @@ function resizeCanvas() {
     canvas.height = 0;
 	canvas.width  = window.innerWidth;
 	canvas.height = window.innerHeight;
-		drawTree();
+	drawTree();
 }
 
 var colors = {
