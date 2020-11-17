@@ -277,7 +277,7 @@ addLayer("b", {
 		milestones: {
 			0: {
 				requirementDescription: "8 Boosters",
-				done() { return player.b.best.gte(8) },
+				done() { return player.b.best.gte(8) || hasAchievement("a", 41) },
 				effectDescription: "Keep Prestige Upgrades on reset.",
 			},
 			1: {
@@ -484,7 +484,7 @@ addLayer("g", {
 		milestones: {
 			0: {
 				requirementDescription: "8 Generators",
-				done() { return player.g.best.gte(8) },
+				done() { return player.g.best.gte(8) || hasAchievement("a", 41) },
 				effectDescription: "Keep Prestige Upgrades on reset.",
 			},
 			1: {
@@ -898,7 +898,7 @@ addLayer("t", {
 			},
 			1: {
 				requirementDescription: "3 Time Capsules",
-				done() { return player.t.best.gte(3) },
+				done() { return player.t.best.gte(3) || hasAchievement("a", 41) },
 				effectDescription: "Keep Prestige Upgrades on reset.",
 			},
 			2: {
@@ -1109,7 +1109,7 @@ addLayer("e", {
 			},
 			1: {
 				requirementDescription: "5 Enhance Points",
-				done() { return player.e.best.gte(5) },
+				done() { return player.e.best.gte(5) || hasAchievement("a", 41) },
 				effectDescription: "Keep Prestige Upgrades on reset.",
 			},
 			2: {
@@ -1581,7 +1581,7 @@ addLayer("s", {
 			},
 			1: {
 				requirementDescription: "3 Space Energy",
-				done() { return player.s.best.gte(3) },
+				done() { return player.s.best.gte(3) || hasAchievement("a", 41) },
 				effectDescription: "Keep Prestige Upgrades on reset.",
 			},
 			2: {
@@ -2821,6 +2821,11 @@ addLayer("a", {
 				name: "Spaceless",
 				done() { return inChallenge("h", 21) && player.g.best.eq(0) && player.points.gte("1e25000") },
 				tooltip: 'Reach 1e25,000 Points in "Out of Room" without any Generators.',
+			},
+			64: {
+				name: "Timeless^2",
+				done() { return player.h.challenges[31]>=10 },
+				tooltip: 'Complete "Timeless" 10 times.',
 			},
         },
 		update(diff) {	// Added this section to call adjustNotificationTime every tick, to reduce notification timers
