@@ -93,6 +93,8 @@ function shouldNotify(layer){
 						let str = buyableData[player.solGlow]
 						if (str>id) continue;
 					}
+				} else if (layer=="m") {
+					if (player.majGlow=="never") continue;
 				}
 				return true
 			}
@@ -240,7 +242,9 @@ function resetRow(row) {
 		if (player[layer].unlockOrder) player[layer].unlockOrder = 0
 	}
 	player.points = getStartPoints()
-	updateTemp();
+	updateTemp()
+	updateTemp()
+	updateTemp()
 	resizeCanvas();
 }
 

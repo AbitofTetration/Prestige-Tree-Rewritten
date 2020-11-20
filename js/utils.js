@@ -106,6 +106,7 @@ function startPlayerBase() {
 		redGlowActive: true,
 		spaceGlow: "normal",
 		solGlow: "normal",
+		majGlow: "normal",
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -411,6 +412,7 @@ function adjustGlow(type) {
 			data.push("never")
 			return data;
 		},
+		maj() { return ["normal", "never"] },
 	}
 	let data = glowData[type]()
 	let index = data.indexOf(player[type+"Glow"]);
@@ -677,13 +679,6 @@ function goBack() {
 	else showTab(player.lastSafeTab)
 }
 
-function layOver(obj1, obj2) {
-	for (let x in obj2) {
-		if (obj2[x] instanceof Object) layOver(obj1[x], obj2[x]);
-		else obj1[x] = obj2[x];
-	}
-}
-
 function prestigeNotify(layer) {
 	if (player.slightGlow=="never") return false;
 	else if (layers[layer].prestigeNotify) return layers[layer].prestigeNotify()
@@ -810,8 +805,8 @@ document.onkeydown = function(e) {
 }
 
 document.onkeyup = function(e) {
-	if (e.keyCode==189 && !player.tapNerd) tmp.nerdMode = false;
-	if (e.keyCode==189) minusHeld = false;
+	if (e.key=="-" && !player.tapNerd) tmp.nerdMode = false;
+	if (e.key=="-") minusHeld = false;
 }
 
 var onFocused = false
