@@ -438,7 +438,9 @@ function changeTreeQuality() {
 }
 
 function toggleAuto(toggle) {
-	player[toggle[0]][toggle[1]] = !player[toggle[0]][toggle[1]] 
+	if (!(toggle instanceof Array)) {
+		player[toggle.layer][toggle.varName] = toggle.options[(toggle.options.indexOf(player[toggle.layer][toggle.varName])+1)%toggle.options.length]
+	} else player[toggle[0]][toggle[1]] = !player[toggle[0]][toggle[1]] 
 }
 
 function adjustMSDisp() {

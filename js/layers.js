@@ -244,13 +244,14 @@ addLayer("b", {
 			if (player.sb.unlocked) base = base.times(tmp.sb.effect);
 			if (hasUpgrade("q", 12)) base = base.times(upgradeEffect("q", 12));
 			if (hasUpgrade("q", 34)) base = base.times(upgradeEffect("q", 34));
+			if (player.m.unlocked) base = base.times(tmp.m.buyables[11].effect);
 			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12);
 			
 			return base.pow(tmp.b.power);
 		},
 		power() {
 			let power = new Decimal(1);
-			if (player.m.unlocked) power = power.times(tmp.m.buyables[11].effect)
+			if (player.m.unlocked) power = power.times(player.m.spellTimes[12].gt(0)?1.05:1);
 			return power;
 		},
 		effect() {
@@ -689,11 +690,12 @@ addLayer("t", {
 			let mult = new Decimal(1);
 			if (player.o.unlocked) mult = mult.times(buyableEffect("o", 13));
 			if (player.ba.unlocked) mult = mult.times(tmp.ba.posBuff);
+			if (player.m.unlocked) mult = mult.times(tmp.m.buyables[12].effect);
 			return mult;
 		},
 		effBasePow() {
 			let exp = new Decimal(1);
-			if (player.m.unlocked) exp = exp.times(tmp.m.buyables[12].effect);
+			if (player.m.unlocked) exp = exp.times(player.m.spellTimes[12].gt(0)?1.1:1);
 			return exp;
 		},
 		effect() { return {
@@ -1776,7 +1778,7 @@ addLayer("h", {
 				layerDataReset(this.layer, keep)
 			}
         },
-        layerShown(){return player.t.unlocked&&hasMilestone("q", 4)},
+        layerShown(){return (player.t.unlocked&&hasMilestone("q", 4))||player.m.unlocked||player.ba.unlocked},
         branches: ["t"],
 		effect() { 
 			let h = player.h.points.times(player.points.plus(1).log("1e1000").plus(1));
@@ -2138,12 +2140,18 @@ addLayer("q", {
 				currencyInternalName: "energy",
 				currencyLayer: "q",
 				unlocked() { return hasUpgrade("q", 12)||hasUpgrade("q", 13) },
-				effect() { return {
-					h: player.q.points.plus(1).cbrt().pow(improvementEffect("q", 13)),
-					q: player.h.points.plus(1).root(4).pow(improvementEffect("q", 13)),
-				}},
+				effect() { 
+					let q = player.q.points;
+					let h = player.h.points;
+					if (h.gte("1e1000")) h = h.log10().pow(1000/3).min(h);
+					if (q.gte("1e1100")) q = q.log10().pow(1100/3).min(q);
+					return {
+						h: q.plus(1).cbrt().pow(improvementEffect("q", 13)),
+						q: h.plus(1).root(4).pow(improvementEffect("q", 13)),
+					};
+				},
 				effectDisplay() { return "H: "+format(tmp.q.upgrades[14].effect.h)+"x, Q: "+format(tmp.q.upgrades[14].effect.q)+"x" },
-				formula: "H: cbrt(Q+1), Q: (H+1)^0.25",
+				formula() { return "H: "+(player.q.points.gte("1e1100")?"log(cbrt(Q+1))^366.67":"cbrt(Q+1)")+", Q: "+(player.h.points.gte("1e1000")?"log(H+1)^83.33":"(H+1)^0.25") },
 			},
 			21: {
 				title: "Quirk City",
@@ -2275,8 +2283,14 @@ addLayer("q", {
 			},
 		},
 		impr: {
-			amount() { return player.q.energy.div(1e128).plus(1).log10().div(2).sqrt().floor() },
-			nextAt(id=11) { return Decimal.pow(10, getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num).pow(2).times(2)).sub(1).times(1e128) },
+			amount() { 
+				let amt = player.q.energy.div(1e128).plus(1).log10().div(2).sqrt().floor();
+				return amt;
+			},
+			nextAt(id=11) { 
+				let impr = getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num);
+				return Decimal.pow(10, impr.pow(2).times(2)).sub(1).times(1e128);
+			},
 			resName: "quirk energy",
 			rows: 3,
 			cols: 3,
@@ -2378,12 +2392,12 @@ addLayer("o", {
         }},
 		increaseUnlockOrder: ["ss"],
 		roundUpCost: true,
-        color: "#faf9b4",
+        color: "rgb(255, 205, 0)",
 		nodeStyle() {return {
-			"background": (player.o.unlocked||canReset("o"))?"radial-gradient(#b4fadc, #faf9b4)":"#bf8f8f" ,
+			"background": (player.o.unlocked||canReset("o"))?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"#bf8f8f" ,
         }},
 		componentStyles: {
-			"prestige-button"() {return { "background": canReset("o")?"radial-gradient(#b4fadc, #faf9b4)":"#bf8f8f" }},
+			"prestige-button"() {return { "background": canReset("o")?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"#bf8f8f" }},
 		},
         requires() { return new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 62))?16:14).sub(tmp.o.solEnEff) }, // Can be a function that takes requirement increases into account
         resource: "solarity", // Name of prestige currency
@@ -2408,22 +2422,23 @@ addLayer("o", {
 			player.q.energy = new Decimal(0);
 			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
-        layerShown(){return player.sb.unlocked&&player.h.unlocked },
+        layerShown(){return (player.sb.unlocked&&player.h.unlocked)||player.m.unlocked||player.ba.unlocked },
         branches: ["sb", "t"],
 		effect() { 
 			let sol = player.o.points;
 			if (sol.gte(1e4)) sol = Decimal.pow(10, sol.log10().sqrt().times(2));
-			let eff = sol.plus(1).log10().div(100);
+			let eff = sol.plus(1).log10().div(100).min(0.1);
 			return eff;
 		},
+		effect2() { return player.o.points.div(1e20).plus(1).sqrt() },
 		solEnGain() { 
-			let gain = player.t.energy.max(1).pow(tmp.o.effect).sub(1);
+			let gain = player.t.energy.max(1).pow(tmp.o.effect).times(tmp.o.effect2).sub(1);
 			if (player.m.unlocked) gain = gain.times(tmp.m.hexEff);
 			return gain;
 		},
 		solEnEff() { return Decimal.sub(4, Decimal.div(4, player.o.energy.plus(1).log10().plus(1))) },
 		solEnEff2() { return player.o.energy.plus(1).pow(2) },
-		effectDescription() { return "which are generating "+(tmp.nerdMode?("(timeEnergy^"+format(tmp.o.effect)+"-1)"):format(tmp.o.solEnGain))+" Solar Energy every second." },
+		effectDescription() { return "which are generating "+(tmp.nerdMode?("(timeEnergy^"+format(tmp.o.effect)+(tmp.o.effect.gt(1.01)?("*"+format(tmp.o.effect2)):"")+"-1)"):format(tmp.o.solEnGain))+" Solar Energy every second." },
 		update(diff) {
 			player.o.energy = player.o.energy.plus(tmp.o.solEnGain.times(diff));
 			if (hasMilestone("m", 0)) {
@@ -2568,7 +2583,7 @@ addLayer("o", {
 		milestones: {
 			0: {
 				requirementDescription: "50,000 Total Solarity",
-				done() { return player.o.total.gte(2) || hasAchievement("a", 71) },
+				done() { return player.o.total.gte(5e4) || hasAchievement("a", 71) },
 				effectDescription: "Gain 5% of Solarity gain every second.",
 			},
 		},
@@ -2586,7 +2601,7 @@ addLayer("ss", {
 			auto: false,
 			first: 0,
         }},
-        color: "#fff9e8",
+        color: "#e8ffff",
         requires() { return new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 62))?30:28) }, // Can be a function that takes requirement increases into account
 		roundUpCost: true,
         resource: "subspace energy", // Name of prestige currency
@@ -2653,7 +2668,7 @@ addLayer("ss", {
 			if (hasMilestone("ba", 2)) keep.push("upgrades");
             if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
-        layerShown(){return player.s.unlocked&&player.h.unlocked},
+        layerShown(){return (player.s.unlocked&&player.h.unlocked)||player.m.unlocked||player.ba.unlocked},
         branches: ["s"],
 		upgrades: {
 			rows: 4,
@@ -2777,6 +2792,12 @@ addLayer("m", {
 				12: new Decimal(0),
 				13: new Decimal(0),
 			},
+			spellInputs: {
+				11: new Decimal(1),
+				12: new Decimal(1),
+				13: new Decimal(1),
+			},
+			spellInput: "1",
 			hexes: new Decimal(0),
 			first: 0,
         }},
@@ -2804,13 +2825,23 @@ addLayer("m", {
         },
         layerShown(){return player.h.unlocked&&player.o.unlocked },
         branches: ["o","h","q"],
-		spellTime() { return new Decimal(60) },
+		spellTime() { 
+			let time = new Decimal(60);
+			if (hasMilestone("m", 3)) time = time.times(tmp.m.spellInputAmt.div(100).plus(1).log10().plus(1));
+			return time;
+		},
 		spellPower() { return new Decimal(1) },
 		hexGain() { return new Decimal(1) },
 		hexEff() { return player.m.hexes.times(2).plus(1).pow(10) },
 		update(diff) {
 			if (!player.m.unlocked) return;
 			for (let i=11;i<=13;i++) if (player.m.spellTimes[i].gt(0)) player.m.spellTimes[i] = player.m.spellTimes[i].sub(diff).max(0);
+		},
+		spellInputAmt() {
+			if (hasMilestone("m", 3) && player.m.spellInput!="1") {
+				let factor = new Decimal(player.m.spellInput.split("%")[0]).div(100);
+				return player.m.points.times(factor).floor().max(1);
+			} else return new Decimal(1);
 		},
 		tabFormat: ["main-display",
 			"prestige-button",
@@ -2829,18 +2860,19 @@ addLayer("m", {
 			11: {
 				title: "Booster Launch",
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                   return new Decimal(1);
+					return tmp.m.spellInputAmt;
                 },
 				effect() {
-					let power = tmp.m.spellPower;
+					let power = tmp.m.spellPower.times(player.m.spellInputs[this.id].max(1).log10().plus(1));
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
-					let eff = power.div(20).plus(1)
-					return eff;
+					let eff = power.div(2).plus(1)
+					return eff.div(1.5);
 				},
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-                    let display = "Effect: Booster base ^" + format(data.effect)+"\n\
+                    let display = "Effect: Booster base ^1.05, x" + format(data.effect)+"\n\
 					Time: "+formatTime(player.m.spellTimes[this.id]||0);
+					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: ((log(inserted+1)+1)/2+1)/1.5"):("To Insert: "+formatWhole(tmp.m.spellInputAmt)));
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -2849,8 +2881,9 @@ addLayer("m", {
 				},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
+					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain)
+                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
 					player.m.spellTimes[this.id] = tmp.m.spellTime;
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -2859,18 +2892,19 @@ addLayer("m", {
 			12: {
 				title: "Time Warp",
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                   return new Decimal(1);
+                  return tmp.m.spellInputAmt;
                 },
 				effect() {
-					let power = tmp.m.spellPower;
+					let power = tmp.m.spellPower.times(player.m.spellInputs[this.id].max(1).log10().plus(1));
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
-					let eff = power.div(10).plus(1)
-					return eff;
+					let eff = power.div(5).plus(1)
+					return eff.div(1.2);
 				},
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-                    let display = "Effect: Time Capsule base ^" + format(data.effect)+"\n\
+                    let display = "Effect: Time Capsule base ^1.1, x" + format(data.effect)+"\n\
 					Time: "+formatTime(player.m.spellTimes[this.id]||0);
+					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: ((log(inserted+1)+1)/5+1)/1.2"):("To Insert: "+formatWhole(tmp.m.spellInputAmt)));
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -2879,8 +2913,9 @@ addLayer("m", {
 				},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
+					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain)
+                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
 					player.m.spellTimes[this.id] = tmp.m.spellTime;
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -2889,10 +2924,10 @@ addLayer("m", {
 			13: {
 				title: "Quirk Amplification",
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                   return new Decimal(1);
+                   return tmp.m.spellInputAmt;
                 },
 				effect() {
-					let power = tmp.m.spellPower;
+					let power = tmp.m.spellPower.times(player.m.spellInputs[this.id].max(1).log10().plus(1));
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
 					let eff = power.times(1.25)
 					return eff;
@@ -2901,6 +2936,7 @@ addLayer("m", {
                     let data = tmp[this.layer].buyables[this.id]
                     let display = "Effect: +" + format(data.effect)+" Free Quirk Layers\n\
 					Time: "+formatTime(player.m.spellTimes[this.id]||0);
+					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: (log(inserted+1)+1)*1.25"):("To Insert: "+formatWhole(tmp.m.spellInputAmt)));
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -2909,8 +2945,9 @@ addLayer("m", {
 				},
                 buy() { 
                     cost = tmp[this.layer].buyables[this.id].cost
+					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain)
+                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
 					player.m.spellTimes[this.id] = tmp.m.spellTime;
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -2934,6 +2971,16 @@ addLayer("m", {
 				done() { return player.m.total.gte(10) },
 				effectDescription: "Automatically gain 100% of Hindrance Spirit gain every second.",
 			},
+			3: {
+				requirementDescription: "5,000 Total Magic",
+				done() { return player.m.total.gte(5e3) },
+				effectDescription: "You can insert more Magic into your Spells to make them stronger & last longer.",
+				toggles: [{
+					layer: "m",
+					varName: "spellInput",
+					options: ["1","10%","50%","100%"],
+				}],
+			},
 		},
 })
 
@@ -2954,7 +3001,7 @@ addLayer("ba", {
         color: "#fced9f",
         requires: new Decimal("1e365"), // Can be a function that takes requirement increases into account
         resource: "balance energy", // Name of prestige currency
-        baseResource: "quirk energy", // Name of resource prestige is based on
+        baseResource: "quirks", // Name of resource prestige is based on
         baseAmount() {return player.q.points}, // Get the current amount of baseResource
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent: new Decimal(0.005), // Prestige currency exponent
@@ -3158,7 +3205,7 @@ addLayer("a", {
 			52: {
 				name: "Hinder is Coming",
 				done() { return inChallenge("h", 11) && player.points.gte("1e7250") },
-				tooltip: 'Reach e7,250 Points in "Upgrade Desert"',
+				tooltip: 'Reach e7,250 Points in "Upgrade Desert".',
 			},
 			53: {
 				name: "Already????",
@@ -3178,7 +3225,7 @@ addLayer("a", {
 			62: {
 				name: "Gotta Get Em All",
 				done() { return player.ss.unlocked && player.o.unlocked },
-				tooltip: "Perform a Solarity & Subspace reset. Reward: Both Solarity & Subspace behave as if you chose them first",
+				tooltip: "Perform a Solarity & Subspace reset. Reward: Both Solarity & Subspace behave as if you chose them first.",
 			},
 			63: {
 				name: "Spaceless",
@@ -3193,7 +3240,7 @@ addLayer("a", {
 			71: {
 				name: "Another One Bites the Rust",
 				done() { return player.m.unlocked || player.ba.unlocked },
-				tooltip: "Perform a Row 5 reset. Reward: Always have all milestones of Row 2, 3, and 4",
+				tooltip: "Perform a Row 5 reset. Reward: Always have all milestones of Row 2, 3, and 4.",
 			},
         },
 		tabFormat: [
