@@ -831,14 +831,13 @@ function costFormulaStatic(layer) {
 	let base = tmp[layer].base;
 	let resDiv = new Decimal(1);
 	
-	if (player[layer].points.gte(1225)) {
-		exp = exp.times(10)
-		resDiv = resDiv.times(Decimal.pow(1225, 9))
-	}
-	let scaleStart = (STATIC_SCALE_STARTS[String(tmp[layer].row-1)]?STATIC_SCALE_STARTS[String(tmp[layer].row+1)]():1);
-	if (player[layer].points.gte(scaleStart)) {
-		exp = exp.times(2);
-		resDiv = resDiv.times(scaleStart);
+	for (let scale=STATIC_SCALE_DATA.length-1;scale>=0;scale--) {
+		let scaleStart = getStaticScaleStart(scale, row+1)
+		let scaleExp = getStaticScaleExp(scale, row+1)
+		if (player[layer].points.gte(scaleStart)) {
+			exp = exp.times(scaleExp);
+			resDiv = resDiv.times(scaleStart.pow(exp.sub(1)));
+		}
 	}
 	
 	return "("+format(base)+"^(x^"+format(exp)+")"+(resDiv.eq(1)?"":(" / "+format(resDiv)))+")"+(mult.eq(1)?"":(mult.gt(1)?(" * ("+format(mult)+")"):(" / ("+format(mult.pow(-1))+")")))

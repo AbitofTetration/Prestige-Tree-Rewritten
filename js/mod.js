@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e999999999999999999"),
-	specialEndgameText: "v0.6 Beta 2 Endgame: e225,000 Points, 1,000,000 Magic, & 100,000 Balance Energy",
+	specialEndgameText: "v0.6 Beta 3 Endgame: e250,000 Points, 5,000,000 Magic, & 500,000 Balance Energy",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.6",
-	beta: 2,
+	beta: 3,
 	name: "Balanced Magical Phantoms",
 }
 
