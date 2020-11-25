@@ -9,19 +9,21 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e999999999999999999"),
-	specialEndgameText: "v0.6 Beta 4 Endgame: e345,000 Points, 2e9 Magic, and 200,000,000 Balance Energy",
+	specialEndgameText: "v0.6 Beta 5 Endgame: e457,500 Points, 1e13 Magic, & 2.5e12 Balance Energy",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.6",
-	beta: 4,
+	beta: 5,
 	name: "Balanced Magical Phantoms",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
 var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything"]
+
+var alwaysKeepTheseVariables = ["auto", "autoExt", "autoBld", "keepPosNeg"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)

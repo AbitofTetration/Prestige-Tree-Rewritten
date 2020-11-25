@@ -975,7 +975,7 @@ addLayer("e", {
 				unlocked() { return hasUpgrade("e", 11) },
 				effect() { 
 					let ret = player.e.total.add(1).pow(1.5) 
-					if (ret.gte("1e1500")) ret = ret.sqrt().times("1e750")
+					ret = softcap("e12", ret);
 					return ret
 				},
 				effectDisplay() { return format(tmp.e.upgrades[12].effect)+"x" },
@@ -1430,7 +1430,7 @@ addLayer("s", {
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let eff = Decimal.pow(1e18, x.plus(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4)).times(tmp.s.buildingPower).pow(0.9))
-					if (eff.gte("e3e9")) eff = Decimal.pow(10, eff.log10().times(9e18).cbrt())
+					eff = softcap("spaceBuilding3", eff);
 					return eff;
                 },
 				display() { // Everything else displayed in the buyable button after the title
@@ -1475,7 +1475,7 @@ addLayer("s", {
                 },
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let ret = x.plus(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4)).times(tmp.s.buildingPower).times((hasUpgrade("s", 15))?3:1).add(1).pow(1.25)
-					if (ret.gte(1e6)) ret = ret.log10().times(1e6/6)
+					ret = softcap("spaceBuilding4", ret);
 					return ret;
                 },
 				display() { // Everything else displayed in the buyable button after the title
@@ -1729,6 +1729,7 @@ addLayer("h", {
             mult = new Decimal(1)
 			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).h);
 			if (player.m.unlocked) mult = mult.times(tmp.m.hexEff);
+			if (hasUpgrade("ba", 22)) mult = mult.times(tmp.ba.negBuff);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -1752,11 +1753,11 @@ addLayer("h", {
         branches: ["t"],
 		effect() { 
 			let h = player.h.points.times(player.points.plus(1).log("1e1000").plus(1));
-			if (h.gte(15e4)) h = Decimal.pow(10, h.log(15e4).sqrt()).times(15e3);
-			return h.plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1) 
+			h = softcap("hindr_base", h);
+			return h.plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1).pow(hasUpgrade("ba", 21)?8:1)
 		},
 		effectDescription() {
-			return "which are multiplying Point gain, Time Energy gain, & the Time Energy cap by "+format(tmp.h.effect)+" ("+(tmp.nerdMode?(tmp.h.effect.gte(15e4)?("(10^sqrt(log(hindranceSpirit/1e3*(log(points+1)+1))/log(1.5e5))+1)^("+(hasChallenge("h", 11)?3.6:3)+")"):("(hindranceSpirit/1e3*(log(points+1)+1)+1)^("+(hasChallenge("h", 11)?3.6:3)+")")):"boosted by Points")+")"
+			return "which are multiplying Point gain, Time Energy gain, & the Time Energy cap by "+format(tmp.h.effect)+" ("+(tmp.nerdMode?(tmp.h.effect.gte(15e4)?("(10^sqrt(log(hindranceSpirit/1e3*(log(points+1)+1))/log(1.5e5))+1)^("+((hasChallenge("h", 11)?3.6:3)*(hasUpgrade("ba", 21)?8:1))+")"):("(hindranceSpirit/1e3*(log(points+1)+1)+1)^("+((hasChallenge("h", 11)?3.6:3)*(hasUpgrade("ba", 21)?8:1))+")")):"boosted by Points")+")"
 		},
 		costMult11() {
 			let mult = new Decimal(1);
@@ -1888,6 +1889,7 @@ addLayer("q", {
 			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).q);
 			mult = mult.times(improvementEffect("q", 33));
 			if (player.m.unlocked) mult = mult.times(tmp.m.hexEff);
+			if (hasUpgrade("ba", 22)) mult = mult.times(tmp.ba.negBuff);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -2113,8 +2115,8 @@ addLayer("q", {
 				effect() { 
 					let q = player.q.points;
 					let h = player.h.points;
-					if (h.gte("1e1000")) h = h.log10().pow(1000/3).min(h);
-					if (q.gte("1e1100")) q = q.log10().pow(1100/3).min(q);
+					h = softcap("q14_h", h);
+					q = softcap("q14_q", q);
 					return {
 						h: q.plus(1).cbrt().pow(improvementEffect("q", 13)),
 						q: h.plus(1).root(4).pow(improvementEffect("q", 13)),
@@ -2370,7 +2372,11 @@ addLayer("o", {
 		componentStyles: {
 			"prestige-button"() {return { "background": canReset("o")?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"#bf8f8f" }},
 		},
-        requires() { return new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 62))?16:14).sub(tmp.o.solEnEff) }, // Can be a function that takes requirement increases into account
+        requires() { 
+			let req = new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 62))?16:14).sub(tmp.o.solEnEff);
+			if (hasUpgrade("ba", 23)) req = req.div(tmp.ba.posBuff);
+			return req;
+		},
         resource: "solarity", // Name of prestige currency
         baseResource: "super boosters", // Name of resource prestige is based on
         baseAmount() {return player.sb.points}, // Get the current amount of baseResource
@@ -2397,7 +2403,7 @@ addLayer("o", {
         branches: ["sb", "t"],
 		effect() { 
 			let sol = player.o.points;
-			if (sol.gte(1e4)) sol = Decimal.pow(10, sol.log10().sqrt().times(2));
+			sol = softcap("sol_eff", sol);
 			let eff = sol.plus(1).log10().div(100).min(0.1);
 			return eff;
 		},
@@ -2449,7 +2455,7 @@ addLayer("o", {
 				gain() { return player.o.points.div(2).root(1.5).floor() },
 				effect() { 
 					let amt = player[this.layer].buyables[this.id]
-					if (amt.gte(5e4)) amt = Decimal.pow(10, amt.log10().sqrt().times(Math.sqrt(Math.log10(5e4))));
+					amt = softcap("solCores", amt);
 					return hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)) 
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -2969,6 +2975,7 @@ addLayer("ba", {
 			allotted: 0.5,
 			pos: new Decimal(0),
 			neg: new Decimal(0),
+			keepPosNeg: false,
 			first: 0,
         }},
         color: "#fced9f",
@@ -2991,8 +2998,10 @@ addLayer("ba", {
         ],
         doReset(resettingLayer){ 
 			let keep = [];
-			player.ba.pos = new Decimal(0);
-			player.ba.neg = new Decimal(0);
+			if (!(hasMilestone("ba", 4) && player.ba.keepPosNeg)) {
+				player.ba.pos = new Decimal(0);
+				player.ba.neg = new Decimal(0);
+			}
 			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
         layerShown(){return player.q.unlocked&&player.ss.unlocked },
@@ -3020,7 +3029,8 @@ addLayer("ba", {
 				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
 				"blank", "blank", "blank", 
 				["column", 
-				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 12], ["upgrade", 14]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
+				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
+			["row", [["upgrade", 22], ["upgrade", 21], ["upgrade", 23]]],
 			"blank", "blank"
 		],
 		bars: {
@@ -3058,7 +3068,7 @@ addLayer("ba", {
 			},
 		},
 		upgrades: {
-			rows: 1,
+			rows: 2,
 			cols: 4,
 			11: {
 				title: "Negative Ion",
@@ -3102,6 +3112,30 @@ addLayer("ba", {
 				currencyLayer: "ba",
 				unlocked() { return hasMilestone("ba", 3) },
 			},
+			21: {
+				title: "Neutral Atom",
+				description: "The Hindrance Spirit effect is raised to the power of 8.",
+				cost: new Decimal(2.5e8),
+				unlocked() { return hasUpgrade("ba", 13)&&hasUpgrade("ba", 14) },
+			},
+			22: {
+				title: "Negative Mass",
+				description: "The Negativity buff also multiplies Hindrance Spirit & Quirk gain.",
+				cost: new Decimal(2.5e11),
+				currencyDisplayName: "negativity",
+				currencyInternalName: "neg",
+				currencyLayer: "ba",
+				unlocked() { return hasUpgrade("ba", 21) },
+			},
+			23: {
+				title: "Complete Plus",
+				description: "The Positivity buff also divides the Solarity requirement.",
+				cost: new Decimal(2.5e11),
+				currencyDisplayName: "positivity",
+				currencyInternalName: "pos",
+				currencyLayer: "ba",
+				unlocked() { return hasUpgrade("ba", 21) },
+			},
 		},
 		milestones: {
 			0: {
@@ -3126,6 +3160,13 @@ addLayer("ba", {
 				requirementDescription: "200,000 Total Balance Energy",
 				done() { return player.ba.total.gte(2e5) },
 				effectDescription: "Unlock Balance Upgrades.",
+			},
+			4: {
+				unlocked() { return hasMilestone("ba", 3) },
+				requirementDescription: "1e12 Total Balance Energy",
+				done() { return player.ba.total.gte(1e12) },
+				effectDescription: "You can keep Positivity & Negativity on reset.",
+				toggles: [["ba", "keepPosNeg"]],
 			},
 		},
 })

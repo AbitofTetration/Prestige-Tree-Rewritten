@@ -9,6 +9,46 @@ const SOFTCAPS = {
 		start: new Decimal("1e3500"),
 		mag: new Decimal(2),
 	},
+	e12: {
+		type: "root",
+		start: new Decimal("1e1500"),
+		mag: new Decimal(2),
+	},
+	spaceBuilding3: {
+		type: "expRoot",
+		start: new Decimal("e3e9"),
+		mag: new Decimal(3),
+	},
+	spaceBuilding4: {
+		type: "log",
+		start: new Decimal(1e6),
+		exp: new Decimal(1),
+	},
+	hindr_base: {
+		type: "expRoot",
+		start: new Decimal(15e4),
+		mag: new Decimal(4),
+	},
+	q14_h: {
+		type: "log",
+		start: new Decimal("1e1000"),
+		exp: new Decimal(1000/3),
+	},
+	q14_q: {
+		type: "log",
+		start: new Decimal("1e1100"),
+		exp: new Decimal(1100/3),
+	},
+	sol_eff: {
+		type: "expRoot",
+		start: new Decimal(1e4),
+		mag: new Decimal(2),
+	},
+	solCores: {
+		type: "expRoot",
+		start: new Decimal(5e4),
+		mag: new Decimal(2),
+	},
 }
 
 const STATIC_SCALE_DATA = [
@@ -35,17 +75,30 @@ const STATIC_SCALE_DATA = [
 
 function softcapActive(name, val) {
 	if (!SOFTCAPS[name]) return false;
-	else return Decimal.gte(val, SOFTCAPS[name].start);
+	else return Decimal.gte(val, getSoftcapData(name, "start"));
+}
+
+function getSoftcapData(name, id) {
+	let data = SOFTCAPS[name][id]
+	if (isFunction(data)) return data();
+	else return data;
 }
 
 function softcap(name, val) {
 	val = new Decimal(val);
-	let data = SOFTCAPS[name];
 	if (!softcapActive(name, val)) return val;
-	if (data.type=="root") return val.times(data.start.pow(data.mag.sub(1))).root(data.mag);
-	else if (data.type=="expRoot") return Decimal.pow(10, val.log10().root(data.mag).times(data.start.log10().pow(Decimal.sub(1, data.mag.pow(-1)))));
-	else if (data.type=="log") return val.log10().pow(data.exp).times(data.start.div(data.start.log10().pow(data.exp)));
-	else return val;
+	let type = getSoftcapData(name, "type");
+	let start = getSoftcapData(name, "start");
+	if (type=="root") {
+		let mag = getSoftcapData(name, "mag");
+		return val.times(start.pow(mag.sub(1))).root(mag);
+	} else if (type=="expRoot") {
+		let mag = getSoftcapData(name, "mag");
+		return Decimal.pow(10, val.log10().root(mag).times(start.log10().pow(Decimal.sub(1, mag.pow(-1)))));
+	} else if (type=="log") {
+		let exp = getSoftcapData(name, "exp");
+		return val.log10().pow(exp).times(start.div(start.log10().pow(exp)));
+	} else return val;
 }
 
 function getStaticScaleStart(scale, r) {
