@@ -3007,8 +3007,8 @@ addLayer("ba", {
 		posBuff() { return player.ba.pos.plus(1).log10().plus(1).div(tmp.ba.negNerf); },
 		posNerf() { return player.ba.pos.plus(1).sqrt() },
 		negGain() { return Decimal.pow(tmp.ba.dirBase, 1-player.ba.allotted).times(1-player.ba.allotted) },
-		negBuff() { return player.ba.neg.plus(1).div(tmp.ba.posNerf) },
-		negNerf() { return player.ba.neg.plus(1).log10().plus(1).sqrt() },
+		negBuff() { return player.ba.neg.plus(1).pow((hasUpgrade("ba", 13))?10:1).div(tmp.ba.posNerf) },
+		negNerf() { return player.ba.neg.plus(1).log10().plus(1).sqrt().div(hasUpgrade("ba", 14)?2:1).max(1) },
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
@@ -3017,10 +3017,10 @@ addLayer("ba", {
 			"blank",
 			["row", [["clickable", 11], "blank", ["bar", "balanceBar"], "blank", ["clickable", 12]]],
 			["row", [
-				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: x+1"):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(log(x+1)+1)"):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["upgrade", 11]], {"max-width": "240px"}], 
+				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
 				"blank", "blank", "blank", 
 				["column", 
-				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["upgrade", 12]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
+				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 12], ["upgrade", 14]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
 			"blank", "blank"
 		],
 		bars: {
@@ -3059,7 +3059,7 @@ addLayer("ba", {
 		},
 		upgrades: {
 			rows: 1,
-			cols: 2,
+			cols: 4,
 			11: {
 				title: "Negative Ion",
 				description: "Negativity boosts Solar Power.",
@@ -3083,6 +3083,24 @@ addLayer("ba", {
 				effect() { return player.ba.pos.plus(1).log10().cbrt().div(10) },
 				effectDisplay() { return "+"+format(tmp.ba.upgrades[12].effect.times(100))+"%" },
 				formula: "cbrt(log(x+1))*10",
+			},
+			13: {
+				title: "Negative Energy",
+				description: "Raise the Negativity buff to the power of 10.",
+				cost: new Decimal(25e7),
+				currencyDisplayName: "negativity",
+				currencyInternalName: "neg",
+				currencyLayer: "ba",
+				unlocked() { return hasMilestone("ba", 3) },
+			},
+			14: {
+				title: "Positive Vibe",
+				description: "Halve the Negativity nerf.",
+				cost: new Decimal(25e7),
+				currencyDisplayName: "positivity",
+				currencyInternalName: "pos",
+				currencyLayer: "ba",
+				unlocked() { return hasMilestone("ba", 3) },
 			},
 		},
 		milestones: {
