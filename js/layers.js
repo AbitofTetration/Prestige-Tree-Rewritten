@@ -3012,10 +3012,20 @@ addLayer("ba", {
 			player.ba.neg = player.ba.neg.plus(tmp.ba.negGain.times(diff));
 		},
 		dirBase() { return player.ba.points.times(10) },
-		posGain() { return Decimal.pow(tmp.ba.dirBase, player.ba.allotted).times(player.ba.allotted) },
+		posGainMult() {
+			let mult = new Decimal(1);
+			if (hasUpgrade("ba", 24)) mult = mult.times(upgradeEffect("ba", 24).pos);
+			return mult;
+		},
+		posGain() { return Decimal.pow(tmp.ba.dirBase, player.ba.allotted).times(player.ba.allotted).times(tmp.ba.posGainMult) },
 		posBuff() { return player.ba.pos.plus(1).log10().plus(1).div(tmp.ba.negNerf); },
 		posNerf() { return player.ba.pos.plus(1).sqrt() },
-		negGain() { return Decimal.pow(tmp.ba.dirBase, 1-player.ba.allotted).times(1-player.ba.allotted) },
+		negGainMult() {
+			let mult = new Decimal(1);
+			if (hasUpgrade("ba", 24)) mult = mult.times(upgradeEffect("ba", 24).neg);
+			return mult;
+		},
+		negGain() { return Decimal.pow(tmp.ba.dirBase, 1-player.ba.allotted).times(1-player.ba.allotted).times(tmp.ba.negGainMult) },
 		negBuff() { return player.ba.neg.plus(1).pow((hasUpgrade("ba", 13))?10:1).div(tmp.ba.posNerf) },
 		negNerf() { return player.ba.neg.plus(1).log10().plus(1).sqrt().div(hasUpgrade("ba", 14)?2:1).max(1) },
 		tabFormat: ["main-display",
@@ -3024,13 +3034,14 @@ addLayer("ba", {
 			"blank",
 			"milestones",
 			"blank",
-			["row", [["clickable", 11], "blank", ["bar", "balanceBar"], "blank", ["clickable", 12]]],
+			["row", [["clickable", 21], ["clickable", 11], "blank", ["bar", "balanceBar"], "blank", ["clickable", 12], ["clickable", 22]]],
 			["row", [
-				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
+				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"+(tmp.ba.negGainMult.eq(1)?"":("*"+format(tmp.ba.negGainMult)))):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
 				"blank", "blank", "blank", 
 				["column", 
-				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
+				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"+(tmp.ba.posGainMult.eq(1)?"":("*"+format(tmp.ba.posGainMult)))):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
 			["row", [["upgrade", 22], ["upgrade", 21], ["upgrade", 23]]],
+			["upgrade", 24],
 			"blank", "blank"
 		],
 		bars: {
@@ -3050,7 +3061,7 @@ addLayer("ba", {
 			},
 		},
 		clickables: {
-			rows: 1,
+			rows: 2,
 			cols: 2,
 			11: {
 				title: "-",
@@ -3064,6 +3075,20 @@ addLayer("ba", {
 				unlocked() { return player.ba.unlocked },
 				canClick() { return player.ba.allotted<1 },
 				onClick() { player.ba.allotted = Math.min(player.ba.allotted+0.05, 1) },
+				style: {"height": "50px", "width": "50px", "background-color": "rgb(162, 249, 252)"},
+			},
+			21: {
+				title: "&#8592;",
+				unlocked() { return player.ba.unlocked },
+				canClick() { return player.ba.allotted>0 },
+				onClick() { player.ba.allotted = 0 },
+				style: {"height": "50px", "width": "50px", "background-color": "rgb(235, 64, 52)"},
+			},
+			22: {
+				title: "&#8594;",
+				unlocked() { return player.ba.unlocked },
+				canClick() { return player.ba.allotted<1 },
+				onClick() { player.ba.allotted = 1 },
 				style: {"height": "50px", "width": "50px", "background-color": "rgb(162, 249, 252)"},
 			},
 		},
@@ -3135,6 +3160,18 @@ addLayer("ba", {
 				currencyInternalName: "pos",
 				currencyLayer: "ba",
 				unlocked() { return hasUpgrade("ba", 21) },
+			},
+			24: {
+				title: "Net Neutrality",
+				description: "Positivity and Negativity boost each other's generation.",
+				cost: new Decimal(2.5e12),
+				unlocked() { return hasUpgrade("ba", 22) && hasUpgrade("ba", 23) },
+				effect() { return {
+					pos: player.ba.neg.div(1e12).plus(1).log10().plus(1).pow(5),
+					neg: player.ba.pos.div(1e12).plus(1).log10().plus(1).pow(5),
+				} },
+				effectDisplay() { return "Pos: "+format(tmp.ba.upgrades[24].effect.pos)+"x, Neg: "+format(tmp.ba.upgrades[24].effect.neg)+"x" },
+				formula: "Pos: (log(neg/1e12+1)+1)^5, Neg: (log(pos/1e12+1)+1)^5",
 			},
 		},
 		milestones: {
