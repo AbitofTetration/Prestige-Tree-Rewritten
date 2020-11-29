@@ -1678,6 +1678,8 @@ addLayer("sg", {
 		effectBase() {
 			let base = new Decimal(5);
 			if (hasUpgrade("ss", 32)) base = base.plus(upgradeEffect("ss", 32));
+			
+			if (hasUpgrade("ba", 32)) base = base.times(upgradeEffect("ba", 32));
 			return base;
 		},
 		effect() {
@@ -1791,7 +1793,7 @@ addLayer("h", {
 		},
 		passiveGeneration() { return hasMilestone("m", 2)?1:0 },
 		challenges: {
-			rows: 3,
+			rows: 4,
 			cols: 2,
 			11: {
 				name: "Upgrade Desert",
@@ -1878,6 +1880,7 @@ addLayer("h", {
 				rewardDescription: "<b>Option D</b> completions multiply the Time Energy gain base.",
 				rewardEffect() { return Decimal.pow(100, Decimal.pow(challengeCompletions("h", 32), 2)) },
 				rewardDisplay() { return format(tmp.h.challenges[32].rewardEffect)+"x" },
+				formula: "100^(completions^2)",
 				unlocked() { return tmp.ps.buyables[11].effects.hindr },
 				countsAs: [11,12,21,22,31],
 				onStart(testInput=false) { 
@@ -1886,6 +1889,47 @@ addLayer("h", {
 						player.b.upgrades = [];
 						resetBuyables("s");
 						player.s.spent = new Decimal(0);
+					}
+				},
+			},
+			41: {
+				name: "Central Madness",
+				completionLimit: 1,
+				challengeDescription: "Perform a Row 5 reset, Positivity & Negativity are reset, and Positivity & Negativity nerfs are extremely stronger.",
+				goal: new Decimal("1e765000"),
+				currencyDisplayName: "points",
+				currencyInternalName: "points",
+				rewardDescription: "Unlock 3 new Balance Upgrades.",
+				unlocked() { return (tmp.ps.buyables[11].effects.hindr||0)>=2 },
+				onStart(testInput=false) {
+					if (testInput) {
+						doReset("ps", true);
+						player.h.activeChallenge = 41;
+						player.ba.pos = new Decimal(0);
+						player.ba.neg = new Decimal(0);
+						updateTemp();
+						updateTemp();
+						updateTemp();
+					}
+				},
+			},
+			42: {
+				name: "Productionless",
+				completionLimit: 1,
+				challengeDescription: "Perform a Row 5 reset, you are trapped in <b>Descension</b>, and all row 2-4 static layers have much harsher cost scalings.",
+				goal: new Decimal("1e19000"),
+				currencyDisplayName: "points",
+				currencyInternalName: "points",
+				rewardDescription: "The Quirk Layer cost base is decreased by 0.15.",
+				unlocked() { return (tmp.ps.buyables[11].effects.hindr||0)>=3 },
+				countsAs: [22],
+				onStart(testInput=false) {
+					if (testInput) {
+						doReset("ps", true);
+						player.h.activeChallenge = 42;
+						updateTemp();
+						updateTemp();
+						updateTemp();
 					}
 				},
 			},
@@ -2010,17 +2054,17 @@ addLayer("q", {
 				costBase() {
 					let base = new Decimal(2);
 					if (hasUpgrade("q", 43)) base = base.sub(.25);
+					if (hasChallenge("h", 42)) base = base.sub(.15);
 					return base;
 				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    if (x.gte(20)) Decimal.pow(1.05, x.sub(20)).times(20)
 					let base = this.costBase();
                     let cost = Decimal.pow(base, Decimal.pow(base, x).sub(1));
                     return cost.floor()
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-                    let display = (tmp.nerdMode?("Cost Formula: "+format(data.costBase)+"^("+format(data.costBase)+"^"+(player[this.layer].buyables[this.id].gte(20)?"1.05^(x-20)*20":"x")+")-1"):("Cost: " + formatWhole(data.cost) + " Quirks")+"\n\
+                    let display = (tmp.nerdMode?("Cost Formula: "+format(data.costBase)+"^("+format(data.costBase)+"^x-1)"):("Cost: " + formatWhole(data.cost) + " Quirks")+"\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.q.freeLayers?(tmp.q.freeLayers.gt(0)?(" + "+format(tmp.q.freeLayers)):""):""))
 					return display;
                 },
@@ -2036,9 +2080,7 @@ addLayer("q", {
 					if (!this.unlocked || !this.canAfford()) return;
 					let base = this.costBase();
 					let target = player.q.points.max(1).log(base).plus(1).log(base);
-					if (target.gte(20)) target = target.div(20).log(1.05).plus(20);
 					target = target.plus(1).floor();
-					let bulk = target.sub(player[this.layer].buyables[this.id])
 					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
 				},
                 style: {'height':'222px'},
@@ -2292,12 +2334,18 @@ addLayer("q", {
 			},
 			amount() { 
 				let amt = player.q.energy.div(this.baseReq()).plus(1).log10().div(2).sqrt().floor();
+				if (amt.gte(270)) amt = amt.log10().times(270/Math.log10(270));
 				return amt;
 			},
-			overallNextImpr() { return Decimal.pow(10, tmp.q.impr.amount.plus(1).pow(2).times(2)).sub(1).times(this.baseReq()) },
+			overallNextImpr() { 
+				let impr = tmp.q.impr.amount;
+				if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
+				return Decimal.pow(10, impr.plus(1).pow(2).times(2)).sub(1).times(this.baseReq()) 
+			},
 			nextAt(id=11) { 
-				let impr = getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num);
-				return Decimal.pow(10, impr.pow(2).times(2)).sub(1).times(this.baseReq());
+				let impr = getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num).sub(1);
+				if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
+				return Decimal.pow(10, impr.plus(1).pow(2).times(2)).sub(1).times(this.baseReq());
 			},
 			resName: "quirk energy",
 			rows: 3,
@@ -2490,7 +2538,7 @@ addLayer("o", {
 				gain() { return player.o.points.div(2).root(1.5).floor() },
 				effect() { 
 					let amt = player[this.layer].buyables[this.id]
-					amt = softcap("solCores", amt);
+					amt = softcap("solCores2", softcap("solCores", amt));
 					return hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)) 
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -2568,7 +2616,11 @@ addLayer("o", {
 			21: {
 				title: "Coronal Waves",
 				gain() { return player.o.points.div(1e5).root(5).times(player.o.energy.div(1e30).root(30)).times(player.ss.subspace.div(1e8).root(8)).times(player.q.energy.div("1e675").root(675)).floor() },
-				effect() { return player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10() },
+				effect() { 
+					let eff = player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10();
+					eff = softcap("corona", eff);
+					return eff;
+				},
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity, Solar Energy, Subspace, & Quirk Energy for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Coronal Waves\n"+
@@ -2846,7 +2898,7 @@ addLayer("m", {
 		},
 		spellPower() { return new Decimal(1) },
 		hexGain() { return new Decimal(1) },
-		hexEff() { return player.m.hexes.times(2).plus(1).pow(10) },
+		hexEff() { return softcap("hex", player.m.hexes.times(2).plus(1).pow(10)) },
 		update(diff) {
 			if (!player.m.unlocked) return;
 			for (let i=11;i<=13;i++) if (player.m.spellTimes[i].gt(0)) player.m.spellTimes[i] = player.m.spellTimes[i].sub(diff).max(0);
@@ -2880,6 +2932,8 @@ addLayer("m", {
 					let power = tmp.m.spellPower.times(player.m.spellInputs[this.id].max(1).log10().plus(1));
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
 					let eff = power.div(2).plus(1)
+					if (hasUpgrade("ba", 31)) eff = Decimal.pow(1.1, power).times(eff);
+					eff = softcap("spell1", eff);
 					return eff.div(1.5).max(1);
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -2912,6 +2966,8 @@ addLayer("m", {
 					let power = tmp.m.spellPower.times(player.m.spellInputs[this.id].max(1).log10().plus(1));
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
 					let eff = power.div(5).plus(1)
+					if (hasUpgrade("ba", 31)) eff = Decimal.pow(1.1, power).times(eff);
+					eff = softcap("spell1", eff);
 					return eff.div(1.2).max(1);
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -2944,6 +3000,7 @@ addLayer("m", {
 					let power = tmp.m.spellPower.times(player.m.spellInputs[this.id].max(1).log10().plus(1));
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
 					let eff = power.times(1.25)
+					eff = softcap("spell3", eff);
 					return eff;
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -3053,16 +3110,24 @@ addLayer("ba", {
 			return mult;
 		},
 		posGain() { return Decimal.pow(tmp.ba.dirBase, player.ba.allotted).times(player.ba.allotted).times(tmp.ba.posGainMult) },
-		posBuff() { return player.ba.pos.plus(1).log10().plus(1).div(tmp.ba.negNerf); },
-		posNerf() { return player.ba.pos.plus(1).sqrt() },
+		posBuff() { 
+			let eff = player.ba.pos.plus(1).log10().plus(1).div(tmp.ba.negNerf); 
+			eff = softcap("posBuff", eff);
+			return eff;
+		},
+		posNerf() { return player.ba.pos.plus(1).sqrt().pow(inChallenge("h", 41)?100:1) },
 		negGainMult() {
 			let mult = new Decimal(1);
 			if (hasUpgrade("ba", 24)) mult = mult.times(upgradeEffect("ba", 24).neg);
 			return mult;
 		},
 		negGain() { return Decimal.pow(tmp.ba.dirBase, 1-player.ba.allotted).times(1-player.ba.allotted).times(tmp.ba.negGainMult) },
-		negBuff() { return player.ba.neg.plus(1).pow((hasUpgrade("ba", 13))?10:1).div(tmp.ba.posNerf) },
-		negNerf() { return player.ba.neg.plus(1).log10().plus(1).sqrt().div(hasUpgrade("ba", 14)?2:1).max(1) },
+		negBuff() { 
+			let eff = player.ba.neg.plus(1).pow((hasUpgrade("ba", 13))?10:1).div(tmp.ba.posNerf);
+			eff = softcap("negBuff", eff);
+			return eff;
+		},
+		negNerf() { return player.ba.neg.plus(1).log10().plus(1).sqrt().pow(inChallenge("h", 41)?100:1).div(hasUpgrade("ba", 14)?2:1).max(1) },
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
@@ -3072,12 +3137,13 @@ addLayer("ba", {
 			["clickable", 31],
 			["row", [["clickable", 21], ["clickable", 11], "blank", ["bar", "balanceBar"], "blank", ["clickable", 12], ["clickable", 22]]],
 			["row", [
-				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"+(tmp.ba.negGainMult.eq(1)?"":("*"+format(tmp.ba.negGainMult)))):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
+				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"+(tmp.ba.negGainMult.eq(1)?"":("*"+format(tmp.ba.negGainMult)))):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)"+(inChallenge("h", 41)?"^100":"")+"/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
 				"blank", "blank", "blank", 
 				["column", 
-				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"+(tmp.ba.posGainMult.eq(1)?"":("*"+format(tmp.ba.posGainMult)))):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
+				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"+(tmp.ba.posGainMult.eq(1)?"":("*"+format(tmp.ba.posGainMult)))):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"+(inChallenge("h", 41)?"^100":"")):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
 			["row", [["upgrade", 22], ["upgrade", 21], ["upgrade", 23]]],
-			["upgrade", 24],
+			["row", [["upgrade", 31], ["upgrade", 24], ["upgrade", 32]]],
+			["upgrade", 33],
 			"blank", "blank"
 		],
 		bars: {
@@ -3136,7 +3202,7 @@ addLayer("ba", {
 			},
 		},
 		upgrades: {
-			rows: 2,
+			rows: 3,
 			cols: 4,
 			11: {
 				title: "Negative Ion",
@@ -3146,7 +3212,11 @@ addLayer("ba", {
 				currencyInternalName: "neg",
 				currencyLayer: "ba",
 				unlocked() { return hasMilestone("ba", 3) },
-				effect() { return player.ba.neg.plus(1).log10().sqrt().div(10) },
+				effect() { 
+					let ret = player.ba.neg.plus(1).log10().sqrt().div(10);
+					ret = softcap("ba11", ret);
+					return ret;
+				},
 				effectDisplay() { return "+"+format(tmp.ba.upgrades[11].effect.times(100))+"%" },
 				formula: "sqrt(log(x+1))*10",
 			},
@@ -3158,7 +3228,7 @@ addLayer("ba", {
 				currencyInternalName: "pos",
 				currencyLayer: "ba",
 				unlocked() { return hasMilestone("ba", 3) },
-				effect() { return player.ba.pos.plus(1).log10().cbrt().div(10) },
+				effect() { return softcap("ba12", player.ba.pos.plus(1).log10().cbrt().div(10)) },
 				effectDisplay() { return "+"+format(tmp.ba.upgrades[12].effect.times(100))+"%" },
 				formula: "cbrt(log(x+1))*10",
 			},
@@ -3210,11 +3280,40 @@ addLayer("ba", {
 				cost: new Decimal(2.5e12),
 				unlocked() { return hasUpgrade("ba", 22) && hasUpgrade("ba", 23) },
 				effect() { return {
-					pos: player.ba.neg.div(1e12).plus(1).log10().plus(1).pow(5),
-					neg: player.ba.pos.div(1e12).plus(1).log10().plus(1).pow(5),
+					pos: player.ba.neg.div(1e12).plus(1).log10().plus(1).pow(hasUpgrade("ba", 33)?15:5),
+					neg: player.ba.pos.div(1e12).plus(1).log10().plus(1).pow(hasUpgrade("ba", 33)?15:5),
 				} },
 				effectDisplay() { return "Pos: "+format(tmp.ba.upgrades[24].effect.pos)+"x, Neg: "+format(tmp.ba.upgrades[24].effect.neg)+"x" },
-				formula: "Pos: (log(neg/1e12+1)+1)^5, Neg: (log(pos/1e12+1)+1)^5",
+				formula() { return "Pos: (log(neg/1e12+1)+1)^"+(hasUpgrade("ba", 33)?15:5)+", Neg: (log(pos/1e12+1)+1)^"+(hasUpgrade("ba", 33)?15:5) },
+			},
+			31: {
+				title: "Tangible Degeneration",
+				description: "The first two Spells use better formulas.",
+				cost: new Decimal(1e52),
+				currencyDisplayName: "negativity",
+				currencyInternalName: "neg",
+				currencyLayer: "ba",
+				unlocked() { return hasChallenge("h", 41) },
+			},
+			32: {
+				title: "Visible Regeneration",
+				description: "Positivity multiplies the Super-Generator base.",
+				cost: new Decimal(1e52),
+				currencyDisplayName: "positivity",
+				currencyInternalName: "pos",
+				currencyLayer: "ba",
+				unlocked() { return hasChallenge("h", 41) },
+				effect() { 
+					return softcap("ba32", player.ba.pos.plus(1).log10().div(50).plus(1).pow(10));
+				},
+				effectDisplay() { return format(tmp.ba.upgrades[32].effect)+"x" },
+				formula: "(log(x+1)/50+1)^10",
+			},
+			33: {
+				title: "True Equality",
+				description: "Both <b>Net Neutrality</b> effects are cubed.",
+				cost: new Decimal(2.5e51),
+				unlocked() { return hasChallenge("h", 41) },
 			},
 		},
 		milestones: {
@@ -3296,8 +3395,13 @@ addLayer("ps", {
         layerShown(){return player.m.unlocked && player.ba.unlocked},
         branches: ["q", ["h", 2]],
 		soulGainExp() { return 1.5 },
+		soulGainMult() {
+			let mult = new Decimal(1);
+			if (tmp.ps.buyables[11].effects.damned) mult = mult.times(tmp.ps.buyables[11].effects.damned||1);
+			return mult;
+		},
 		soulGain() {
-			let gain = Decimal.pow(player.ps.points, layers.ps.soulGainExp()).div(10);
+			let gain = Decimal.pow(player.ps.points, layers.ps.soulGainExp()).div(10).times(layers.ps.soulGainMult());
 			return gain;
 		},
 		gainDisplay() {
@@ -3308,15 +3412,20 @@ addLayer("ps", {
 			else display = "1 per "+format(gain.pow(-1))+" OoMs of Hindrance Spirit"
 			return display;
 		},
+		soulEffExp() {
+			let exp = new Decimal(1.5e3);
+			if (tmp.ps.buyables[11].effects.damned) exp = exp.times(tmp.ps.buyables[11].effects.damned||1);
+			return exp;
+		},
 		soulEff() {
-			let eff = player.ps.souls.plus(1).pow(1500);
+			let eff = player.ps.souls.plus(1).pow(layers.ps.soulEffExp());
 			return eff;
 		},
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
 			"blank",
-			["display-text", function() { return "You have "+formatWhole(player.ps.souls)+" Damned Souls "+(tmp.nerdMode?("(Formula: (PS^"+format(tmp.ps.soulGainExp)+")/10)"):("(Gain: "+tmp.ps.gainDisplay+")"))+": Divide Quirk Improvement requirements by "+format(tmp.ps.soulEff)+(tmp.nerdMode?(" (x+1)^(1,500)"):"") }],
+			["display-text", function() { return "You have "+formatWhole(player.ps.souls)+" Damned Souls "+(tmp.nerdMode?("(Formula: (PS^"+format(tmp.ps.soulGainExp)+")*"+format(tmp.ps.soulGainMult.div(10))+")"):("(Gain: "+tmp.ps.gainDisplay+")"))+": Divide Quirk Improvement requirements by "+format(tmp.ps.soulEff)+(tmp.nerdMode?(" (x+1)^("+formatWhole(tmp.ps.soulEffExp)+")"):"") }],
 			"blank",
 			"buyables",
 		],
@@ -3326,21 +3435,21 @@ addLayer("ps", {
 			11: {
 				title: "Wraiths",
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    let cost1 = x.times(1.5).plus(1).floor();
-					let cost2 = x.plus(1).pow(3).times(125).plus(200).floor();
+                    let cost1 = x.times(2).plus(1).floor();
+					let cost2 = x.plus(1).pow(4).times(174).plus(200).floor();
                     return { phantom: cost1, damned: cost2 };
                 },
 				effects(adj=0) {
 					let data = {};
 					let x = player[this.layer].buyables[this.id].plus(adj);
-					if (x.gte(1)) data.hindr = 1;
-					// if (x.gte(2)) data.damned = x.sub(1).times(0.25).plus(1);
+					if (x.gte(1)) data.hindr = x.min(3).toNumber();
+					if (x.gte(2)) data.damned = x.sub(1).times(0.5).plus(1);
 					// if (x.gte(4)) data.quirkImpr = x.div(2).sub(1).floor().min(3).toNumber();
 					return data;
 				},
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-                    let display = ((tmp.nerdMode?("Cost Formula: 1.5*x+1 Phantom Souls, (x+1)^3*125+200 Damned Souls"):("Cost: " + formatWhole(data.cost.phantom) + " Phantom Souls, "+formatWhole(data.cost.damned)+" Damned Souls"))+"\n\
+                    let display = ((tmp.nerdMode?("Cost Formula: 2*x+1 Phantom Souls, (x+1)^4*174+200 Damned Souls"):("Cost: " + formatWhole(data.cost.phantom) + " Phantom Souls, "+formatWhole(data.cost.damned)+" Damned Souls"))+"\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+"\n\
 					Effects: ")
 					let curr = data.effects;
@@ -3348,16 +3457,16 @@ addLayer("ps", {
 					if (Object.keys(next).length>0) {
 						if (next.hindr) {
 							display += "\n"
-							if (curr.hindr) display += "1 New Hindrance"
+							if (curr.hindr) display += curr.hindr+" New Hindrance"+(curr.hindr==1?"":"s")+(curr.hindr>=3?" (MAXED)":"")
 							else display += "<b>NEXT: Unlock a new Hindrance</b>"
 						}
-						// HEY! What are you lookin' at? You're gonna be spoilered! Oh well, that's your fault by looking at the code...
-						/*if (next.damned) {
+						if (next.damned) {
 							display += "\n"
-							if (curr.damned) display += "Multiply Damned Soul gain by "+format(curr.damned)+(tmp.nerdMode?"((x-1)*0.25+1)":"");
-							else display += "<b>NEXT: Multiply Damned Soul gain</b>"
+							if (curr.damned) display += "Multiply Damned Soul gain & effect exponent by "+format(curr.damned)+(tmp.nerdMode?" ((x-1)*0.5+1)":"");
+							else display += "<b>NEXT: Multiply Damned Soul gain & effect exponent</b>"
 						}
-						if (next.quirkImpr) {
+						// HEY! What are you lookin' at? You're gonna be spoilered! Oh well, that's your fault by looking at the code...
+						/*if (next.quirkImpr) {
 							display += "\n"
 							if (curr.quirkImpr) display += curr.quirkImpr+" New Quirk Improvements"
 							else display += "<b>NEXT: Unlock a new Quirk Improvement</b>"
@@ -3524,6 +3633,11 @@ addLayer("a", {
 				name: "Generator Slowdown",
 				done() { return player.g.best.gte(1225) },
 				tooltip: "Reach 1,225 Generators.",
+			},
+			73: {
+				name: "Seems Familiar?",
+				done() { return player.ps.unlocked },
+				tooltip: "Unlock Phantom Souls.",
 			},
         },
 		tabFormat: [

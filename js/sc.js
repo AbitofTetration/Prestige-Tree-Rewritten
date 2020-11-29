@@ -49,6 +49,61 @@ const SOFTCAPS = {
 		start: new Decimal(5e4),
 		mag: new Decimal(2),
 	},
+	solCores2: {
+		type: "log",
+		start: new Decimal(1e60),
+		exp: new Decimal(3),
+	},
+	corona: {
+		type: "expRoot",
+		start: new Decimal(4),
+		mag: new Decimal(2),
+	},
+	hex: {
+		type: "log",
+		start: new Decimal("1e10000"),
+		exp: new Decimal(10),
+	},
+	spell1: {
+		type: "expRoot",
+		start: new Decimal(1e6),
+		mag: new Decimal(1.5),
+	},
+	spell2: {
+		type: "expRoot",
+		start: new Decimal(1e6),
+		mag: new Decimal(2),
+	},
+	spell3: {
+		type: "root",
+		start: new Decimal(45),
+		mag: new Decimal(5),
+	},
+	posBuff: {
+		type: "root",
+		start: new Decimal(1e6),
+		mag: new Decimal(3),
+	},
+	negBuff: {
+		type: "expRoot",
+		start: new Decimal("1e1500"),
+		mag: new Decimal(2),
+	},
+	ba11: {
+		type: "log",
+		start: new Decimal(1.5),
+		exp: new Decimal(0.5),
+	},
+	ba12: {
+		type: "log",
+		start: new Decimal(0.75),
+		exp: new Decimal(0.25),
+	},
+	ba32: {
+		type: "log",
+		start: new Decimal(1e9),
+		exp: new Decimal(1.6),
+	},
 }
 
 const STATIC_SCALE_DATA = [
@@ -69,6 +124,23 @@ const STATIC_SCALE_DATA = [
 		exp: new Decimal(2),
 	}, {
 		start: new Decimal(1225),
+		start_adj: {
+			"2": function() {
+				let start = new Decimal(1225);
+				if (inChallenge("h", 42)) start = new Decimal(1);
+				return start;
+			},
+			"3": function() {
+				let start = new Decimal(1225);
+				if (inChallenge("h", 42)) start = new Decimal(1);
+				return start;
+			},
+			"4": function() {
+				let start = new Decimal(1225);
+				if (inChallenge("h", 42)) start = new Decimal(1);
+				return start;
+			},
+		},
 		exp: new Decimal(10),
 	},
 ]
