@@ -1789,6 +1789,7 @@ addLayer("h", {
 		},
 		pointRoot31(x=challengeCompletions("h", 31)) {
 			if (player.h.activeChallenge==32) x = challengeCompletions("h", 32)*2
+			if (x>=20) x = Math.pow(x-19, 1.5)+19
 			let root = Decimal.add(2, Decimal.pow(x, 1.5).div(16))
 			return root;
 		},
@@ -1854,11 +1855,17 @@ addLayer("h", {
 			},
 			31: {
 				name: "Timeless",
-				completionLimit() { return hasAchievement("a", 71)?20:10 },
+				completionLimit() { 
+					let lim = 10
+					if (hasAchievement("a", 71)) lim += 10;
+					if (hasAchievement("a", 74)) lim += 10;
+					return lim
+				},
 				challengeDescription() {return "You can only buy 10 Enhancers & Extra Time Capsules (total), Enhancer/Extra Time Capsule automation is disabled, and Point generation is brought to the "+format(tmp.h.pointRoot31)+"th root<br>Completions: "+challengeCompletions("h", 31)+"/"+this.completionLimit()},
 				unlocked() { return hasChallenge("h", 22) },
 				goal() { 
 					let comps = challengeCompletions("h", 31);
+					if (comps>=20) comps = Math.pow(comps-19, 1.95)+19;
 					return Decimal.pow("1e50", Decimal.pow(comps, 2.5)).times("1e5325") 
 				},
 				currencyDisplayName: "points",
@@ -1874,6 +1881,7 @@ addLayer("h", {
 				challengeDescription() { return 'All previous challenges are applied at once ("Timeless" is applied at difficulty level '+(challengeCompletions("h", 32)*2+1)+')<br>Completions: '+challengeCompletions("h", 32)+'/'+this.completionLimit },
 				goal() {
 					let comps = challengeCompletions("h", 32);
+					if (comps>=3) comps = comps-0.96;
 					return Decimal.pow("1e1000", Decimal.pow(comps, 3)).times("1e9000");
 				},
 				currencyDisplayName: "points",
@@ -2927,6 +2935,7 @@ addLayer("m", {
         exponent: new Decimal(0.007), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
+			if (hasAchievement("a", 74)) mult = mult.times(challengeEffect("h", 32));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -3130,6 +3139,7 @@ addLayer("ba", {
         exponent: new Decimal(0.005), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
+			if (hasAchievement("a", 74)) mult = mult.times(challengeEffect("h", 32));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -3688,6 +3698,11 @@ addLayer("a", {
 				name: "Seems Familiar?",
 				done() { return player.ps.unlocked },
 				tooltip: "Unlock Phantom Souls.",
+			},
+			74: {
+				name: "Super Balanced",
+				done() { return player.ba.points.gte(1e100) },
+				tooltip: 'Reach 1e100 Balance Energy. Reward: You can complete "Timeless" 10 more times, and the "Option D" effect also affects Magic & Balance Energy gain.',
 			},
         },
 		tabFormat: [
