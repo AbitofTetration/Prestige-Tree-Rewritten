@@ -1221,6 +1221,7 @@ addLayer("s", {
 			if (hasUpgrade("s", 21)) pow = pow.plus(0.08);
 			if (hasChallenge("h", 21)) pow = pow.plus(challengeEffect("h", 21).div(100));
 			if (player.ss.unlocked) pow = pow.plus(tmp.ss.eff2);
+			if (hasUpgrade("ss", 42)) pow = pow.plus(1);
 			if (hasUpgrade("ba", 12)) pow = pow.plus(upgradeEffect("ba", 12));
 			if (inChallenge("h", 21)) pow = pow.sub(0.9);
 			return pow;
@@ -1920,7 +1921,7 @@ addLayer("h", {
 				goal: new Decimal("1e19000"),
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
-				rewardDescription: "The Quirk Layer cost base is decreased by 0.15.",
+				rewardDescription: "The Quirk Layer cost base is decreased by 0.15, and unlock 2 new Subspace Upgrades.",
 				unlocked() { return (tmp.ps.buyables[11].effects.hindr||0)>=3 },
 				countsAs: [22],
 				onStart(testInput=false) {
@@ -2044,6 +2045,7 @@ addLayer("q", {
 		freeLayers() {
 			let l = new Decimal(0);
 			if (player.m.unlocked) l = l.plus(tmp.m.buyables[13].effect);
+			if (tmp.q.impr[43].unlocked) l = l.plus(improvementEffect("q", 43));
 			return l;
 		},
 		buyables: {
@@ -2333,23 +2335,25 @@ addLayer("q", {
 				return req;
 			},
 			amount() { 
-				let amt = player.q.energy.div(this.baseReq()).plus(1).log10().div(2).sqrt().floor();
+				let amt = player.q.energy.div(this.baseReq()).plus(1).log10().div(2).sqrt();
 				if (amt.gte(270)) amt = amt.log10().times(270/Math.log10(270));
-				return amt;
+				return amt.floor();
 			},
 			overallNextImpr() { 
-				let impr = tmp.q.impr.amount;
+				let impr = tmp.q.impr.amount.plus(1);
 				if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
-				return Decimal.pow(10, impr.plus(1).pow(2).times(2)).sub(1).times(this.baseReq()) 
+				return Decimal.pow(10, impr.pow(2).times(2)).sub(1).times(this.baseReq()) 
 			},
 			nextAt(id=11) { 
-				let impr = getImprovements("q", id).times(tmp.q.impr.rows*tmp.q.impr.cols).add(tmp.q.impr[id].num).sub(1);
+				let impr = getImprovements("q", id).times(tmp.q.impr.activeRows*tmp.q.impr.activeCols).add(tmp.q.impr[id].num);
 				if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
-				return Decimal.pow(10, impr.plus(1).pow(2).times(2)).sub(1).times(this.baseReq());
+				return Decimal.pow(10, impr.pow(2).times(2)).sub(1).times(this.baseReq());
 			},
 			resName: "quirk energy",
-			rows: 3,
+			rows: 4,
 			cols: 3,
+			activeRows: 3,
+			activeCols: 3,
 			11: {
 				num: 1,
 				title: "Central Improvement",
@@ -2431,6 +2435,33 @@ addLayer("q", {
 				effectDisplay() { return format(tmp.q.impr[33].effect)+"x" },
 				formula: "1e8^(x^1.2)",
 			},
+			41: {
+				num: 271,
+				title: "Solar Improvement",
+				description: "Solar Energy gain is stronger.",
+				unlocked() { return (tmp.ps.buyables[11].effects.quirkImpr||0)>=1 },
+				effect() { return Decimal.pow("1e400", Decimal.pow(getImprovements("q", 41), 0.9)) },
+				effectDisplay() { return format(tmp.q.impr[41].effect)+"x" },
+				formula: "1e400^(x^0.9)",
+			},
+			42: {
+				num: 540,
+				title: "Subspatial Improvement",
+				description: "The Subspace base is stronger.",
+				unlocked() { return (tmp.ps.buyables[11].effects.quirkImpr||0)>=2 },
+				effect() { return Decimal.pow(10, Decimal.pow(getImprovements("q", 42), 0.75)) },
+				effectDisplay() { return format(tmp.q.impr[42].effect)+"x" },
+				formula: "10^(x^0.75)",
+			},
+			43: {
+				num: 810,
+				title: "Layer Improvement",
+				description: "Add free Quirk Layers.",
+				unlocked() { return (tmp.ps.buyables[11].effects.quirkImpr||0)>=3 },
+				effect() { return Decimal.mul(Decimal.pow(getImprovements("q", 43), 0.8), 1.25) },
+				effectDisplay() { return format(tmp.q.impr[43].effect)+"x" },
+				formula: "1.25*(x^0.8)",
+			},
 		},
 })
 
@@ -2494,6 +2525,7 @@ addLayer("o", {
 		solEnGain() { 
 			let gain = player.t.energy.max(1).pow(tmp.o.effect).times(tmp.o.effect2).sub(1);
 			if (player.m.unlocked) gain = gain.times(tmp.m.hexEff);
+			if (tmp.q.impr[41].unlocked) gain = gain.times(improvementEffect("q", 41));
 			return gain;
 		},
 		solEnEff() { return Decimal.sub(4, Decimal.div(4, player.o.energy.plus(1).log10().plus(1))) },
@@ -2538,7 +2570,7 @@ addLayer("o", {
 				gain() { return player.o.points.div(2).root(1.5).floor() },
 				effect() { 
 					let amt = player[this.layer].buyables[this.id]
-					amt = softcap("solCores2", softcap("solCores", amt));
+					amt = softcap("solCores", amt)
 					return hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)) 
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -2688,6 +2720,7 @@ addLayer("ss", {
 			if (hasUpgrade("ss", 32)) base = base.plus(upgradeEffect("ss", 32));
 			if (hasUpgrade("ss", 41)) base = base.plus(buyableEffect("o", 21));
 			if (player.ba.unlocked) base = base.times(tmp.ba.posBuff);
+			if (tmp.q.impr[42].unlocked) base = base.times(improvementEffect("q", 42));
 			return base;
 		},
 		effect() { 
@@ -2841,6 +2874,24 @@ addLayer("ss", {
 				currencyLayer: "s",
 				unlocked() { return hasUpgrade("ss", 33) },
 			},
+			42: {
+				title: "Sub-Subspace",
+				description: "Space Buildings are 100% stronger (additive).",
+				cost: new Decimal("1e936"),
+				currencyDisplayName: "subspace",
+				currencyInternalName: "subspace",
+				currencyLayer: "ss",
+				unlocked() { return hasChallenge("h", 42) },
+			},
+			43: {
+				title: "Challenging Speedup",
+				description: "When below e1,000,000, Point gain is raised to the power of 1.1. Otherwise, it is raised to the power of 1.01.",
+				cost: new Decimal("1e990"),
+				currencyDisplayName: "subspace",
+				currencyInternalName: "subspace",
+				currencyLayer: "ss",
+				unlocked() { return hasChallenge("h", 42) },
+			},
 		},
 })
 
@@ -2967,7 +3018,7 @@ addLayer("m", {
 					if (player.m.spellTimes[this.id].eq(0)) power = new Decimal(0);
 					let eff = power.div(5).plus(1)
 					if (hasUpgrade("ba", 31)) eff = Decimal.pow(1.1, power).times(eff);
-					eff = softcap("spell1", eff);
+					eff = softcap("spell2", eff);
 					return eff.div(1.2).max(1);
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -3444,7 +3495,7 @@ addLayer("ps", {
 					let x = player[this.layer].buyables[this.id].plus(adj);
 					if (x.gte(1)) data.hindr = x.min(3).toNumber();
 					if (x.gte(2)) data.damned = x.sub(1).times(0.5).plus(1);
-					// if (x.gte(4)) data.quirkImpr = x.div(2).sub(1).floor().min(3).toNumber();
+					if (x.gte(4)) data.quirkImpr = x.div(2).sub(1).floor().min(3).toNumber();
 					return data;
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -3465,12 +3516,11 @@ addLayer("ps", {
 							if (curr.damned) display += "Multiply Damned Soul gain & effect exponent by "+format(curr.damned)+(tmp.nerdMode?" ((x-1)*0.5+1)":"");
 							else display += "<b>NEXT: Multiply Damned Soul gain & effect exponent</b>"
 						}
-						// HEY! What are you lookin' at? You're gonna be spoilered! Oh well, that's your fault by looking at the code...
-						/*if (next.quirkImpr) {
+						if (next.quirkImpr) {
 							display += "\n"
-							if (curr.quirkImpr) display += curr.quirkImpr+" New Quirk Improvements"
-							else display += "<b>NEXT: Unlock a new Quirk Improvement</b>"
-						}*/
+							if (curr.quirkImpr) display += curr.quirkImpr+" New Quirk Improvement"+(curr.quirkImpr==1?"":"s")+(curr.quirkImpr>=3?" (MAXED)":"")
+							else if (next.quirkImpr>(curr.quirkImpr||0)) display += "<b>NEXT: Unlock a new Quirk Improvement</b>"
+						}
 					} else display += "None"
 					return display;
                 },
@@ -3649,3 +3699,26 @@ addLayer("a", {
 		},	
     }, 
 )
+
+addLayer("sc", {
+	startData() { return {unlocked: true}},
+	color: "#e6ff69",
+	symbol: "SC",
+	row: "side",
+	layerShown() { return hasAchievement("a", 21) },
+	tooltip: "Softcaps",
+	tabFormat: [
+		"blank", "blank", "blank",
+		["raw-html", function() {
+			let html = ""
+			for (let id in SOFTCAPS) {
+				let data = SOFTCAPS[id];
+				if (data.display) if (data.display()) {
+					html += "<div><h3>"+data.title+"</h3><br>"+data.info();
+					html += "</div><br><br>";
+				}
+			}
+			return html;
+		}],
+	],
+})

@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e999999999999999999"),
-	specialEndgameText: "v0.6 Beta 8 Endgame: e3,580,000 Points, 38,000 Damned Souls, & 1e100 Balance Energy",
+	specialEndgameText: "v0.6 Beta 9 Endgame: e3,980,000 Points & 7 Wraiths",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.6",
-	beta: 8,
+	beta: 9,
 	name: "Balanced Magical Phantoms",
 }
 
@@ -55,6 +55,7 @@ function getPointGen() {
 	if (player.q.unlocked) gain = gain.times(tmp.q.enEff);
 	
 	if (inChallenge("h", 31)) gain = gain.root(tmp.h.pointRoot31);
+	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt("e1e6")?1.1:1.01);
 	return gain
 }
 

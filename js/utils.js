@@ -548,7 +548,7 @@ function achievementEffect(layer, id){
 }
 
 function getImprovements(layer, id) {
-	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.rows*tmp[layer].impr.cols).plus(1).floor().max(0)):new Decimal(0);
+	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.activeRows*tmp[layer].impr.activeCols).plus(1).floor().max(0)):new Decimal(0);
 }
 
 function getNextImpr(layer, id) {
