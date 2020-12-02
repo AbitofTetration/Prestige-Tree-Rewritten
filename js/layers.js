@@ -2923,6 +2923,7 @@ addLayer("m", {
 				13: new Decimal(1),
 			},
 			spellInput: "1",
+			distrAll: false,
 			hexes: new Decimal(0),
 			first: 0,
         }},
@@ -2980,6 +2981,17 @@ addLayer("m", {
 				function() {return "You have "+formatWhole(player.m.hexes)+" Hexes, which are multiplying Hindrance Spirit, Quirk, Solar Energy, & Subspace gain by "+format(tmp.m.hexEff)+(tmp.nerdMode?" (2*x+1)^5":"") },
 					{}],
 		],
+		spellsUnlocked() { return 3 },
+		castAllSpells() {
+			let cost = tmp.m.spellInputAmt;
+			let input = tmp.m.spellInputAmt.div(tmp.m.spellsUnlocked);
+			for (let i=11;i<=(10+tmp.m.spellsUnlocked);i++) {
+				player.m.spellInputs[i] = (player.m.spellTimes[i].gt(0)?player.m.spellInputs[i].max(input):input);
+				player.m.spellTimes[i] = tmp.m.spellTime;
+			}
+			player.m.points = player.m.points.sub(cost)
+            player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
+		},
 		buyables: {
 			rows: 1,
 			cols: 3,
@@ -3000,7 +3012,7 @@ addLayer("m", {
                     let data = tmp[this.layer].buyables[this.id]
                     let display = "Effect: Booster base ^1.05, x" + format(data.effect)+"\n\
 					Time: "+formatTime(player.m.spellTimes[this.id]||0);
-					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: ((log(inserted+1)+1)/2+1)/1.5"):("To Insert: "+formatWhole(tmp.m.spellInputAmt)));
+					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: ((log(inserted+1)+1)/2+1)/1.5"):("To Insert: "+formatWhole(tmp.m.spellInputAmt.div((player.m.distrAll && hasMilestone("m", 4))?tmp.m.spellsUnlocked:1))));
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -3008,6 +3020,10 @@ addLayer("m", {
                     return player.m.points.gte(tmp[this.layer].buyables[this.id].cost)
 				},
                 buy() { 
+					if (player.m.distrAll && hasMilestone("m", 4)) {
+						layers.m.castAllSpells();
+						return;
+					}
                     cost = tmp[this.layer].buyables[this.id].cost
 					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
@@ -3034,7 +3050,7 @@ addLayer("m", {
                     let data = tmp[this.layer].buyables[this.id]
                     let display = "Effect: Time Capsule base ^1.1, x" + format(data.effect)+"\n\
 					Time: "+formatTime(player.m.spellTimes[this.id]||0);
-					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: ((log(inserted+1)+1)/5+1)/1.2"):("To Insert: "+formatWhole(tmp.m.spellInputAmt)));
+					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: ((log(inserted+1)+1)/5+1)/1.2"):("To Insert: "+formatWhole(tmp.m.spellInputAmt.div((player.m.distrAll && hasMilestone("m", 4))?tmp.m.spellsUnlocked:1))));
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -3042,6 +3058,10 @@ addLayer("m", {
                     return player.m.points.gte(tmp[this.layer].buyables[this.id].cost)
 				},
                 buy() { 
+					if (player.m.distrAll && hasMilestone("m", 4)) {
+						layers.m.castAllSpells();
+						return;
+					}
                     cost = tmp[this.layer].buyables[this.id].cost
 					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
@@ -3067,7 +3087,7 @@ addLayer("m", {
                     let data = tmp[this.layer].buyables[this.id]
                     let display = "Effect: +" + format(data.effect)+" Free Quirk Layers\n\
 					Time: "+formatTime(player.m.spellTimes[this.id]||0);
-					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: (log(inserted+1)+1)*1.25"):("To Insert: "+formatWhole(tmp.m.spellInputAmt)));
+					if (hasMilestone("m", 3)) display += "\n "+(tmp.nerdMode?("Formula: (log(inserted+1)+1)*1.25"):("To Insert: "+formatWhole(tmp.m.spellInputAmt.div((player.m.distrAll && hasMilestone("m", 4))?tmp.m.spellsUnlocked:1))));
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -3075,6 +3095,10 @@ addLayer("m", {
                     return player.m.points.gte(tmp[this.layer].buyables[this.id].cost)
 				},
                 buy() { 
+					if (player.m.distrAll && hasMilestone("m", 4)) {
+						layers.m.castAllSpells();
+						return;
+					}
                     cost = tmp[this.layer].buyables[this.id].cost
 					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
@@ -3111,6 +3135,13 @@ addLayer("m", {
 					varName: "spellInput",
 					options: ["1","10%","50%","100%"],
 				}],
+			},
+			4: {
+				unlocked() { return hasMilestone("m", 3) },
+				requirementDescription: "1e10 Total Magic",
+				done() { return player.m.total.gte(1e10) },
+				effectDescription: "When casting a Spell, all Spells are casted equally (magic is distributed).",
+				toggles: [["m", "distrAll"]],
 			},
 		},
 })
