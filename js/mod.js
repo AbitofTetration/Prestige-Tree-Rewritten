@@ -8,14 +8,14 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e999999999999999999"),
-	specialEndgameText: "v0.6 Beta 10 Endgame: e5,340,000 Points & 1e150 Magic",
+	endgame: new Decimal("1e5340000"),
+	//specialEndgameText: "v0.6 Beta 10 Endgame: e5,340,000 Points & 1e150 Magic",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "0.6",
-	beta: 11,
+	//beta: 11,
 	name: "Balanced Magical Phantoms",
 }
 
