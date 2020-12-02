@@ -93,6 +93,8 @@ function shouldNotify(layer){
 						let str = buyableData[player.solGlow]
 						if (str>id) continue;
 					}
+				} else if (layer=="m") {
+					if (player.majGlow=="never") continue;
 				}
 				return true
 			}
@@ -132,9 +134,10 @@ function rowReset(row, layer) {
 
 function layerDataReset(layer, keep = []) {
 	let storedData = {unlocked: player[layer].unlocked, first: player[layer].first} // Always keep unlocked & time unlocked
-	if (player[layer].auto) storedData.auto = player[layer].auto;
-	if (player[layer].autoExt) storedData.autoExt = player[layer].autoExt; // idk I don't feel like generalizing this
-	if (player[layer].autoBld) storedData.autoBld = player[layer].autoBld; // idk I don't feel like generalizing this
+	for (let i=0;i<alwaysKeepTheseVariables.length;i++) {
+		let name = alwaysKeepTheseVariables[i];
+		if (player[layer][name]) storedData[name] = player[layer][name];
+	}
 
 	for (thing in keep) {
 		if (player[layer][keep[thing]] !== undefined && player[layer][keep[thing]] !== null) {
@@ -240,7 +243,9 @@ function resetRow(row) {
 		if (player[layer].unlockOrder) player[layer].unlockOrder = 0
 	}
 	player.points = getStartPoints()
-	updateTemp();
+	updateTemp()
+	updateTemp()
+	updateTemp()
 	resizeCanvas();
 }
 

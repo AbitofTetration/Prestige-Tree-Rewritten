@@ -8,20 +8,22 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e104000"),
-	// specialEndgameText: "v0.5 Beta 6 Endgame: e104,000 Points",
+	endgame: new Decimal("1e5340000"),
+	//specialEndgameText: "v0.6 Beta 10 Endgame: e5,340,000 Points & 1e150 Magic",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.5",
-	// beta: 6,
-	name: "Subsolar",
+	num: "0.6",
+	//beta: 11,
+	name: "Balanced Magical Phantoms",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
-var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything"]
+var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything", "castAllSpells"]
+
+var alwaysKeepTheseVariables = ["auto", "autoExt", "autoBld", "keepPosNeg"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)
@@ -53,6 +55,7 @@ function getPointGen() {
 	if (player.q.unlocked) gain = gain.times(tmp.q.enEff);
 	
 	if (inChallenge("h", 31)) gain = gain.root(tmp.h.pointRoot31);
+	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt("e1e6")?1.1:1.01);
 	return gain
 }
 

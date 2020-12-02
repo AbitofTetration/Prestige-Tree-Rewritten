@@ -8,6 +8,7 @@
 	<script type="text/javascript" src="js/technical/break_eternity.js"></script>
 	<script type="text/javascript" src="js/technical/layerSupport.js"></script>
 	<script type="text/javascript" src="js/tree.js"></script>
+	<script type="text/javascript" src="js/sc.js"></script>
 	<script type="text/javascript" src="js/layers.js"></script>
 	<script type="text/javascript" src="js/mod.js"></script>
 	<script type="text/javascript" src="js/technical/temp.js"></script>
@@ -22,7 +23,7 @@
 		<canvas id="treeCanvas" class="canvas" v-if ="!(gameEnded && !player.keepGoing)"></canvas>
 
 		<div v-if="false" id="loadingSection" class="fullWidth">
-			<h1>Loading... (If this takes too long it means there was a serious error!)←</h1>
+			<h1>Loading... (If this takes too long it means there was a serious error!)</h1>
 		</div>
 		<div class="vl" v-if="player.navTab!= 'none' &&player.tab!='none'&&!(gameEnded && !player.keepGoing)"></div>
 		<div v-if="(gameEnded && !player.keepGoing)" class="fullWidth">
@@ -70,7 +71,7 @@
 			<br>
 			The Prestige Tree made by Jacorb and Aarex
 			<br>
-			Original idea by papyrus (on discord)
+			Original idea by papyrus#6977 (on discord)
 			<br><br>
 			<a v-bind:href="modInfo.changelogLink" target="_blank" class="link" >Changelog</a><br>
 			<span v-if="modInfo.discordLink"><a class="link" v-bind:href="modInfo.discordLink" target="_blank">{{modInfo.discordName}}</a><br></span>
@@ -123,6 +124,7 @@
 						<td><button class="opt" onclick="toggleOpt('redGlowActive')">Red Glow: {{ player.redGlowActive?"ON":"OFF" }}</button></td>
 						<td><button v-if="player.s.unlocked" class="opt" onclick="adjustGlow('space')">Red Glow - Space Buildings: {{ player.spaceGlow.toUpperCase() }}</button></td>
 						<td><button v-if="player.o.unlocked" class="opt" onclick="adjustGlow('sol')">Red Glow - Solarity Buyables: {{ player.solGlow.toUpperCase() }}</button></td>
+						<td><button v-if="player.m.unlocked" class="opt" onclick="adjustGlow('maj')">Red Glow - Spells: {{ player.majGlow.toUpperCase() }}</button></td>
 					</tr>
 				</table>
 			</div>
@@ -164,7 +166,7 @@
 
 
 		<div v-if="!(gameEnded && !player.keepGoing)" id="treeTab" style="z-index: 0" onscroll="resizeCanvas()" v-bind:class="{ fullWidth: (player.tab == 'none' || player.navTab == 'none'), col: (player.tab !== 'none' && player.navTab !== 'none'), left: (player.tab !== 'none' && player.navTab !== 'none')}">
-			<br><br><br><br>
+			<br><br><br><br><br><br>
 			<overlay-head id="fakeHead" style="visibility: hidden;">
 			</overlay-head>
 

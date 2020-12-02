@@ -106,6 +106,7 @@ function startPlayerBase() {
 		redGlowActive: true,
 		spaceGlow: "normal",
 		solGlow: "normal",
+		majGlow: "normal",
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -411,6 +412,7 @@ function adjustGlow(type) {
 			data.push("never")
 			return data;
 		},
+		maj() { return ["normal", "never"] },
 	}
 	let data = glowData[type]()
 	let index = data.indexOf(player[type+"Glow"]);
@@ -436,7 +438,9 @@ function changeTreeQuality() {
 }
 
 function toggleAuto(toggle) {
-	player[toggle[0]][toggle[1]] = !player[toggle[0]][toggle[1]] 
+	if (!(toggle instanceof Array)) {
+		player[toggle.layer][toggle.varName] = toggle.options[(toggle.options.indexOf(player[toggle.layer][toggle.varName])+1)%toggle.options.length]
+	} else player[toggle[0]][toggle[1]] = !player[toggle[0]][toggle[1]] 
 }
 
 function adjustMSDisp() {
@@ -544,7 +548,7 @@ function achievementEffect(layer, id){
 }
 
 function getImprovements(layer, id) {
-	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.rows*tmp[layer].impr.cols).plus(1).floor().max(0)):new Decimal(0);
+	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.activeRows*tmp[layer].impr.activeCols).plus(1).floor().max(0)):new Decimal(0);
 }
 
 function getNextImpr(layer, id) {
@@ -675,13 +679,6 @@ function showNavTab(name) {
 function goBack() {
 	if (player.navTab !== "none") showTab("none")
 	else showTab(player.lastSafeTab)
-}
-
-function layOver(obj1, obj2) {
-	for (let x in obj2) {
-		if (obj2[x] instanceof Object) layOver(obj1[x], obj2[x]);
-		else obj1[x] = obj2[x];
-	}
 }
 
 function prestigeNotify(layer) {
@@ -834,14 +831,13 @@ function costFormulaStatic(layer) {
 	let base = tmp[layer].base;
 	let resDiv = new Decimal(1);
 	
-	if (player[layer].points.gte(1225)) {
-		exp = exp.times(10)
-		resDiv = resDiv.times(Decimal.pow(1225, 9))
-	}
-	let scaleStart = (STATIC_SCALE_STARTS[String(tmp[layer].row-1)]?STATIC_SCALE_STARTS[String(tmp[layer].row+1)]():1);
-	if (player[layer].points.gte(scaleStart)) {
-		exp = exp.times(2);
-		resDiv = resDiv.times(scaleStart);
+	for (let scale=STATIC_SCALE_DATA.length-1;scale>=0;scale--) {
+		let scaleStart = getStaticScaleStart(scale, row+1)
+		let scaleExp = getStaticScaleExp(scale, row+1)
+		if (player[layer].points.gte(scaleStart)) {
+			exp = exp.times(scaleExp);
+			resDiv = resDiv.times(scaleStart.pow(exp.sub(1)));
+		}
 	}
 	
 	return "("+format(base)+"^(x^"+format(exp)+")"+(resDiv.eq(1)?"":(" / "+format(resDiv)))+")"+(mult.eq(1)?"":(mult.gt(1)?(" * ("+format(mult)+")"):(" / ("+format(mult.pow(-1))+")")))

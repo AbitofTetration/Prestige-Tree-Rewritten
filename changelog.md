@@ -1,5 +1,11 @@
 # The Prestige Tree: Rewritten changelog (major updates only):
 
+### v0.6: Balanced Magical Phantoms
+- Ported the "M", "BA", & "PS" layers
+- Added the next section of achievements
+- Minor bugfixes/QoL improvements were made
+- Phantom Souls now actually have a mechanic
+
 ### v0.5: Subsolar
 - Ported the "SS" layer and added the "O" layer
 - Added the next section of achievements

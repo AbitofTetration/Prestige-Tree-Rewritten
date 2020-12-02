@@ -149,7 +149,7 @@ function loadVue() {
 	Vue.component('upgrade', {
 		props: ['layer', 'data', 'cl'],
 		template: `
-		<button v-if="tmp[layer].upgrades && tmp[layer].upgrades[data]!== undefined && tmp[layer].upgrades[data].unlocked" v-on:click="buyUpg(layer, data)" v-bind:class="{ [layer]: true, upg: true, bought: cl=='bought', locked: cl=='locked', can: cl=='can'}"
+		<button v-if="tmp[layer].upgrades && tmp[layer].upgrades[data]!== undefined && tmp[layer].upgrades[data].unlocked" v-on:click="buyUpg(layer, data)" v-bind:class="{ [layer]: true, upg: true, bought: cl?(cl=='bought'):hasUpgrade(layer, data), locked: cl?(cl=='locked'):(!hasUpgrade(layer, data)&&!canAffordUpgrade(layer, data)), can: cl?(cl=='can'):(!hasUpgrade(layer, data)&&canAffordUpgrade(layer, data))}"
 			v-bind:style="[((!hasUpgrade(layer, data) && canAffordUpgrade(layer, data)) ? {'background-color': tmp[layer].color} : {}), tmp[layer].upgrades[data].style]">
 			<span v-if= "tmp[layer].upgrades[data].title"><h3 v-html="tmp[layer].upgrades[data].title"></h3><br></span>
 			<span v-html="tmp[layer].upgrades[data].description"></span>
@@ -208,14 +208,14 @@ function loadVue() {
 		<td v-if="tmp[layer].milestones && tmp[layer].milestones[data]!== undefined && shown" v-bind:style="[locked ? {'visibility': 'hidden'} : {}, tmp[layer].milestones[data].style]" v-bind:class="{milestone: cl=='milestone', milestoneDone: cl=='milestoneDone'}">
 			<h3 v-html="tmp[layer].milestones[data].requirementDescription"></h3><br>
 			<span v-html="tmp[layer].milestones[data].effectDescription"></span><br>
-		<span v-if="(tmp[layer].milestones[data].toggles)&&(hasMilestone(layer, data))" v-for="toggle in tmp[layer].milestones[data].toggles"><toggle :layer= "layer" :data= "toggle" v-bind:style="tmp[layer].componentStyles.toggle"></toggle>&nbsp;</span></td></tr>
+		<span v-if="(tmp[layer].milestones[data].toggles)&&(hasMilestone(layer, data))" v-for="toggle in tmp[layer].milestones[data].toggles"><toggle :data= "toggle" :type="((toggle instanceof Array)?'normal':'multi')" v-bind:style="tmp[layer].componentStyles.toggle"></toggle>&nbsp;</span></td></tr>
 		`
 	})
 
 	Vue.component('toggle', {
-		props: ['layer', 'data'],
+		props: ['data', 'type'],
 		template: `
-		<button class="smallUpg can" v-bind:style="{'background-color': tmp[data[0]].color}" v-on:click="toggleAuto(data)">{{player[data[0]][data[1]]?"ON":"OFF"}}</button>
+		<button class="smallUpg can" v-bind:style="{'background-color': tmp[((type=='multi')?(data.layer):(data[0]))].color}" v-on:click="toggleAuto(data)">{{(type=='multi')?(player[data.layer][data.varName]):(player[data[0]][data[1]]?"ON":"OFF")}}</button>
 		`
 	})
 
