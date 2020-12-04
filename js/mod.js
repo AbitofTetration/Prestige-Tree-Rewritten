@@ -8,14 +8,14 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e5340000"),
-	//specialEndgameText: "v0.6 Beta 10 Endgame: e5,340,000 Points & 1e150 Magic",
+	endgame: new Decimal("1e9999999999999999999"),
+	specialEndgameText: "v1.0 Beta 1 Endgame: e6,025,000 Points & 15 Total Honour",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.6",
-	//beta: 11,
+	num: "1.0",
+	beta: 1,
 	name: "Balanced Magical Phantoms",
 }
 
@@ -23,7 +23,7 @@ let VERSION = {
 // (The ones here are examples, all official functions are already taken care of)
 var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything", "castAllSpells"]
 
-var alwaysKeepTheseVariables = ["auto", "autoExt", "autoBld", "keepPosNeg"]
+var alwaysKeepTheseVariables = ["auto", "autoExt", "autoBld", "autoW", "keepPosNeg", "distrAll", "spellInput"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)

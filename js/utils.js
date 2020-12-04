@@ -483,12 +483,20 @@ function respecBuyables(layer) {
 
 function canAffordUpgrade(layer, id) {
 	let upg = tmp[layer].upgrades[id]
-	let cost = tmp[layer].upgrades[id].cost
-	return canAffordPurchase(layer, upg, cost) 
+	if (upg.multiRes) {
+		for (let i=0;i<upg.multiRes.length;i++) {
+			let cost = upg.multiRes[i].cost
+			if (!canAffordPurchase(layer, upg.multiRes[i], cost)) return false;
+		}
+		return true;
+	} else {
+		let cost = upg.cost
+		return canAffordPurchase(layer, upg, cost) 
+	}
 }
 
 function hasUpgrade(layer, id){
-	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString()))
+	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString())) && (tmp[layer].upgrades[id].unlocked)
 }
 
 function hasMilestone(layer, id){
@@ -587,32 +595,80 @@ function buyUpg(layer, id) {
 	if (!player[layer].unlocked) return
 	if (!tmp[layer].upgrades[id].unlocked) return
 	if (player[layer].upgrades.includes(id)) return
+	if (!canAffordUpgrade(layer, id)) return;
 	let upg = tmp[layer].upgrades[id]
 	let cost = tmp[layer].upgrades[id].cost
+	let orig = player;
 
-	if (upg.currencyInternalName){
-		let name = upg.currencyInternalName
-		if (upg.currencyLocation){
-			if (upg.currencyLocation[name].lt(cost)) return
-			upg.currencyLocation[name] = upg.currencyLocation[name].sub(cost)
+	if (upg.multiRes) {
+		let doReturn = false;
+		for (let i=0;i<upg.multiRes.length;i++) {
+			let data = upg.multiRes[i]
+			let cost = data.cost;
+			if (data.currencyInternalName){
+				let name = data.currencyInternalName
+				if (data.currencyLocation){
+					if (data.currencyLocation[name].lt(cost)) doReturn = true;
+					data.currencyLocation[name] = data.currencyLocation[name].sub(cost)
+				}
+				else if (data.currencyLayer){
+					let lr = data.currencyLayer
+					if (player[lr][name].lt(cost)) doReturn = true;
+					player[lr][name] = player[lr][name].sub(cost)
+				}
+				else {
+					if (player[name].lt(cost)) doReturn = true;
+					player[name] = player[name].sub(cost)
+				}
+			}
+			else {
+				if (player[layer].points.lt(cost)) doReturn = true;
+				player[layer].points = player[layer].points.sub(cost)	
+			}
 		}
-		else if (upg.currencyLayer){
-			let lr = upg.currencyLayer
-			if (player[lr][name].lt(cost)) return
-			player[lr][name] = player[lr][name].sub(cost)
+		if (doReturn) {
+			player = orig;
+			return;
+		}
+	} else {
+		if (upg.currencyInternalName){
+			let name = upg.currencyInternalName
+			if (upg.currencyLocation){
+				if (upg.currencyLocation[name].lt(cost)) return
+				upg.currencyLocation[name] = upg.currencyLocation[name].sub(cost)
+			}
+			else if (upg.currencyLayer){
+				let lr = upg.currencyLayer
+				if (player[lr][name].lt(cost)) return
+				player[lr][name] = player[lr][name].sub(cost)
+			}
+			else {
+				if (player[name].lt(cost)) return
+				player[name] = player[name].sub(cost)
+			}
 		}
 		else {
-			if (player[name].lt(cost)) return
-			player[name] = player[name].sub(cost)
+			if (player[layer].points.lt(cost)) return
+			player[layer].points = player[layer].points.sub(cost)	
 		}
-	}
-	else {
-		if (player[layer].points.lt(cost)) return
-		player[layer].points = player[layer].points.sub(cost)	
 	}
 	player[layer].upgrades.push(id);
 	if (upg.onPurchase != undefined)
 		upg.onPurchase()
+}
+
+function unlockUpg(layer, id) {
+	if (!player[layer].unlocked) return
+	if (!tmp[layer].upgrades[id].pseudoUnl) return
+	if (tmp[layer].upgrades[id].unlocked) return
+	if (player[layer].pseudoUpgs.includes(id)) return
+	let upg = tmp[layer].upgrades[id]
+	if (!upg.pseudoCan) return;
+	player[layer].pseudoUpgs.push(id);
+}
+
+function pseudoUnl(layer, id) {
+	return tmp[layer].upgrades[id].pseudoUnl && !tmp[layer].upgrades[id].unlocked;
 }
 
 function buyMaxBuyable(layer, id) {

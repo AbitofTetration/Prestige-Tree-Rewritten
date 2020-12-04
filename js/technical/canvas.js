@@ -1,7 +1,7 @@
 var canvas;
 var ctx;
 
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize", (_=>resizeCanvas()));
 
 function retrieveCanvasData() {
 	let treeCanv = document.getElementById("treeCanvas")
@@ -17,8 +17,8 @@ function resizeCanvas() {
 	if (!retrieveCanvasData()) return
 	canvas.width = 0;
     canvas.height = 0;
-	canvas.width  = window.innerWidth;
-	canvas.height = window.innerHeight;
+	canvas.width  = document.body.scrollWidth;
+	canvas.height = document.body.scrollHeight;
 	drawTree();
 }
 
@@ -47,6 +47,7 @@ function drawTree() {
 				}
 		}
 	}
+	needCanvasUpdate = false;
 }
 
 function drawTreeBranch(num1, data) { // taken from Antimatter Dimensions & adjusted slightly

@@ -136,8 +136,8 @@ function loadVue() {
 		template: `
 		<div v-if="tmp[layer].upgrades" class="upgTable">
 			<div v-for="row in tmp[layer].upgrades.rows" class="upgRow">
-				<div v-for="col in tmp[layer].upgrades.cols"><div v-if="tmp[layer].upgrades[row*10+col]!== undefined && tmp[layer].upgrades[row*10+col].unlocked" class="upgAlign">
-					<upgrade :layer = "layer" :data = "row*10+col" :cl = "hasUpgrade(layer, row*10+col)?'bought':(canAffordUpgrade(layer, row*10+col)?'can':'locked')" v-bind:style="tmp[layer].componentStyles.upgrade"></upgrade>
+				<div v-for="col in tmp[layer].upgrades.cols"><div v-if="tmp[layer].upgrades[row*10+col]!== undefined" class="upgAlign">
+					<upgrade :layer = "layer" :data = "row*10+col" :cl = "hasUpgrade(layer, row*10+col)?'bought':(canAffordUpgrade(layer, row*10+col)?'can':'locked')" :pcl="tmp[layer].upgrades[row*10+col].pseudoCan?'can':'locked'" v-bind:style="tmp[layer].componentStyles.upgrade"></upgrade>
 				</div></div>
 			</div>
 			<br>
@@ -147,15 +147,20 @@ function loadVue() {
 
 	// data = id
 	Vue.component('upgrade', {
-		props: ['layer', 'data', 'cl'],
+		props: ['layer', 'data', 'cl', 'pcl'],
 		template: `
-		<button v-if="tmp[layer].upgrades && tmp[layer].upgrades[data]!== undefined && tmp[layer].upgrades[data].unlocked" v-on:click="buyUpg(layer, data)" v-bind:class="{ [layer]: true, upg: true, bought: cl?(cl=='bought'):hasUpgrade(layer, data), locked: cl?(cl=='locked'):(!hasUpgrade(layer, data)&&!canAffordUpgrade(layer, data)), can: cl?(cl=='can'):(!hasUpgrade(layer, data)&&canAffordUpgrade(layer, data))}"
-			v-bind:style="[((!hasUpgrade(layer, data) && canAffordUpgrade(layer, data)) ? {'background-color': tmp[layer].color} : {}), tmp[layer].upgrades[data].style]">
-			<span v-if= "tmp[layer].upgrades[data].title"><h3 v-html="tmp[layer].upgrades[data].title"></h3><br></span>
-			<span v-html="tmp[layer].upgrades[data].description"></span>
-			<span v-if="tmp[layer].upgrades[data].effect"><br>{{(tmp.nerdMode&&!tmp[layer].upgrades[data].noFormula)?'Formula: ':'Currently: '}}<span v-if="tmp.nerdMode&&!tmp[layer].upgrades[data].noFormula" v-html="tmp[layer].upgrades[data].formula?tmp[layer].upgrades[data].formula:'???'"></span><span v-if="(!tmp.nerdMode)||tmp[layer].upgrades[data].noFormula" v-html="(tmp[layer].upgrades[data].effectDisplay) ? (tmp[layer].upgrades[data].effectDisplay) : format(tmp[layer].upgrades[data].effect)"></span></span>
-			<br><span v-if="tmp.nerdMode&&tmp[layer].upgrades[data].costFormula">Cost Formula: {{tmp[layer].upgrades[data].costFormula}}</span><span v-if="!tmp.nerdMode||!tmp[layer].upgrades[data].costFormula"><br>Cost: {{ formatWhole(tmp[layer].upgrades[data].cost) }} {{(tmp[layer].upgrades[data].currencyDisplayName ? tmp[layer].upgrades[data].currencyDisplayName : tmp[layer].resource)}}</span>
-		</button>
+		<div v-if="tmp[layer].upgrades && tmp[layer].upgrades[data]!==undefined">
+			<button v-if="pseudoUnl(layer, data) && !(tmp[layer].upgrades[data].unlocked)" v-bind:class="{ [layer]: true, upg: true, pseudo: true, plocked: pcl=='locked', can: pcl=='can' }" v-on:click="unlockUpg(layer, data)">
+				<h3>Explore A New Upgrade</h3><br>{{tmp[layer].upgrades[data].pseudoReq}}
+			</button>
+			<button v-if="tmp[layer].upgrades[data].unlocked" v-on:click="buyUpg(layer, data)" v-bind:class="{ [layer]: true, upg: true, bought: cl?(cl=='bought'):hasUpgrade(layer, data), locked: cl?(cl=='locked'):(!hasUpgrade(layer, data)&&!canAffordUpgrade(layer, data)), can: cl?(cl=='can'):(!hasUpgrade(layer, data)&&canAffordUpgrade(layer, data))}"
+				v-bind:style="[((!hasUpgrade(layer, data) && canAffordUpgrade(layer, data)) ? {'background-color': tmp[layer].color} : {}), tmp[layer].upgrades[data].style]">
+				<span v-if= "tmp[layer].upgrades[data].title"><h3 v-html="tmp[layer].upgrades[data].title"></h3><br></span>
+				<span v-html="tmp[layer].upgrades[data].description"></span>
+				<span v-if="tmp[layer].upgrades[data].effect"><br>{{(tmp.nerdMode&&!tmp[layer].upgrades[data].noFormula)?'Formula: ':'Currently: '}}<span v-if="tmp.nerdMode&&!tmp[layer].upgrades[data].noFormula" v-html="tmp[layer].upgrades[data].formula?tmp[layer].upgrades[data].formula:'???'"></span><span v-if="(!tmp.nerdMode)||tmp[layer].upgrades[data].noFormula" v-html="(tmp[layer].upgrades[data].effectDisplay) ? (tmp[layer].upgrades[data].effectDisplay) : format(tmp[layer].upgrades[data].effect)"></span></span>
+				<br><span v-if="tmp.nerdMode&&tmp[layer].upgrades[data].costFormula">Cost Formula: {{tmp[layer].upgrades[data].costFormula}}</span><span v-if="!tmp.nerdMode||!tmp[layer].upgrades[data].costFormula"><br>Cost: <span v-if="tmp[layer].upgrades[data].multiRes"><span v-for="num in tmp[layer].upgrades[data].multiRes.length">{{formatWhole(tmp[layer].upgrades[data].multiRes[num-1].cost)+' '+(tmp[layer].upgrades[data].multiRes[num-1].currencyDisplayName ? tmp[layer].upgrades[data].multiRes[num-1].currencyDisplayName : tmp[layer].resource)}}<br></span></span><span v-if="!tmp[layer].upgrades[data].multiRes">{{formatWhole(tmp[layer].upgrades[data].cost)+' '+(tmp[layer].upgrades[data].currencyDisplayName ? tmp[layer].upgrades[data].currencyDisplayName : tmp[layer].resource)}}</span></span>
+			</button>
+		</div>
 		`
 	})
 	

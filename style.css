@@ -247,6 +247,20 @@ h1, h2, h3, b, input {
 	font-size: 10px;
 }
 
+.pseudo {
+	border: 2px dotted white;
+}
+
+.pseudo:not(.plocked) {
+	background-color: #f5b942;
+}
+
+.plocked {
+	background-color: var(--bg);
+	color: var(--color);
+	cursor: not-allowed;
+}
+
 .achievement {
 	height: 90px;
 	width: 90px;
@@ -686,4 +700,19 @@ button > * {
 
 #treeTab td button {
     margin: 0 10px 0 10px;
+}
+
+.hn:not(.locked):not(.bought) {
+	background: radial-gradient(#ffbf00, #ffeb91, #ffbf00, #ffeb91);
+	background-size: 50% 100%;
+	animation: honour 10s linear infinite;
+}
+
+@keyframes honour {
+	0% {
+		background-position: 0% 0%;
+	}
+	100% {
+		background-position: 400% 0%;
+	}
 }

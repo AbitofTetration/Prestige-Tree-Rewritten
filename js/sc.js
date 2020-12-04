@@ -2,18 +2,18 @@ const SOFTCAPS = {
 	p12: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "log",
-		start: new Decimal("1e3500"),
+		start() { return new Decimal("1e3500").times((hasUpgrade("hn", 12)) ? upgradeEffect("hn", 12) : 1) },
 		exp: new Decimal(1),
-		display() { return hasUpgrade("p", 12) && !hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, logarithmic" },
+		display() { return hasUpgrade("p", 12) && !hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, logarithmic" },
 	},
 	p12_h22: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "expRoot",
-		start: new Decimal("1e3500"),
+		start() { return new Decimal("1e3500").times((hasUpgrade("hn", 12)) ? upgradeEffect("hn", 12) : 1) },
 		mag: new Decimal(2),
-		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
 	},
 	e12: {
 		title: "Enhance Upgrade 2 (Enhanced Prestige)",
@@ -167,6 +167,14 @@ const SOFTCAPS = {
 		exp: new Decimal(1.6),
 		display() { return hasUpgrade("ba", 32) && upgradeEffect("ba", 32).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the "+format(this.exp)+"th power" },
+	},
+	hn12: {
+		title: "Second Honour Upgrade (Honour Boost)",
+		type: "expRoot",
+		start: new Decimal(1e10),
+		mag: new Decimal(2),
+		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
 	},
 }
 

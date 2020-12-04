@@ -111,9 +111,9 @@ function shouldNotify(layer){
 function canReset(layer)
 {
 	if(tmp[layer].type == "normal")
-		return tmp[layer].baseAmount.gte(tmp[layer].requires)
+		return tmp[layer].baseAmount.gte(tmp[layer].requires) && getResetGain(layer).gt(0)
 	else if(tmp[layer].type== "static")
-		return tmp[layer].baseAmount.gte(tmp[layer].nextAt) 
+		return tmp[layer].baseAmount.gte(tmp[layer].nextAt)
 	if(tmp[layer].type == "none")
 		return false
 	else
@@ -182,6 +182,7 @@ function doReset(layer, force=false) {
 	let row = tmp[layer].row
 	if (!force) {
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return;
+		if (!canReset(layer)) return;
 		let gain = tmp[layer].resetGain.max(0)
 		if (tmp[layer].type=="static") {
 			if (tmp[layer].baseAmount.lt(tmp[layer].nextAt)) return;
@@ -397,9 +398,7 @@ var interval = setInterval(function() {
 	}
 	if (player.devSpeed) diff *= player.devSpeed
 	player.time = now
-	if (needCanvasUpdate){ resizeCanvas();
-		needCanvasUpdate = false;
-	}
+	if (needCanvasUpdate) resizeCanvas();
 	updateTemp();
 	gameLoop(diff)
 	fixNaNs()
