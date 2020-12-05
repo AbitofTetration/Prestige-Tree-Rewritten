@@ -1957,12 +1957,13 @@ addLayer("h", {
 				goal() {
 					let comps = challengeCompletions("h", 32);
 					if (comps>=3) comps = comps-0.96;
+					if (comps>=3.04) comps *= 1.425;
 					return Decimal.pow("1e1000", Decimal.pow(comps, 3)).times("1e9000");
 				},
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription: "<b>Option D</b> completions multiply the Time Energy gain base.",
-				rewardEffect() { return Decimal.pow(100, Decimal.pow(challengeCompletions("h", 32), 2)) },
+				rewardEffect() { return softcap("option_d", Decimal.pow(100, Decimal.pow(challengeCompletions("h", 32), 2))) },
 				rewardDisplay() { return format(tmp.h.challenges[32].rewardEffect)+"x" },
 				formula: "100^(completions^2)",
 				unlocked() { return tmp.ps.buyables[11].effects.hindr },

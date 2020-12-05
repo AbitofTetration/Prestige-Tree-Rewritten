@@ -48,6 +48,14 @@ const SOFTCAPS = {
 		display() { return player.h.unlocked && tmp.h.effect.root(this.spec()).gte(this.start) },
 		info() { return "Starts at "+format(this.start.pow(this.spec()))+"x, exponent brought to the "+format(this.mag)+"th root" },
 	},
+	option_d: {
+		title: '"Option D" Effect',
+		type: "expRoot",
+		start: new Decimal(1e33),
+		mag: new Decimal(3),
+		display() { return tmp.h.challenges[32].unlocked && challengeEffect("h", 32).gte(1e33) },
+		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
+	},
 	q14_h: {
 		title: "Quirk Upgrade 4 (Row 4 Synergy) - Quirk Boost",
 		type: "log",

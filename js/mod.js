@@ -9,14 +9,15 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9999999999999999999"),
-	specialEndgameText: "v1.0 Beta 1 Endgame: e6,025,000 Points & 15 Total Honour",
+	specialEndgameText: "v1.0 Beta 1 Patch 1 Endgame: e6,200,000 Points & 25 Total Honour",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.0",
 	beta: 1,
-	name: "Balanced Magical Phantoms",
+	patch: 1,
+	name: "The Honour Update",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
