@@ -11,9 +11,9 @@ const SOFTCAPS = {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "expRoot",
 		start() { return new Decimal("1e3500").times((hasUpgrade("hn", 12)) ? upgradeEffect("hn", 12) : 1) },
-		mag: new Decimal(2),
+		mag() { return new Decimal(2).sub((hasUpgrade("hn", 21)) ? upgradeEffect("hn", 21) : 0) },
 		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
-		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
+		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+(this.mag().eq(2)?"2nd":(format(this.mag())+"th"))+" root" },
 	},
 	e12: {
 		title: "Enhance Upgrade 2 (Enhanced Prestige)",

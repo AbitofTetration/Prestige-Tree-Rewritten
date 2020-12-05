@@ -1,6 +1,6 @@
 # The Prestige Tree: Rewritten changelog (major updates only):
 
-### v1.0: The Honoured
+### v1.0: The Honour Update
 - Added the "HN" layer (replaces "SP")
 - Added the next section of achievements
 - More minor bugfixes/QoL improvements were made

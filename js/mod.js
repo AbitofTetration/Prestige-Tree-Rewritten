@@ -9,14 +9,14 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9999999999999999999"),
-	specialEndgameText: "v1.0 Beta 1 Patch 1 Endgame: e6,200,000 Points & 25 Total Honour",
+	specialEndgameText: "v1.0 Beta 2 Endgame: e8,800,000 Points, 400 Total Honour",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.0",
-	beta: 1,
-	patch: 1,
+	beta: 2,
+	//patch: 0,
 	name: "The Honour Update",
 }
 
@@ -57,6 +57,7 @@ function getPointGen() {
 	
 	if (inChallenge("h", 31)) gain = gain.root(tmp.h.pointRoot31);
 	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt("e1e6")?1.1:1.01);
+	if (hasUpgrade("hn", 31)) gain = gain.pow(1.05);
 	return gain
 }
 

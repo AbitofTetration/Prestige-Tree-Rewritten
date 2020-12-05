@@ -69,7 +69,7 @@ function shouldNotify(layer){
 		if (!isNaN(id)){
 			if (canAffordUpgrade(layer, id) && !hasUpgrade(layer, id) && tmp[layer].upgrades[id].unlocked){
 				return true
-			}
+			} else if (tmp[layer].upgrades[id].pseudoUnl && tmp[layer].upgrades[id].pseudoCan && !tmp[layer].upgrades[id].unlocked) return true;
 		}
 	}
 	
