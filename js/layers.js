@@ -135,6 +135,7 @@ addLayer("p", {
 					let eff = Decimal.pow(1.4, player.p.upgrades.length);
 					if (hasUpgrade("p", 32)) eff = eff.pow(2);
 					if (hasUpgrade("hn", 22)) eff = eff.pow(upgradeEffect("hn", 22))
+					if (hasUpgrade("hn", 32)) eff = eff.pow(7);
 					return eff;
 				},
 				unlocked() { return hasAchievement("a", 21)&&hasUpgrade("p", 12) },
@@ -142,6 +143,7 @@ addLayer("p", {
 				formula() { 
 					let exp = new Decimal(hasUpgrade("p", 32)?2:1);
 					if (hasUpgrade("hn", 22)) exp = exp.times(upgradeEffect("hn", 22));
+					if (hasUpgrade("hn", 32)) exp = exp.times(7);
 					return exp.gt(1)?("(1.4^x)^"+format(exp)):"1.4^x" 
 				},
 			},
@@ -3614,7 +3616,7 @@ addLayer("ps", {
 			return mult;
 		},
 		soulGain() {
-			let gain = Decimal.pow(player.ps.points, layers.ps.soulGainExp()).div(10).times(layers.ps.soulGainMult());
+			let gain = Decimal.pow(player.ps.points, layers.ps.soulGainExp()).div(9.4).times(layers.ps.soulGainMult());
 			return gain;
 		},
 		gainDisplay() {
@@ -3656,7 +3658,7 @@ addLayer("ps", {
 					let data = {};
 					let x = player[this.layer].buyables[this.id].plus(adj);
 					if (x.gte(1)) data.hindr = x.min(3).toNumber();
-					if (x.gte(2)) data.damned = x.sub(1).times(0.5).plus(1);
+					if (x.gte(2)) data.damned = x.sub(1).times(0.5).div(10/9.4).plus(1);
 					if (x.gte(4)) data.quirkImpr = x.div(2).sub(1).floor().min(3).toNumber();
 					return data;
 				},
@@ -3952,7 +3954,22 @@ addLayer("hn", {
 				],
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 31) },
 			},
-			
+			32: {
+				title: "Less Useless",
+				description: "<b>Upgrade Power</b> is raised ^7.",
+				multiRes: [
+					{
+						cost: new Decimal(1e4),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e10250000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 32) },
+			},
 			33: {
 				title: "Column Leader Leader",
 				description: "<b>Column Leader</b> is stronger based on your Best Honour.",
