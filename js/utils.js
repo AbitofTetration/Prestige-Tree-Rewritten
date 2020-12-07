@@ -101,6 +101,8 @@ function startPlayerBase() {
 		hasNaN: false,
 		hideChallenges: false,
 		tapNerd: false,
+		anim: true,
+		grad: true,
 		optTab: "mainOpt",
 		slightGlow: "normal",
 		redGlowActive: true,
@@ -496,7 +498,7 @@ function canAffordUpgrade(layer, id) {
 }
 
 function hasUpgrade(layer, id){
-	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString())) && (tmp[layer].upgrades[id].unlocked)
+	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString()))
 }
 
 function hasMilestone(layer, id){

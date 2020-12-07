@@ -191,19 +191,22 @@ addLayer("p", {
 				title: "Column Leader",
 				description: "Both above upgrades are stronger based on your Total Prestige Points.",
 				cost() { return tmp.h.costMult11.times(1e60).pow(tmp.h.costExp11) },
-				effect() { return player.p.total.plus(1).log10().plus(1).log10().div(5).plus(1) },
+				effect() { return player.p.total.plus(1).log10().plus(1).log10().div(5).plus(1).times(hasUpgrade("hn", 33) ? upgradeEffect("hn", 33) : 1) },
 				unlocked() { return hasAchievement("a", 23)&&hasUpgrade("p", 23) },
 				effectDisplay() { return "^"+format(tmp.p.upgrades[33].effect) },
-				formula: "log(log(x+1)+1)/5+1",
+				formula() { return hasUpgrade("hn", 33) ? ("(log(log(x+1)+1)/5+1)*"+format(upgradeEffect("hn", 33))) : "log(log(x+1)+1)/5+1" },
 			},
 			34: {
-				title: "p34",
-				description: "???",
-				cost() { return tmp.h.costMult11.times(1/0).pow(tmp.h.costExp11) },
+				title: "Solar Potential",
+				description: "Solarity multiplies the Solarity gain exponent.",
+				cost() { return tmp.h.costMult11.times("ee7").pow(tmp.h.costExp11) },
 				pseudoUnl() { return hasUpgrade("hn", 11) && (hasUpgrade("p", 24)||hasUpgrade("p", 33)) },
-				pseudoReq: "Coming Soon!",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 30 Achievements",
+				pseudoCan() { return player.a.achievements.length>=30 },
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.o.points.plus(1).log10().plus(1).log10().plus(1).log10().plus(1) },
+				effectDisplay() { return format(tmp.p.upgrades[34].effect)+"x" },
+				formula: "log(log(log(x+1)+1)+1)+1",
 			},
 			41: {
 				title: "Prestige Recursion",
@@ -227,22 +230,25 @@ addLayer("p", {
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
 			},
 			43: {
-				title: "p43",
-				description: "???",
-				cost() { return tmp.h.costMult11.times(1/0).pow(tmp.h.costExp11) },
+				title: "Booster Potential",
+				description: "Quirk Energy also affects the Booster effect.",
+				cost() { return tmp.h.costMult11.times("e8888888").pow(tmp.h.costExp11) },
 				pseudoUnl() { return hasUpgrade("hn", 11) && hasUpgrade("p", 33) },
-				pseudoReq: "Coming Soon!",
-				pseudoCan() { return false },
+				pseudoReq: "Req: e10,000,000 Points",
+				pseudoCan() { return player.points.gte("ee7") },
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
 			},
 			44: {
-				title: "p44",
-				description: "???",
-				cost() { return tmp.h.costMult11.times(1/0).pow(tmp.h.costExp11) },
+				title: "Spelling Dictionary",
+				description: "The softcaps for the first two Spells start later based on your Boosters.",
+				cost() { return tmp.h.costMult11.times("e6500000").pow(tmp.h.costExp11) },
 				pseudoUnl() { return hasUpgrade("hn", 11) && hasUpgrade("p", 33) },
-				pseudoReq: "Coming Soon!",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 150,000 Primary Space Buildings",
+				pseudoCan() { return player.s.buyables[11].gte(1.5e5) },
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.b.points.plus(1).pow(3) },
+				effectDisplay() { return format(tmp.p.upgrades[44].effect)+"x later" },
+				formula: "(x+1)^3",
 			},
 		},
 })
@@ -306,7 +312,7 @@ addLayer("b", {
 			return power;
 		},
 		effect() {
-			return Decimal.pow(tmp.b.effectBase, player.b.points).max(0);
+			return Decimal.pow(tmp.b.effectBase, player.b.points).max(0).times(hasUpgrade("p", 43)?tmp.q.enEff:1);
 		},
 		effectDescription() {
 			return "which are boosting Point generation by "+format(tmp.b.effect)+"x"+(tmp.nerdMode?("\n ("+format(tmp.b.effectBase)+"x each)"):"")
@@ -1894,7 +1900,7 @@ addLayer("h", {
 				currencyInternalName: "points",
 				rewardDescription: "Unlock Quirk Upgrades, and the Hindrance Spirit effect is raised to the power of 1.2.",
 				onStart(testInput=false) { 
-					if (testInput) {
+					if (testInput && !hasAchievement("a", 81)) {
 						player.p.upgrades = []; 
 						player.b.upgrades = [];
 					}
@@ -2593,13 +2599,17 @@ addLayer("o", {
         baseResource: "super boosters", // Name of resource prestige is based on
         baseAmount() {return player.sb.points}, // Get the current amount of baseResource
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-        exponent: new Decimal(10), // Prestige currency exponent
+        exponent() { 
+			let exp = new Decimal(10);
+			if (hasUpgrade("p", 34)) exp = exp.times(upgradeEffect("p", 34));
+			return exp;
+		}, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = buyableEffect("o", 11);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
-            return new Decimal(1)
+            return new Decimal(1);
         },
         row: 3, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
@@ -2668,7 +2678,7 @@ addLayer("o", {
 				gain() { return player.o.points.div(2).root(1.5).floor() },
 				effect() { 
 					let amt = player[this.layer].buyables[this.id]
-					amt = softcap("solCores", amt)
+					amt = softcap("solCores2", softcap("solCores", amt));
 					return hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)) 
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -2962,6 +2972,7 @@ addLayer("ss", {
 				effect() { return player.o.buyables[11].plus(1).log10().div(10) },
 				effectDisplay() { return "+"+format(tmp.ss.upgrades[33].effect.times(100))+"%" },
 				formula: "log(x+1)*10",
+				style: {"font-size": "9px"},
 			},
 			41: {
 				title: "More Sun",
@@ -2989,6 +3000,7 @@ addLayer("ss", {
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
 				unlocked() { return hasChallenge("h", 42) },
+				style: {"font-size": "9px"},
 			},
 		},
 })
@@ -3940,6 +3952,26 @@ addLayer("hn", {
 				],
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 31) },
 			},
+			
+			33: {
+				title: "Column Leader Leader",
+				description: "<b>Column Leader</b> is stronger based on your Best Honour.",
+				multiRes: [
+					{
+						cost: new Decimal(500),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e6900000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 33) },
+				effect() { return Decimal.pow(10, player.hn.best.plus(1).log10().plus(1).log10().sqrt()) },
+				effectDisplay() { return format(tmp.hn.upgrades[33].effect)+"x" },
+				formula: "10^sqrt(log(log(x+1)+1))",
+			},
 		},
 })
 
@@ -4099,7 +4131,12 @@ addLayer("a", {
 			81: {
 				name: "Yes I Am",
 				done() { return player.hn.unlocked },
-				tooltip: 'Perform a Row 6 reset. Reward: "Option D" does not reset your Prestige/Booster Upgrades.',
+				tooltip: 'Perform a Row 6 reset. Reward: Hindrances do not reset your Prestige/Booster Upgrades.',
+			},
+			82: {
+				name: "Not So Hindered Now",
+				done() { return player.points.gte("ee7") && player.h.activeChallenge>20 },
+				tooltip: "Reach e10,000,000 Points while in a Hindrance that isn't in the first row.",
 			},
         },
 		tabFormat: [

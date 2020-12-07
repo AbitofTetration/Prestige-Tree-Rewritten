@@ -91,10 +91,11 @@ const SOFTCAPS = {
 	solCores2: {
 		title: "Solar Core Effect",
 		type: "log",
-		start: new Decimal(1e60),
+		start: new Decimal(4.75453173647236e21),
 		exp: new Decimal(3),
-		display() { return player.o.buyables[11].gte(Decimal.pow(10, this.start.log10().pow(2))) },
-		info() { return "Starts at "+format(Decimal.pow(10, this.start.log10().pow(2)))+" Solar Cores, logarithmic but cubed" },
+		goal() { return reverse_softcap("solCores", this.start) },
+		display() { return player.o.buyables[11].gte(this.goal()) },
+		info() { return "Starts at "+format(this.goal())+" Solar Cores, logarithmic but cubed" },
 	},
 	corona: {
 		title: "Coronal Waves",
@@ -115,18 +116,18 @@ const SOFTCAPS = {
 	spell1: {
 		title: "First Spell (Booster Launch)",
 		type: "expRoot",
-		start: new Decimal(1e6),
+		start() { return new Decimal(1e6).times(hasUpgrade("p", 44) ? upgradeEffect("p", 44) : 1) },
 		mag: new Decimal(1.5),
-		display() { return player.m.unlocked && buyableEffect("m", 11).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent brought to the "+format(this.mag)+"th root" },
+		display() { return player.m.unlocked && buyableEffect("m", 11).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+format(this.mag)+"th root" },
 	},
 	spell2: {
 		title: "Second Spell (Time Warp)",
 		type: "expRoot",
-		start: new Decimal(1e6),
+		start() { return new Decimal(1e6).times(hasUpgrade("p", 44) ? upgradeEffect("p", 44) : 1) },
 		mag: new Decimal(2),
-		display() { return player.m.unlocked && buyableEffect("m", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return player.m.unlocked && buyableEffect("m", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
 	},
 	spell3: {
 		title: "Third Spell (Quirk Amplification)",
@@ -250,6 +251,23 @@ function softcap(name, val) {
 	} else if (type=="log") {
 		let exp = getSoftcapData(name, "exp");
 		return val.log10().pow(exp).times(start.div(start.log10().pow(exp)));
+	} else return val;
+}
+
+function reverse_softcap(name, val) {
+	val = new Decimal(val);
+	if (!softcapActive(name, val)) return val;
+	let type = getSoftcapData(name, "type");
+	let start = getSoftcapData(name, "start");
+	if (type=="root") {
+		let mag = getSoftcapData(name, "mag");
+		return val.pow(mag).div(start.pow(mag.sub(1)));
+	} else if (type=="expRoot") {
+		let mag = getSoftcapData(name, "mag");
+		return Decimal.pow(10, val.log10().div(start.log10().pow(Decimal.sub(1, mag.pow(-1)))).pow(mag));
+	} else if (type=="log") {
+		let exp = getSoftcapData(name, "exp");
+		return Decimal.pow(10, val.div(start.div(start.log10().pow(exp))).root(exp));
 	} else return val;
 }
 

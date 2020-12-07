@@ -114,7 +114,11 @@
 					<tr>
 						<td><button class="opt" onclick="toggleOpt('hideChallenges')">Completed Challenges: {{ player.hideChallenges?"HIDDEN":"SHOWN" }}</button></td>
 						<td><button class="opt" onclick="toggleOpt('tapNerd')">"Nerd Mode" Activation: {{player.tapNerd?"ON TAP":"ON HOLD"}}</button></td>
-						<!--<td><button class="opt" onclick="toggleOpt('oldStyle')">Style: {{ player.oldStyle?"v1.0":"NEW" }}</button></td>-->
+						<td><button class="opt" onclick="alert('no')">Spelling: Canadian & British</button></td>
+					</tr>
+					<tr>
+						<td><button class="opt" onclick="toggleOpt('anim')">Animations: {{ player.anim?"ON":"OFF" }}</button></td>
+						<td><button class="opt" onclick="toggleOpt('grad')">Gradients: {{ player.grad?"ON":"OFF" }}</button></td>
 					</tr>
 				</table>
 			</div><div v-if="player.optTab=='notifyOpt'">

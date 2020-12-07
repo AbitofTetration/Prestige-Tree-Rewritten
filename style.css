@@ -702,7 +702,7 @@ button > * {
     margin: 0 10px 0 10px;
 }
 
-.hn:not(.locked):not(.bought) {
+.hn.anim:not(.locked):not(.bought) {
 	background: radial-gradient(#ffbf00, #ffeb91, #ffbf00, #ffeb91);
 	background-size: 50% 100%;
 	animation: honour 10s linear infinite;
