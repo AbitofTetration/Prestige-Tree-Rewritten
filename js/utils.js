@@ -103,6 +103,7 @@ function startPlayerBase() {
 		tapNerd: false,
 		anim: true,
 		grad: true,
+		milNotify: true,
 		optTab: "mainOpt",
 		slightGlow: "normal",
 		redGlowActive: true,
@@ -136,6 +137,7 @@ function getStartPlayer() {
 		playerdata[layer].spentOnBuyables = new Decimal(0)
 		playerdata[layer].upgrades = []
 		playerdata[layer].milestones = []
+		playerdata[layer].primeMiles = []
 		playerdata[layer].achievements = []
 		playerdata[layer].challenges = getStartChallenges(layer)
 		if (layers[layer].tabFormat && !Array.isArray(layers[layer].tabFormat)) {
@@ -403,7 +405,7 @@ function adjustGlow(type) {
 			return data;
 		},
 		sol() { 
-			let data = ["normal", "solar cores onward"]
+			let data = ["normal"]
 			if (player.ss.unlocked) {
 				data.push("tachoclinal plasma onward")
 				if (hasUpgrade("ss", 41)) {
@@ -799,8 +801,14 @@ function toNumber(x) {
 
 function updateMilestones(layer){
 	for (id in layers[layer].milestones){
-		if (!(player[layer].milestones.includes(id)) && layers[layer].milestones[id].done())
+		let done = layers[layer].milestones[id].done();
+		if (!player[layer].primeMiles.includes(id) && done) {
+			player[layer].primeMiles.push(id);
+			if (player.milNotify && !player[layer].milestones.includes(id)) addNotification("milestone", layers[layer].milestones[id].requirementDescription, "Milestone Gotten!");
+		}
+		if (!(player[layer].milestones.includes(id)) && done) {
 			player[layer].milestones.push(id)
+		}
 	}
 }
 

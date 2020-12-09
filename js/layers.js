@@ -4018,7 +4018,7 @@ addLayer("hn", {
 						cost: new Decimal("1e11000000"),
 					},
 				],
-				unlocked() { return player.hn.unlocked && hasUpgrade("p", 14) },
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 14) && hasMilestone("hn", 7) },
 			},
 			21: {
 				title: "Point Efficiency",
@@ -4143,7 +4143,7 @@ addLayer("hn", {
 						cost: new Decimal("1e11000000"),
 					},
 				],
-				unlocked() { return player.hn.unlocked && hasUpgrade("p", 41) },
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 41) && hasMilestone("hn", 7) },
 				effect() { return player.ps.power.plus(1).log10().plus(1).log10().times(2.4).plus(1) },
 				effectDisplay() { return "^"+format(tmp.hn.upgrades[41].effect) },
 				formula: "log(log(x+1)+1)*2.4+1",
