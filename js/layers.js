@@ -76,6 +76,7 @@ addLayer("p", {
 					else eff = softcap("p12", eff);
 					
 					if (hasUpgrade("p", 14)) eff = eff.pow(3);
+					if (hasUpgrade("hn", 14)) eff = eff.pow(1.05);
 					return eff;
 				},
 				unlocked() { return hasUpgrade("p", 11) },
@@ -87,7 +88,7 @@ addLayer("p", {
 						if (hasChallenge("h", 22)) f = "10^(sqrt(log(x+2))*"+format(Decimal.mul(exp, 3500).sqrt())+")"
 						else f = "log(x+2)*"+format(Decimal.div("1e3500",3500).times(exp))
 					}
-					if (hasUpgrade("p", 14)) f += "^3"
+					if (hasUpgrade("p", 14)) f += "^"+(hasUpgrade("hn", 14)?3.15:3)
 					return f;
 				},
 			},
@@ -218,9 +219,13 @@ addLayer("p", {
 				pseudoReq: "Req: 25 Total Honour",
 				pseudoCan() { return player.hn.total.gte(25) },
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
-				effect() { return Decimal.pow(10, player.p.points.plus(1).log10().pow(.8)) },
+				effect() { 
+					let eff = Decimal.pow(10, player.p.points.plus(1).log10().pow(.8));
+					if (hasUpgrade("hn", 41)) eff = eff.pow(upgradeEffect("hn", 41));
+					return eff;
+				},
 				effectDisplay() { return format(tmp.p.upgrades[41].effect)+"x" },
-				formula: "10^(log(x+1)^0.8)",
+				formula() { return "10^(log(x+1)^0.8)"+(hasUpgrade("hn", 41)?("^"+format(upgradeEffect("hn", 41))):"") },
 			},
 			42: {
 				title: "Spatial Awareness",
@@ -2654,6 +2659,7 @@ addLayer("o", {
 			if (hasUpgrade("ss", 33)) pow = pow.plus(upgradeEffect("ss", 33));
 			if (hasUpgrade("ss", 41)) pow = pow.plus(buyableEffect("o", 21));
 			if (hasUpgrade("ba", 11)) pow = pow.plus(upgradeEffect("ba", 11));
+			if (tmp.ps.impr[11].unlocked) pow = pow.times(tmp.ps.impr[11].effect);
 			return pow;
 		},
 		tabFormat: ["main-display",
@@ -3065,7 +3071,11 @@ addLayer("m", {
 			return time;
 		},
 		spellPower() { return new Decimal(1) },
-		hexGain() { return new Decimal(1) },
+		hexGain() { 
+			let gain = new Decimal(1);
+			if (tmp.ps.impr[12].unlocked) gain = gain.times(tmp.ps.impr[12].effect);
+			return gain;
+		},
 		hexEff() { return softcap("hex", player.m.hexes.times(2).plus(1).pow(10)) },
 		update(diff) {
 			if (!player.m.unlocked) return;
@@ -3494,6 +3504,7 @@ addLayer("ba", {
 				} },
 				effectDisplay() { return "Pos: "+format(tmp.ba.upgrades[24].effect.pos)+"x, Neg: "+format(tmp.ba.upgrades[24].effect.neg)+"x" },
 				formula() { return "Pos: (log(neg/1e12+1)+1)^"+(hasUpgrade("ba", 33)?15:5)+", Neg: (log(pos/1e12+1)+1)^"+(hasUpgrade("ba", 33)?15:5) },
+				style: {"font-size": "9px"},
 			},
 			31: {
 				title: "Tangible Degeneration",
@@ -3517,6 +3528,7 @@ addLayer("ba", {
 				},
 				effectDisplay() { return format(tmp.ba.upgrades[32].effect)+"x" },
 				formula: "(log(x+1)/50+1)^10",
+				style: {"font-size": "9px"},
 			},
 			33: {
 				title: "True Equality",
@@ -3569,6 +3581,7 @@ addLayer("ps", {
 			best: new Decimal(0),
 			prevH: new Decimal(0),
 			souls: new Decimal(0),
+			power: new Decimal(0),
 			auto: false,
 			autoW: false,
 			first: 0,
@@ -3597,7 +3610,10 @@ addLayer("ps", {
         doReset(resettingLayer){ 
 			let keep = [];
 			player.ps.souls = new Decimal(0);
+			let keptGS = new Decimal(0);
+			if (layers[resettingLayer].row <= this.row+1) keptGS = new Decimal(player.ps.buyables[21]);
             if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+			player.ps.buyables[21] = keptGS;
         },
 		update(diff) {
 			if (hasMilestone("hn", 5)) {
@@ -3605,6 +3621,8 @@ addLayer("ps", {
 				player.ps.souls = player.ps.souls.max(tmp.ps.soulGain.times(player.h.points.max(1).log10()))
 			} else player.ps.souls = player.ps.souls.plus(player.h.points.max(1).log10().sub(player.ps.prevH.max(1).log10()).max(0).times(tmp.ps.soulGain));
 			player.ps.prevH = new Decimal(player.h.points);
+			if (hasMilestone("hn", 7)) player.ps.power = player.ps.power.root(tmp.ps.powerExp).plus(tmp.ps.powerGain.times(diff)).pow(tmp.ps.powerExp);
+			else player.ps.power = new Decimal(0);
 		},
 		autoPrestige() { return hasMilestone("hn", 4) && player.ps.auto },
         layerShown(){return player.m.unlocked && player.ba.unlocked},
@@ -3636,16 +3654,36 @@ addLayer("ps", {
 			let eff = player.ps.souls.plus(1).pow(layers.ps.soulEffExp());
 			return eff;
 		},
-		tabFormat: ["main-display",
-			"prestige-button",
-			"resource-display",
-			"blank",
-			["display-text", function() { return "You have "+formatWhole(player.ps.souls)+" Damned Souls "+(tmp.nerdMode?("(Formula: (PS^"+format(tmp.ps.soulGainExp)+")*"+format(tmp.ps.soulGainMult.div(10))+")"):("(Gain: "+tmp.ps.gainDisplay+")"))+": Divide Quirk Improvement requirements by "+format(tmp.ps.soulEff)+(tmp.nerdMode?(" (x+1)^("+formatWhole(tmp.ps.soulEffExp)+")"):"") }],
-			"blank",
-			"buyables",
-		],
+		powerGain() { return player.ps.souls.plus(1).times(tmp.ps.buyables[21].effect) },
+		powerExp() { return player.ps.points.sqrt().times(tmp.ps.buyables[21].effect) },
+		tabFormat: {
+			"Main Tab": {
+				content: ["main-display",
+					"prestige-button",
+					"resource-display",
+					"blank",
+					["display-text", function() { return "You have "+formatWhole(player.ps.souls)+" Damned Souls "+(tmp.nerdMode?("(Formula: (PS^"+format(tmp.ps.soulGainExp)+")*"+format(tmp.ps.soulGainMult.div(10))+")"):("(Gain: "+tmp.ps.gainDisplay+")"))+": Divide Quirk Improvement requirements by "+format(tmp.ps.soulEff)+(tmp.nerdMode?(" (x+1)^("+formatWhole(tmp.ps.soulEffExp)+")"):"") }],
+					"blank",
+					["buyable", 11],
+				],
+			},
+			Boosters: {
+				unlocked() { return hasMilestone("hn", 7) },
+				buttonStyle() { return {'background-color': '#b38fbf'} },
+				content: [
+					"main-display",
+					"blank",
+					["buyable", 21],
+					"blank",
+					["display-text",
+						function() {return 'You have ' + formatWhole(player.ps.power)+' Phantom Power'+(tmp.nerdMode?(" (Gain Formula: (damned+1), Exp Formula: sqrt(ps))"):" (+"+format(tmp.ps.powerGain)+"/sec, then raised to the power of "+format(tmp.ps.powerExp)+")")+', which has provided the below Phantom Boosters (next at '+format(tmp.ps.impr.overallNextImpr)+')'},
+							{}],
+					"blank",
+					"improvements"],
+			},
+		},
 		buyables: {
-			rows: 1,
+			rows: 2,
 			cols: 1,
 			11: {
 				title: "Wraiths",
@@ -3705,6 +3743,86 @@ addLayer("ps", {
 				},
                 style: {'height':'200px', 'width':'200px'},
 				autoed() { return hasMilestone("hn", 5) && player.ps.autoW },
+			},
+			21: {
+				title: "Ghost Spirit",
+				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+                    let cost = Decimal.pow(10, Decimal.pow(2, x)).times(x.eq(0)?1e21:1e22);
+					return cost;
+                },
+				effect() {
+					return player[this.layer].buyables[this.id].div(25).plus(1).pow(2);
+				},
+				effect2() {
+					return player[this.layer].buyables[this.id].div(10).plus(1);
+				},
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id]
+                    let display = ((tmp.nerdMode?("Cost Formula: (10^(2^x))*1e22"):("Cost: " + formatWhole(data.cost) + " Phantom Power"))+"\n\
+                    Amount: " + formatWhole(player[this.layer].buyables[this.id])+"\n\
+					Effect: "+(tmp.nerdMode?("Formula 1: (x/25+1)^2, Formula 2: (x/10+1)"):("Multiply Phantom Power gain/exponent by "+format(tmp.ps.buyables[this.id].effect)+", and boost Phantom Booster effectiveness by "+format(tmp.ps.buyables[this.id].effect2.sub(1).times(100))+"%")))
+					return display;
+                },
+                unlocked() { return player[this.layer].unlocked }, 
+                canAfford() {
+                    return player.ps.power.gte(tmp[this.layer].buyables[this.id].cost)},
+                buy() { 
+                    cost = tmp[this.layer].buyables[this.id].cost
+					player.ps.power = player.ps.power.sub(cost);
+                    player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+                },
+                buyMax() {
+					// later :)
+				},
+                style: {'height':'200px', 'width':'200px'},
+				autoed() { return false },
+			},
+		},
+		impr: {
+			baseReq() { 
+				let req = new Decimal(1e20).div(99);
+				return req;
+			},
+			amount() { 
+				let amt = player.ps.power.div(this.baseReq()).plus(1).log10().div(2).root(1.5);
+				//if (amt.gte(270)) amt = amt.log10().times(270/Math.log10(270));
+				return amt.floor();
+			},
+			overallNextImpr() { 
+				let impr = tmp.ps.impr.amount.plus(1);
+				//if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
+				return Decimal.pow(10, impr.pow(1.5).times(2)).sub(1).times(this.baseReq()) 
+			},
+			nextAt(id=11) { 
+				let impr = getImprovements("ps", id).times(tmp.ps.impr.activeRows*tmp.ps.impr.activeCols).add(tmp.ps.impr[id].num);
+				//if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
+				return Decimal.pow(10, impr.pow(1.5).times(2)).sub(1).times(this.baseReq());
+			},
+			power() { return tmp.ps.buyables[21].effect2 },
+			resName: "phantom power",
+			rows: 1,
+			cols: 2,
+			activeRows: 2,
+			activeCols: 2,
+			11: {
+				num: 1,
+				title: "Phantom Booster I",
+				description: "Boost Solar Power.",
+				unlocked() { return hasMilestone("hn", 7) },
+				effect() { return getImprovements("ps", 11).times(tmp.ps.impr.power).div(20).plus(1) },
+				effectDisplay() { return "+"+format(tmp.ps.impr[11].effect.sub(1).times(100))+"% (multiplicative)" },
+				formula: "x*20%",
+				style: {height: "150px", width: "150px"},
+			},
+			12: {
+				num: 2,
+				title: "Phantom Booster II",
+				description: "Boost Hex gain.",
+				unlocked() { return hasMilestone("hn", 7) },
+				effect() { return Decimal.pow(10, getImprovements("ps", 11).times(tmp.ps.impr.power).pow(5)) },
+				effectDisplay() { return format(tmp.ps.impr[12].effect)+"x" },
+				formula: "10^(x^5)",
+				style: {height: "150px", width: "150px"},
 			},
 		},
 })
@@ -3822,10 +3940,16 @@ addLayer("hn", {
 				done() { return player.hn.total.gte(10) },
 				effectDescription: "Phantom Souls reset nothing.",
 			},
+			7: {
+				requirementDescription: "100,000 Total Honour & e11,000,000 Prestige Points",
+				unlocked() { return hasMilestone("hn", 6) },
+				done() { return player.hn.total.gte(1e5) && player.p.points.gte("e11000000") },
+				effectDescription: "Unlock Phantom Boosters & more Honour Upgrades.",
+			},
 		},
 		upgrades: {
-			rows: 3,
-			cols: 3,
+			rows: 4,
+			cols: 4,
 			11: {
 				title: "Begin Again",
 				description: "You can explore further Prestige Upgrades.",
@@ -3879,6 +4003,22 @@ addLayer("hn", {
 				effect() { return tmp.p.upgrades[13].effect.max(1).log10().plus(1).log10().times(40).plus(1) },
 				effectDisplay() { return "^"+format(tmp.hn.upgrades[13].effect) },
 				formula: "log(log(x+1)+1)*40+1",
+			},
+			14: {
+				title: "Anti-Calm",
+				description: "<b>Prestigious Intensity</b>'s effect is 5% stronger.",
+				multiRes: [
+					{
+						cost: new Decimal(1e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e11000000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 14) },
 			},
 			21: {
 				title: "Point Efficiency",
@@ -3988,6 +4128,25 @@ addLayer("hn", {
 				effect() { return Decimal.pow(10, player.hn.best.plus(1).log10().plus(1).log10().sqrt()) },
 				effectDisplay() { return format(tmp.hn.upgrades[33].effect)+"x" },
 				formula: "10^sqrt(log(log(x+1)+1))",
+			},
+			41: {
+				title: "Again and Again",
+				description: "<b>Prestige Recursion</b> is stronger based on your Phantom Power.",
+				multiRes: [
+					{
+						cost: new Decimal(1e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e11000000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 41) },
+				effect() { return player.ps.power.plus(1).log10().plus(1).log10().times(2.4).plus(1) },
+				effectDisplay() { return "^"+format(tmp.hn.upgrades[41].effect) },
+				formula: "log(log(x+1)+1)*2.4+1",
 			},
 		},
 })
@@ -4154,6 +4313,11 @@ addLayer("a", {
 				name: "Not So Hindered Now",
 				done() { return player.points.gte("ee7") && player.h.activeChallenge>20 },
 				tooltip: "Reach e10,000,000 Points while in a Hindrance that isn't in the first row.",
+			},
+			83: {
+				name: "The Impossible Task",
+				done() { return hasMilestone("hn", 7) },
+				tooltip: "Unlock Phantom Boosters.",
 			},
         },
 		tabFormat: [
