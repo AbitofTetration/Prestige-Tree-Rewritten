@@ -53,8 +53,16 @@ const SOFTCAPS = {
 		type: "expRoot",
 		start: new Decimal(1e33),
 		mag: new Decimal(3),
-		display() { return tmp.h.challenges[32].unlocked && challengeEffect("h", 32).gte(1e33) },
+		display() { return tmp.h.challenges[32].unlocked && challengeEffect("h", 32).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
+	},
+	qe: {
+		title: "Quirk Energy Effect",
+		type: "expRoot",
+		start: new Decimal("e1800000"),
+		mag: new Decimal(2),
+		display() { return player.q.unlocked && tmp.q.enEff.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
 	},
 	q14_h: {
 		title: "Quirk Upgrade 4 (Row 4 Synergy) - Quirk Boost",
@@ -71,6 +79,14 @@ const SOFTCAPS = {
 		exp: new Decimal(1100/3),
 		display() { return hasUpgrade("q", 14) && upgradeEffect("q", 14).h.gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the "+format(this.exp)+"th power" },
+	},
+	solPow: {
+		title: "Solar Power",
+		type: "root",
+		start: new Decimal(32),
+		mag: new Decimal(3),
+		display() { return player.o.unlocked && tmp.o.solPow.gte(this.start) },
+		info() { return "Starts at "+format(this.start.times(100))+"%, cube rooted" },
 	},
 	sol_eff: {
 		title: "Solarity Effect",

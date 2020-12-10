@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e9999999999999999999"),
-	specialEndgameText: "v1.0 Beta 6 Endgame: e17,000,000 Points, 3,000,000 Total Honour",
+	specialEndgameText: "v1.0 Beta 7 Endgame: e20,500,000 Points & 7,500,000 Total Honour",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.0",
-	beta: 6,
+	beta: 7,
 	//patch: 1,
 	name: "The Honour Update",
 }

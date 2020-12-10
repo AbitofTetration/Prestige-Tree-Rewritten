@@ -2110,7 +2110,7 @@ addLayer("q", {
 		enEff() {
 			let eff = player.q.energy.plus(1).pow(2);
 			if (hasUpgrade("q", 23)) eff = eff.pow(3);
-			return eff.times(improvementEffect("q", 23));
+			return softcap("qe", eff.times(improvementEffect("q", 23)));
 		},
 		update(diff) {
 			player.q.time = player.q.time.plus(diff);
@@ -2563,7 +2563,7 @@ addLayer("q", {
 				formula: "1e400^(x^0.9)",
 			},
 			42: {
-				num: 540,
+				num: 281,
 				title: "Subspatial Improvement",
 				description: "The Subspace base is stronger.",
 				unlocked() { return (tmp.ps.buyables[11].effects.quirkImpr||0)>=2 },
@@ -2572,7 +2572,7 @@ addLayer("q", {
 				formula: "10^(x^0.75)",
 			},
 			43: {
-				num: 810,
+				num: 301,
 				title: "Layer Improvement",
 				description: "Add free Quirk Layers.",
 				unlocked() { return (tmp.ps.buyables[11].effects.quirkImpr||0)>=3 },
@@ -2667,7 +2667,7 @@ addLayer("o", {
 			if (hasUpgrade("ss", 41)) pow = pow.plus(buyableEffect("o", 21));
 			if (hasUpgrade("ba", 11)) pow = pow.plus(upgradeEffect("ba", 11));
 			if (tmp.ps.impr[11].unlocked) pow = pow.times(tmp.ps.impr[11].effect);
-			return pow;
+			return softcap("solPow", pow);
 		},
 		tabFormat: ["main-display",
 			"prestige-button",
@@ -3760,8 +3760,14 @@ addLayer("ps", {
 			},
 			21: {
 				title: "Ghost Spirit",
+				scaleSlow() {
+					let slow = new Decimal(1);
+					if (hasUpgrade("hn", 51)) slow = slow.times(2);
+					return slow;
+				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    let cost = Decimal.pow(10, Decimal.pow(2, x)).times(x.eq(0)?1e21:1e22);
+                    let cost = Decimal.pow(10, Decimal.pow(2, x.div(this.scaleSlow()))).times(x.eq(0)?1e21:1e22);
+					if (hasUpgrade("hn", 51)) cost = cost.div(upgradeEffect("hn", 51));
 					return cost;
                 },
 				effect() {
@@ -3823,9 +3829,9 @@ addLayer("ps", {
 				title: "Phantom Booster I",
 				description: "Boost Solar Power.",
 				unlocked() { return hasMilestone("hn", 7) },
-				effect() { return getImprovements("ps", 11).times(tmp.ps.impr.power).div(20).plus(1) },
+				effect() { return getImprovements("ps", 11).times(tmp.ps.impr.power).div(20).plus(1).sqrt() },
 				effectDisplay() { return "+"+format(tmp.ps.impr[11].effect.sub(1).times(100))+"% (multiplicative)" },
-				formula: "x*20%",
+				formula: "sqrt(x*5%)",
 				style: {height: "150px", width: "150px"},
 			},
 			12: {
@@ -3833,9 +3839,9 @@ addLayer("ps", {
 				title: "Phantom Booster II",
 				description: "Boost Hex gain.",
 				unlocked() { return hasMilestone("hn", 7) },
-				effect() { return Decimal.pow(10, getImprovements("ps", 11).times(tmp.ps.impr.power).pow(5)) },
+				effect() { return Decimal.pow(10, getImprovements("ps", 11).times(tmp.ps.impr.power).pow(2.5)) },
 				effectDisplay() { return format(tmp.ps.impr[12].effect)+"x" },
-				formula: "10^(x^5)",
+				formula: "10^(x^2.5)",
 				style: {height: "150px", width: "150px"},
 			},
 			21: {
@@ -3987,7 +3993,7 @@ addLayer("hn", {
 			},
 		},
 		upgrades: {
-			rows: 4,
+			rows: 5,
 			cols: 4,
 			11: {
 				title: "Begin Again",
@@ -4272,6 +4278,26 @@ addLayer("hn", {
 					},
 				],
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 44) && hasMilestone("hn", 7) },
+				style: {"font-size": "8px"},
+			},
+			51: {
+				title: "Ghostly Reduction",
+				description: "The Ghost Spirit cost is divided based on your Total Honour, and cost scales half as fast.",
+				multiRes: [
+					{
+						cost: new Decimal(1e6),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e12800000"),
+					},
+				],
+				unlocked() { return player.hn.upgrades.length>=16 },
+				effect() { return player.hn.total.plus(1).pow(5) },
+				effectDisplay() { return "/"+format(tmp.hn.upgrades[51].effect) },
+				formula: "(x+1)^5",
 				style: {"font-size": "8px"},
 			},
 		},
