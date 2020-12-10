@@ -58,7 +58,7 @@ var systemComponents = {
 				[layer]: true,
 				ghost: tmp[layer].layerShown == 'ghost',
 				hidden: !tmp[layer].layerShown,
-				locked: !player[layer].unlocked && !tmp[layer].baseAmount.gte(tmp[layer].requires),
+				locked: !player[layer].unlocked && !(tmp[layer].baseAmount.gte(tmp[layer].requires)&&tmp[layer].canReset),
 				notify: tmp[layer].notify,
 				resetNotify: tmp[layer].prestigeNotify,
 				can: player[layer].unlocked,

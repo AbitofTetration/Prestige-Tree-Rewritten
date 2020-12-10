@@ -177,6 +177,14 @@ const SOFTCAPS = {
 		display() { return hasUpgrade("ba", 32) && upgradeEffect("ba", 32).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the "+format(this.exp)+"th power" },
 	},
+	HnG: {
+		title: "Honour Gain",
+		type: "root",
+		start: new Decimal(1e5),
+		mag: new Decimal(5),
+		display() { return player.hn.unlocked && tmp.hn.getResetGain.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+", brought to the fifth root" },
+	},
 	hn12: {
 		title: "Second Honour Upgrade (Honour Boost)",
 		type: "expRoot",

@@ -207,7 +207,7 @@ addLayer("p", {
 				pseudoReq: "Req: 30 Achievements",
 				pseudoCan() { return player.a.achievements.length>=30 },
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
-				effect() { return player.o.points.plus(1).log10().plus(1).log10().plus(1).log10().plus(1) },
+				effect() { return player.o.points.plus(1).log10().plus(1).log10().plus(1).log10().plus(1).times((hasUpgrade("hn", 34)) ? upgradeEffect("hn", 34) : 1) },
 				effectDisplay() { return format(tmp.p.upgrades[34].effect)+"x" },
 				formula: "log(log(log(x+1)+1)+1)+1",
 			},
@@ -1430,7 +1430,8 @@ addLayer("s", {
 		},
 		buildScalePower() {
 			let scale = new Decimal(1);
-			if (hasUpgrade("p", 42)) scale = scale.sub(.5);
+			if (hasUpgrade("p", 42)) scale = scale.times(.5);
+			if (hasUpgrade("hn", 42)) scale = scale.times(.8);
 			return scale;
 		},
 		buyables: {
@@ -2075,6 +2076,7 @@ addLayer("q", {
 			mult = mult.times(improvementEffect("q", 33));
 			if (player.m.unlocked) mult = mult.times(tmp.m.hexEff);
 			if (hasUpgrade("ba", 22)) mult = mult.times(tmp.ba.negBuff);
+			if (hasUpgrade("hn", 43)) mult = mult.times(upgradeEffect("hn", 43));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -2440,25 +2442,30 @@ addLayer("q", {
 			},
 		},
 		impr: {
+			scaleSlow() {
+				let slow = new Decimal(1);
+				if (tmp.ps.impr[22].unlocked) slow = slow.times(tmp.ps.impr[22].effect);
+				return slow;
+			},
 			baseReq() { 
 				let req = new Decimal(1e128);
 				if (player.ps.unlocked) req = req.div(tmp.ps.soulEff);
 				return req;
 			},
 			amount() { 
-				let amt = player.q.energy.div(this.baseReq()).plus(1).log10().div(2).sqrt();
+				let amt = player.q.energy.div(this.baseReq()).plus(1).log10().div(2).root(layers.q.impr.scaleSlow().pow(-1).plus(1));
 				if (amt.gte(270)) amt = amt.log10().times(270/Math.log10(270));
 				return amt.floor();
 			},
 			overallNextImpr() { 
 				let impr = tmp.q.impr.amount.plus(1);
 				if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
-				return Decimal.pow(10, impr.pow(2).times(2)).sub(1).times(this.baseReq()) 
+				return Decimal.pow(10, impr.pow(layers.q.impr.scaleSlow().pow(-1).plus(1)).times(2)).sub(1).times(this.baseReq()) 
 			},
 			nextAt(id=11) { 
 				let impr = getImprovements("q", id).times(tmp.q.impr.activeRows*tmp.q.impr.activeCols).add(tmp.q.impr[id].num);
 				if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
-				return Decimal.pow(10, impr.pow(2).times(2)).sub(1).times(this.baseReq());
+				return Decimal.pow(10, impr.pow(layers.q.impr.scaleSlow().pow(-1).plus(1)).times(2)).sub(1).times(this.baseReq());
 			},
 			resName: "quirk energy",
 			rows: 4,
@@ -2767,6 +2774,7 @@ addLayer("o", {
 				effect() { 
 					let eff = player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10();
 					eff = softcap("corona", eff);
+					if (hasUpgrade("hn", 24)) eff = eff.times(2);
 					return eff;
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -3070,7 +3078,11 @@ addLayer("m", {
 			if (hasMilestone("m", 3)) time = time.times(tmp.m.spellInputAmt.div(100).plus(1).log10().plus(1));
 			return time;
 		},
-		spellPower() { return new Decimal(1) },
+		spellPower() { 
+			let power = new Decimal(1);
+			if (tmp.ps.impr[21].unlocked) power = power.times(tmp.ps.impr[21].effect);
+			return power;
+		},
 		hexGain() { 
 			let gain = new Decimal(1);
 			if (tmp.ps.impr[12].unlocked) gain = gain.times(tmp.ps.impr[12].effect);
@@ -3524,7 +3536,9 @@ addLayer("ba", {
 				currencyLayer: "ba",
 				unlocked() { return hasChallenge("h", 41) },
 				effect() { 
-					return softcap("ba32", player.ba.pos.plus(1).log10().div(50).plus(1).pow(10));
+					let eff = softcap("ba32", player.ba.pos.plus(1).log10().div(50).plus(1).pow(10));
+					if (hasUpgrade("hn", 44)) eff = eff.times(upgradeEffect("p", 44));
+					return eff;
 				},
 				effectDisplay() { return format(tmp.ba.upgrades[32].effect)+"x" },
 				formula: "(log(x+1)/50+1)^10",
@@ -3784,23 +3798,23 @@ addLayer("ps", {
 				return req;
 			},
 			amount() { 
-				let amt = player.ps.power.div(this.baseReq()).plus(1).log10().div(2).root(1.5);
+				let amt = player.ps.power.div(this.baseReq()).plus(1).log10().div(4).root(1.5);
 				//if (amt.gte(270)) amt = amt.log10().times(270/Math.log10(270));
 				return amt.floor();
 			},
 			overallNextImpr() { 
 				let impr = tmp.ps.impr.amount.plus(1);
 				//if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
-				return Decimal.pow(10, impr.pow(1.5).times(2)).sub(1).times(this.baseReq()) 
+				return Decimal.pow(10, impr.pow(1.5).times(4)).sub(1).times(this.baseReq()) 
 			},
 			nextAt(id=11) { 
 				let impr = getImprovements("ps", id).times(tmp.ps.impr.activeRows*tmp.ps.impr.activeCols).add(tmp.ps.impr[id].num);
 				//if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
-				return Decimal.pow(10, impr.pow(1.5).times(2)).sub(1).times(this.baseReq());
+				return Decimal.pow(10, impr.pow(1.5).times(4)).sub(1).times(this.baseReq());
 			},
 			power() { return tmp.ps.buyables[21].effect2 },
 			resName: "phantom power",
-			rows: 1,
+			rows: 2,
 			cols: 2,
 			activeRows: 2,
 			activeCols: 2,
@@ -3824,6 +3838,26 @@ addLayer("ps", {
 				formula: "10^(x^5)",
 				style: {height: "150px", width: "150px"},
 			},
+			21: {
+				num: 3,
+				title: "Phantom Booster III",
+				description: "Spells are more effective.",
+				unlocked() { return hasMilestone("hn", 7) },
+				effect() { return getImprovements("ps", 21).times(tmp.ps.impr.power).div(10).plus(1) },
+				effectDisplay() { return format(tmp.ps.impr[21].effect.sub(1).times(100))+"% stronger" },
+				formula: "x*10%",
+				style: {height: "150px", width: "150px"},
+			},
+			22: {
+				num: 4,
+				title: "Phantom Booster IV",
+				description: "Quirk Improvement requirements increase slower.",
+				unlocked() { return hasMilestone("hn", 7) },
+				effect() { return getImprovements("ps", 22).times(tmp.ps.impr.power).div(20).plus(1) },
+				effectDisplay() { return format(tmp.ps.impr[22].effect)+"x slower" },
+				formula: "x/20+1",
+				style: {height: "150px", width: "150px"},
+			},
 		},
 })
 
@@ -3839,6 +3873,9 @@ addLayer("hn", {
 			first: 0,
         }},
         color: "#ffbf00",
+		nodeStyle() {return {
+			"background-color": ((player.hn.unlocked||canReset("hn"))?"#ffbf00":"#bf8f8f"),
+        }},
         resource: "honour", // Name of prestige currency
         type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
 		baseResource: "magic and balance energy",
@@ -3849,11 +3886,13 @@ addLayer("hn", {
 		exponent() { return this.exp },
 		getResetGain() {
 			let gain = player.m.points.div(tmp.hn.req.m).pow(tmp.hn.exp.m).times(player.ba.points.div(tmp.hn.req.ba).pow(tmp.hn.exp.ba));
+			if (gain.gte(1e5)) gain = softcap("HnG", gain);
 			return gain.floor();
 		},
 		resetGain() { return this.getResetGain() },
 		getNextAt() {
-			let gain = tmp.hn.getResetGain.plus(1);
+			let gain = tmp.hn.getResetGain
+			gain = reverse_softcap("HnG", gain).plus(1);
 			let next = {m: gain.sqrt().root(tmp.hn.exp.m).times(tmp.hn.req.m), ba: gain.sqrt().root(tmp.hn.exp.ba).times(tmp.hn.req.ba)};
 			return next;
 		},
@@ -4078,6 +4117,22 @@ addLayer("hn", {
 				effectDisplay() { return "^"+format(tmp.hn.upgrades[23].effect) },
 				formula: "(log(x+1)+1)^0.75",
 			},
+			24: {
+				title: "Coronal Energies",
+				description: "Both Coronal Wave effects are doubled (unaffected by softcap).",
+				multiRes: [
+					{
+						cost: new Decimal(1.5e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e12000000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 24) && hasMilestone("hn", 7) },
+			},
 			31: {
 				title: "Exponential Drift",
 				description: "Point gain is raised to the power of 1.05.",
@@ -4129,6 +4184,25 @@ addLayer("hn", {
 				effectDisplay() { return format(tmp.hn.upgrades[33].effect)+"x" },
 				formula: "10^sqrt(log(log(x+1)+1))",
 			},
+			34: {
+				title: "Solar Exertion",
+				description: "The <b>Solar Potential</b> effect is boosted by your Total Honour.",
+				multiRes: [
+					{
+						cost: new Decimal(5e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e12500000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 34) && hasMilestone("hn", 7) },
+				effect() { return player.hn.total.plus(1).log10().plus(1).log10().plus(1).log10().plus(1) },
+				effectDisplay() { return format(tmp.hn.upgrades[34].effect)+"x" },
+				formula: "log(log(log(x+1)+1)+1)+1",
+			},
 			41: {
 				title: "Again and Again",
 				description: "<b>Prestige Recursion</b> is stronger based on your Phantom Power.",
@@ -4147,6 +4221,58 @@ addLayer("hn", {
 				effect() { return player.ps.power.plus(1).log10().plus(1).log10().times(2.4).plus(1) },
 				effectDisplay() { return "^"+format(tmp.hn.upgrades[41].effect) },
 				formula: "log(log(x+1)+1)*2.4+1",
+			},
+			42: {
+				title: "Spatial Awareness II",
+				description: "Space Building costs scale 20% slower.",
+				multiRes: [
+					{
+						cost: new Decimal(1.5e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e12000000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 42) && hasMilestone("hn", 7) },
+			},
+			43: {
+				title: "Quir-cursion",
+				description: "Quirk Energy boosts Quirk gain at a reduced rate.",
+				multiRes: [
+					{
+						cost: new Decimal(5e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e12500000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 43) && hasMilestone("hn", 7) },
+				effect() { return Decimal.pow(10, tmp.q.enEff.max(1).log10().root(1.8)) },
+				effectDisplay() { return format(tmp.hn.upgrades[43].effect)+"x" },
+				formula: "10^(log(quirkEnergyEff)^0.556)",
+			},
+			44: {
+				title: "Numerical Lexicon",
+				description: "<b>Spelling Dictionary</b> also affects <b>Visible Regeneration</b> (a Balance Upgrade)'s effect (unaffected by softcap).",
+				multiRes: [
+					{
+						cost: new Decimal(5e5),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e12500000"),
+					},
+				],
+				unlocked() { return player.hn.unlocked && hasUpgrade("p", 44) && hasMilestone("hn", 7) },
+				style: {"font-size": "8px"},
 			},
 		},
 })
