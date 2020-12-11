@@ -2,18 +2,18 @@ const SOFTCAPS = {
 	p12: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "log",
-		start: new Decimal("1e3500"),
+		start() { return new Decimal("1e3500").times((hasUpgrade("hn", 12)) ? upgradeEffect("hn", 12) : 1) },
 		exp: new Decimal(1),
-		display() { return hasUpgrade("p", 12) && !hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, logarithmic" },
+		display() { return hasUpgrade("p", 12) && !hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, logarithmic" },
 	},
 	p12_h22: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "expRoot",
-		start: new Decimal("1e3500"),
-		mag: new Decimal(2),
-		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		start() { return new Decimal("1e3500").times((hasUpgrade("hn", 12)) ? upgradeEffect("hn", 12) : 1) },
+		mag() { return new Decimal(2).sub((hasUpgrade("hn", 21)) ? upgradeEffect("hn", 21) : 0) },
+		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+(this.mag().eq(2)?"2nd":(format(this.mag())+"th"))+" root" },
 	},
 	e12: {
 		title: "Enhance Upgrade 2 (Enhanced Prestige)",
@@ -48,6 +48,22 @@ const SOFTCAPS = {
 		display() { return player.h.unlocked && tmp.h.effect.root(this.spec()).gte(this.start) },
 		info() { return "Starts at "+format(this.start.pow(this.spec()))+"x, exponent brought to the "+format(this.mag)+"th root" },
 	},
+	option_d: {
+		title: '"Option D" Effect',
+		type: "expRoot",
+		start: new Decimal(1e33),
+		mag: new Decimal(3),
+		display() { return tmp.h.challenges[32].unlocked && challengeEffect("h", 32).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
+	},
+	qe: {
+		title: "Quirk Energy Effect",
+		type: "expRoot",
+		start: new Decimal("e1800000"),
+		mag: new Decimal(2),
+		display() { return player.q.unlocked && tmp.q.enEff.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+	},
 	q14_h: {
 		title: "Quirk Upgrade 4 (Row 4 Synergy) - Quirk Boost",
 		type: "log",
@@ -63,6 +79,14 @@ const SOFTCAPS = {
 		exp: new Decimal(1100/3),
 		display() { return hasUpgrade("q", 14) && upgradeEffect("q", 14).h.gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the "+format(this.exp)+"th power" },
+	},
+	solPow: {
+		title: "Solar Power",
+		type: "root",
+		start: new Decimal(32),
+		mag: new Decimal(3),
+		display() { return player.o.unlocked && tmp.o.solPow.gte(this.start) },
+		info() { return "Starts at "+format(this.start.times(100))+"%, cube rooted" },
 	},
 	sol_eff: {
 		title: "Solarity Effect",
@@ -83,10 +107,11 @@ const SOFTCAPS = {
 	solCores2: {
 		title: "Solar Core Effect",
 		type: "log",
-		start: new Decimal(1e60),
+		start: new Decimal(4.75453173647236e21),
 		exp: new Decimal(3),
-		display() { return player.o.buyables[11].gte(Decimal.pow(10, this.start.log10().pow(2))) },
-		info() { return "Starts at "+format(Decimal.pow(10, this.start.log10().pow(2)))+" Solar Cores, logarithmic but cubed" },
+		goal() { return reverse_softcap("solCores", this.start) },
+		display() { return player.o.buyables[11].gte(this.goal()) },
+		info() { return "Starts at "+format(this.goal())+" Solar Cores, logarithmic but cubed" },
 	},
 	corona: {
 		title: "Coronal Waves",
@@ -107,18 +132,18 @@ const SOFTCAPS = {
 	spell1: {
 		title: "First Spell (Booster Launch)",
 		type: "expRoot",
-		start: new Decimal(1e6),
+		start() { return new Decimal(1e6).times(hasUpgrade("p", 44) ? upgradeEffect("p", 44) : 1) },
 		mag: new Decimal(1.5),
-		display() { return player.m.unlocked && buyableEffect("m", 11).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent brought to the "+format(this.mag)+"th root" },
+		display() { return player.m.unlocked && buyableEffect("m", 11).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+format(this.mag)+"th root" },
 	},
 	spell2: {
 		title: "Second Spell (Time Warp)",
 		type: "expRoot",
-		start: new Decimal(1e6),
+		start() { return new Decimal(1e6).times(hasUpgrade("p", 44) ? upgradeEffect("p", 44) : 1) },
 		mag: new Decimal(2),
-		display() { return player.m.unlocked && buyableEffect("m", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return player.m.unlocked && buyableEffect("m", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
 	},
 	spell3: {
 		title: "Third Spell (Quirk Amplification)",
@@ -167,6 +192,22 @@ const SOFTCAPS = {
 		exp: new Decimal(1.6),
 		display() { return hasUpgrade("ba", 32) && upgradeEffect("ba", 32).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the "+format(this.exp)+"th power" },
+	},
+	HnG: {
+		title: "Honour Gain",
+		type: "root",
+		start: new Decimal(1e5),
+		mag: new Decimal(5),
+		display() { return player.hn.unlocked && tmp.hn.getResetGain.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+", brought to the fifth root" },
+	},
+	hn12: {
+		title: "Second Honour Upgrade (Honour Boost)",
+		type: "expRoot",
+		start: new Decimal(1e10),
+		mag: new Decimal(2),
+		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
 	},
 }
 
@@ -234,6 +275,23 @@ function softcap(name, val) {
 	} else if (type=="log") {
 		let exp = getSoftcapData(name, "exp");
 		return val.log10().pow(exp).times(start.div(start.log10().pow(exp)));
+	} else return val;
+}
+
+function reverse_softcap(name, val) {
+	val = new Decimal(val);
+	if (!softcapActive(name, val)) return val;
+	let type = getSoftcapData(name, "type");
+	let start = getSoftcapData(name, "start");
+	if (type=="root") {
+		let mag = getSoftcapData(name, "mag");
+		return val.pow(mag).div(start.pow(mag.sub(1)));
+	} else if (type=="expRoot") {
+		let mag = getSoftcapData(name, "mag");
+		return Decimal.pow(10, val.log10().div(start.log10().pow(Decimal.sub(1, mag.pow(-1)))).pow(mag));
+	} else if (type=="log") {
+		let exp = getSoftcapData(name, "exp");
+		return Decimal.pow(10, val.div(start.div(start.log10().pow(exp))).root(exp));
 	} else return val;
 }
 

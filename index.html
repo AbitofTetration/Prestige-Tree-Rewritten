@@ -19,7 +19,7 @@
 	<script type="text/javascript" src="js/technical/canvas.js"></script>
 </head>
 <body onload="load()">
-	<div id="app"> 
+	<div id="app">
 		<canvas id="treeCanvas" class="canvas" v-if ="!(gameEnded && !player.keepGoing)"></canvas>
 
 		<div v-if="false" id="loadingSection" class="fullWidth">
@@ -55,8 +55,8 @@
 				</div>
 			</transition-group>
 		</div>
-		
-		
+
+
 		<div v-if="player.tab=='info'" class="col right">
 			<button class="back" onclick="showTab('none')">←</button><br>
 			<h2>{{modInfo.name}}</h2>
@@ -64,7 +64,7 @@
 			<h3>{{VERSION.withName}}</h3>
 			<span v-if="modInfo.author">
 				<br>
-				Made by {{modInfo.author}}	
+				Made by {{modInfo.author}}
 			</span>
 			<br>
 			The Modding Tree {{TMT_VERSION.tmtNum}} by Acamaeda
@@ -114,8 +114,13 @@
 					<tr>
 						<td><button class="opt" onclick="toggleOpt('hideChallenges')">Completed Challenges: {{ player.hideChallenges?"HIDDEN":"SHOWN" }}</button></td>
 						<td><button class="opt" onclick="toggleOpt('tapNerd')">"Nerd Mode" Activation: {{player.tapNerd?"ON TAP":"ON HOLD"}}</button></td>
-						<!--<td><button class="opt" onclick="toggleOpt('oldStyle')">Style: {{ player.oldStyle?"v1.0":"NEW" }}</button></td>-->
-					</tr> 
+						<td><button class="opt" onclick="alert('no')">Spelling: Canadian & British</button></td>
+					</tr>
+					<tr>
+						<td><button class="opt" onclick="toggleOpt('anim')">Animations: {{ player.anim?"ON":"OFF" }}</button></td>
+						<td><button class="opt" onclick="toggleOpt('grad')">Gradients: {{ player.grad?"ON":"OFF" }}</button></td>
+						<td><button class="opt" onclick="toggleOpt('milNotify')">Milestone Notifications: {{ player.milNotify?"ON":"OFF" }}</button></td>
+					</tr>
 				</table>
 			</div><div v-if="player.optTab=='notifyOpt'">
 				<table>

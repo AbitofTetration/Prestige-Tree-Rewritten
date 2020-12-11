@@ -101,6 +101,9 @@ function startPlayerBase() {
 		hasNaN: false,
 		hideChallenges: false,
 		tapNerd: false,
+		anim: true,
+		grad: true,
+		milNotify: true,
 		optTab: "mainOpt",
 		slightGlow: "normal",
 		redGlowActive: true,
@@ -134,6 +137,7 @@ function getStartPlayer() {
 		playerdata[layer].spentOnBuyables = new Decimal(0)
 		playerdata[layer].upgrades = []
 		playerdata[layer].milestones = []
+		playerdata[layer].primeMiles = []
 		playerdata[layer].achievements = []
 		playerdata[layer].challenges = getStartChallenges(layer)
 		if (layers[layer].tabFormat && !Array.isArray(layers[layer].tabFormat)) {
@@ -365,7 +369,7 @@ function getThemeName() {
 }
 
 function switchTheme() {
-	if (player.theme === undefined) player.theme = themes[1]
+	if (player.theme === undefined || player.theme === null) player.theme = themes[1]
 	else {
 		player.theme = themes[Object.keys(themes)[player.theme] + 1]
 		if (!player.theme) player.theme = null;
@@ -401,7 +405,7 @@ function adjustGlow(type) {
 			return data;
 		},
 		sol() { 
-			let data = ["normal", "solar cores onward"]
+			let data = ["normal"]
 			if (player.ss.unlocked) {
 				data.push("tachoclinal plasma onward")
 				if (hasUpgrade("ss", 41)) {
@@ -483,8 +487,16 @@ function respecBuyables(layer) {
 
 function canAffordUpgrade(layer, id) {
 	let upg = tmp[layer].upgrades[id]
-	let cost = tmp[layer].upgrades[id].cost
-	return canAffordPurchase(layer, upg, cost) 
+	if (upg.multiRes) {
+		for (let i=0;i<upg.multiRes.length;i++) {
+			let cost = upg.multiRes[i].cost
+			if (!canAffordPurchase(layer, upg.multiRes[i], cost)) return false;
+		}
+		return true;
+	} else {
+		let cost = upg.cost
+		return canAffordPurchase(layer, upg, cost) 
+	}
 }
 
 function hasUpgrade(layer, id){
@@ -587,32 +599,80 @@ function buyUpg(layer, id) {
 	if (!player[layer].unlocked) return
 	if (!tmp[layer].upgrades[id].unlocked) return
 	if (player[layer].upgrades.includes(id)) return
+	if (!canAffordUpgrade(layer, id)) return;
 	let upg = tmp[layer].upgrades[id]
 	let cost = tmp[layer].upgrades[id].cost
+	let orig = player;
 
-	if (upg.currencyInternalName){
-		let name = upg.currencyInternalName
-		if (upg.currencyLocation){
-			if (upg.currencyLocation[name].lt(cost)) return
-			upg.currencyLocation[name] = upg.currencyLocation[name].sub(cost)
+	if (upg.multiRes) {
+		let doReturn = false;
+		for (let i=0;i<upg.multiRes.length;i++) {
+			let data = upg.multiRes[i]
+			let cost = data.cost;
+			if (data.currencyInternalName){
+				let name = data.currencyInternalName
+				if (data.currencyLocation){
+					if (data.currencyLocation[name].lt(cost)) doReturn = true;
+					data.currencyLocation[name] = data.currencyLocation[name].sub(cost)
+				}
+				else if (data.currencyLayer){
+					let lr = data.currencyLayer
+					if (player[lr][name].lt(cost)) doReturn = true;
+					player[lr][name] = player[lr][name].sub(cost)
+				}
+				else {
+					if (player[name].lt(cost)) doReturn = true;
+					player[name] = player[name].sub(cost)
+				}
+			}
+			else {
+				if (player[layer].points.lt(cost)) doReturn = true;
+				player[layer].points = player[layer].points.sub(cost)	
+			}
 		}
-		else if (upg.currencyLayer){
-			let lr = upg.currencyLayer
-			if (player[lr][name].lt(cost)) return
-			player[lr][name] = player[lr][name].sub(cost)
+		if (doReturn) {
+			player = orig;
+			return;
+		}
+	} else {
+		if (upg.currencyInternalName){
+			let name = upg.currencyInternalName
+			if (upg.currencyLocation){
+				if (upg.currencyLocation[name].lt(cost)) return
+				upg.currencyLocation[name] = upg.currencyLocation[name].sub(cost)
+			}
+			else if (upg.currencyLayer){
+				let lr = upg.currencyLayer
+				if (player[lr][name].lt(cost)) return
+				player[lr][name] = player[lr][name].sub(cost)
+			}
+			else {
+				if (player[name].lt(cost)) return
+				player[name] = player[name].sub(cost)
+			}
 		}
 		else {
-			if (player[name].lt(cost)) return
-			player[name] = player[name].sub(cost)
+			if (player[layer].points.lt(cost)) return
+			player[layer].points = player[layer].points.sub(cost)	
 		}
-	}
-	else {
-		if (player[layer].points.lt(cost)) return
-		player[layer].points = player[layer].points.sub(cost)	
 	}
 	player[layer].upgrades.push(id);
 	if (upg.onPurchase != undefined)
 		upg.onPurchase()
+}
+
+function unlockUpg(layer, id) {
+	if (!player[layer].unlocked) return
+	if (!tmp[layer].upgrades[id].pseudoUnl) return
+	if (tmp[layer].upgrades[id].unlocked) return
+	if (player[layer].pseudoUpgs.includes(id)) return
+	let upg = tmp[layer].upgrades[id]
+	if (!upg.pseudoCan) return;
+	player[layer].pseudoUpgs.push(id);
+}
+
+function pseudoUnl(layer, id) {
+	return tmp[layer].upgrades[id].pseudoUnl && !tmp[layer].upgrades[id].unlocked;
 }
 
 function buyMaxBuyable(layer, id) {
@@ -741,8 +801,14 @@ function toNumber(x) {
 
 function updateMilestones(layer){
 	for (id in layers[layer].milestones){
-		if (!(player[layer].milestones.includes(id)) && layers[layer].milestones[id].done())
+		let done = layers[layer].milestones[id].done();
+		if (!player[layer].primeMiles.includes(id) && done) {
+			player[layer].primeMiles.push(id);
+			if (player.milNotify && !player[layer].milestones.includes(id)) addNotification("milestone", layers[layer].milestones[id].requirementDescription, "Milestone Gotten!");
+		}
+		if (!(player[layer].milestones.includes(id)) && done) {
 			player[layer].milestones.push(id)
+		}
 	}
 }
 

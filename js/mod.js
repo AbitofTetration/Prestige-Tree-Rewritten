@@ -8,22 +8,23 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e5340000"),
-	//specialEndgameText: "v0.6 Beta 10 Endgame: e5,340,000 Points & 1e150 Magic",
+	endgame: new Decimal("1e20500000"),
+	//specialEndgameText: "v1.0 Beta 8 Endgame: e20,500,000 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.6",
-	//beta: 11,
-	name: "Balanced Magical Phantoms",
+	num: "1.0",
+	//beta: 8,
+	//patch: 1,
+	name: "The Honour Update",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
 var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything", "castAllSpells"]
 
-var alwaysKeepTheseVariables = ["auto", "autoExt", "autoBld", "keepPosNeg"]
+var alwaysKeepTheseVariables = ["primeMiles", "auto", "autoExt", "autoBld", "autoW", "keepPosNeg", "distrAll", "spellInput"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)
@@ -56,6 +57,7 @@ function getPointGen() {
 	
 	if (inChallenge("h", 31)) gain = gain.root(tmp.h.pointRoot31);
 	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt("e1e6")?1.1:1.01);
+	if (hasUpgrade("hn", 31)) gain = gain.pow(1.05);
 	return gain
 }
 
@@ -91,6 +93,10 @@ function addNotification(type="none",text="This is a test notification.",title="
 		case "achievement":
 			notificationTitle = "Achievement Unlocked!";
 			notificationType = "achievement-notification"
+			break;
+		case "milestone":
+			notificationTitle = "Milestone Gotten!";
+			notificationType = "milestone-notification"
 			break;
 		case "challenge":
 			notificationTitle = "Challenge Complete";

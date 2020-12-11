@@ -4,7 +4,7 @@ var systemComponents = {
 		template: `
 			<div class="upgRow">
 				<div v-for="tab in Object.keys(data)">
-					<button v-if="data[tab].unlocked == undefined || data[tab].unlocked" v-bind:class="{tabButton: true, notify: subtabShouldNotify(layer, name, tab), resetNotify: subtabResetNotify(layer, name, tab)}" v-bind:style="[{'border-color': tmp[layer].color}, tmp[layer].componentStyles['tab-button'], data[tab].buttonStyle]" v-on:click="player.subtabs[layer][name] = tab">{{tab}}</button>
+					<button v-if="data[tab].unlocked == undefined || data[tab].unlocked" v-bind:class="{tabButton: true, notify: subtabShouldNotify(layer, name, tab), resetNotify: subtabResetNotify(layer, name, tab), anim: player.anim, grad: player.grad}" v-bind:style="[{'border-color': tmp[layer].color}, tmp[layer].componentStyles['tab-button'], data[tab].buttonStyle]" v-on:click="player.subtabs[layer][name] = tab">{{tab}}</button>
 				</div>
 			</div>
 		`
@@ -31,6 +31,8 @@ var systemComponents = {
 				locked: !tmp[layer].canClick,
 				notify: tmp[layer].notify,
 				can: tmp[layer].canClick,
+				anim: player.anim,
+				grad: player.grad
 			}"
 			v-bind:style="[tmp[layer].canClick ? {'background-color': tmp[layer].color} : {}, tmp[layer].nodeStyle]">
 			{{abb}}
@@ -56,10 +58,12 @@ var systemComponents = {
 				[layer]: true,
 				ghost: tmp[layer].layerShown == 'ghost',
 				hidden: !tmp[layer].layerShown,
-				locked: !player[layer].unlocked && !tmp[layer].baseAmount.gte(tmp[layer].requires),
+				locked: !player[layer].unlocked && !(tmp[layer].baseAmount.gte(tmp[layer].requires)&&tmp[layer].canReset),
 				notify: tmp[layer].notify,
 				resetNotify: tmp[layer].prestigeNotify,
 				can: player[layer].unlocked,
+				anim: player.anim,
+				grad: player.grad
 			}"
 			v-bind:style="[layerunlocked(layer) ? {
 				'background-color': tmp[layer].color,

@@ -23,6 +23,11 @@
 	background: #7182BC;
 }
 
+.milestone-notification {
+	border-color: #52a195;
+	background: #73bfb5;
+}
+
 .challenge-notification {
 	border-color: #B1A21C;
 	background: #D1C23C;
