@@ -177,6 +177,7 @@ addLayer("p", {
 				pseudoReq: "Req: 41,250 Damned Souls without any Wraiths.",
 				pseudoCan() { return player.ps.souls.gte(41250) && player.ps.buyables[11].eq(0) },
 				unlocked() { return player.p.pseudoUpgs.includes(Number(this.id)) },
+				style: {"font-size": "9px" },
 			},
 			31: {
 				title: "WE NEED MORE PRESTIGE",
@@ -3922,7 +3923,7 @@ addLayer("hn", {
 		},
 		prestigeNotify() {
 			if (!canReset("hn")) return false;
-			if (tmp.hn.getResetGain.gte(player.hn.points.times(0.6).max(1))) return true;
+			if (tmp.hn.getResetGain.gte(player.hn.points.times(0.1).max(1)) && !tmp.hn.passiveGeneration) return true;
 			else return false;
 		},
 		tooltip() { return formatWhole(player.hn.points)+" Honour" },
@@ -4470,6 +4471,11 @@ addLayer("a", {
 				name: "The Impossible Task",
 				done() { return hasMilestone("hn", 7) },
 				tooltip: "Unlock Phantom Boosters.",
+			},
+			84: {
+				name: "Beyond the Basics",
+				done() { return player.points.gte("e9250000") && player.b.best.eq(0) && player.g.best.eq(0) },
+				tooltip: "Reah e9,250,000 Points without any Boosters or Generators.",
 			},
         },
 		tabFormat: [

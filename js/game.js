@@ -94,7 +94,7 @@ function shouldNotify(layer){
 						if (str>id) continue;
 					}
 				} else if (layer=="m") {
-					if (player.majGlow=="never") continue;
+					if (player.majGlow=="never" || (player.m.auto && hasMilestone("hn", 2))) continue;
 				}
 				return true
 			}
