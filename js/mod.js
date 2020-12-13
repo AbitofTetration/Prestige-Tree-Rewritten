@@ -8,14 +8,14 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e20500000"),
-	//specialEndgameText: "v1.0 Beta 8 Endgame: e20,500,000 Points",
+	endgame: new Decimal("1e99999999999999999999999999999999"),
+	specialEndgameText: "v1.1 Beta 1 Endgame: e23,750,000 Points & 8 Nebula Energy",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0",
-	//beta: 8,
+	num: "1.1",
+	beta: 1,
 	//patch: 1,
 	name: "The Honour Update",
 }

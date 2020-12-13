@@ -1727,7 +1727,7 @@ addLayer("sb", {
 			if (hasChallenge("h", 12)) base = base.plus(.25);
 			
 			if (player.o.unlocked) base = base.times(buyableEffect("o", 12));
-			return base;
+			return base.times(tmp.n.dustEffs.blue);
 		},
 		effect() {
 			return Decimal.pow(this.effectBase(), player.sb.points).max(0);
@@ -2686,6 +2686,10 @@ addLayer("o", {
 			"buyables",
 			"blank"
 		],
+		multiplyBuyables() {
+			let mult = tmp.n.dustEffs.orange;
+			return mult;
+		},
 		buyables: {
 			rows: 2,
 			cols: 3,
@@ -2693,7 +2697,7 @@ addLayer("o", {
 				title: "Solar Cores",
 				gain() { return player.o.points.div(2).root(1.5).floor() },
 				effect() { 
-					let amt = player[this.layer].buyables[this.id]
+					let amt = player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables)
 					amt = softcap("solCores2", softcap("solCores", amt));
 					return hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)) 
 				},
@@ -2702,7 +2706,7 @@ addLayer("o", {
 					let x = player[this.layer].buyables[this.id].gte(5e4)?"10^(sqrt(log(x)*log(5e4)))":"x"
                     let display = ("Sacrifice all of your Solarity for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Solar Cores\n"+
 					"Req: 2 Solarity\n"+
-					"Amount: " + formatWhole(player[this.layer].buyables[this.id]))+"\n"+
+					"Amount: " + formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables))))+"\n"+
 					(tmp.nerdMode?("Formula: "+(hasUpgrade("ss", 22)?"cbrt("+x+"+1)":"log("+x+"+1)+1")+""):("Effect: Multiplies Solarity gain by "+format(tmp[this.layer].buyables[this.id].effect)))
 					return display;
                 },
@@ -2721,12 +2725,12 @@ addLayer("o", {
 			12: {
 				title: "Tachoclinal Plasma",
 				gain() { return player.o.points.div(100).times(player.o.energy.div(2500)).root(3.5).floor() },
-				effect() { return hasUpgrade("p", 24)?Decimal.pow(10, player[this.layer].buyables[this.id].plus(1).log10().cbrt()):(player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10().times(10).plus(1)) },
+				effect() { return hasUpgrade("p", 24)?Decimal.pow(10, player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).log10().cbrt()):(player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().times(10).plus(1)) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity & Solar Energy for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Tachoclinal Plasma\n"+
 					"Req: 100 Solarity & 2,500 Solar Energy\n"+
-					"Amount: " + formatWhole(player[this.layer].buyables[this.id]))+"\n"+
+					"Amount: " + formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables))))+"\n"+
 					(tmp.nerdMode?("Formula: "+(hasUpgrade("p", 24)?"10^cbrt(log(x+1))":"log(log(x+1)+1)*10+1")):("Effect: Multiplies the Super Booster base and each Quirk Layer by "+format(tmp[this.layer].buyables[this.id].effect)))
 					return display;
                 },
@@ -2746,12 +2750,12 @@ addLayer("o", {
 			13: {
 				title: "Convectional Energy",
 				gain() { return player.o.points.div(1e3).times(player.o.energy.div(2e5)).times(player.ss.subspace.div(10)).root(6.5).floor() },
-				effect() { return player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).pow(2.5) },
+				effect() { return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).pow(2.5) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity, Solar Energy, & Subspace for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Convectional Energy\n"+
 					"Req: 1,000 Solarity, 200,000 Solar Energy, & 10 Subspace\n"+
-					"Amount: " + formatWhole(player[this.layer].buyables[this.id]))+"\n"+
+					"Amount: " + formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables))))+"\n"+
 					(tmp.nerdMode?("Formula: (log(x+1)+1)^2.5"):("Effect: Multiplies the Time Capsule base and Subspace gain by "+format(tmp[this.layer].buyables[this.id].effect)))
 					return display;
                 },
@@ -2773,7 +2777,7 @@ addLayer("o", {
 				title: "Coronal Waves",
 				gain() { return player.o.points.div(1e5).root(5).times(player.o.energy.div(1e30).root(30)).times(player.ss.subspace.div(1e8).root(8)).times(player.q.energy.div("1e675").root(675)).floor() },
 				effect() { 
-					let eff = player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10();
+					let eff = player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10();
 					eff = softcap("corona", eff);
 					if (hasUpgrade("hn", 24)) eff = eff.times(2);
 					return eff;
@@ -2782,7 +2786,7 @@ addLayer("o", {
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity, Solar Energy, Subspace, & Quirk Energy for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Coronal Waves\n"+
 					"Req: 100,000 Solarity, 1e30 Solar Energy, 500,000,000 Subspace, & 1e675 Quirk Energy\n"+
-					"Amount: " + formatWhole(player[this.layer].buyables[this.id]))+"\n"+
+					"Amount: " + formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables))))+"\n"+
 					(tmp.nerdMode?("Formula: log(log(x+1)+1)"):("Effect: +"+format(tmp[this.layer].buyables[this.id].effect)+" to Subspace base & +"+format(tmp[this.layer].buyables[this.id].effect.times(100))+"% Solar Power"))
 					return display;
                 },
@@ -3256,7 +3260,6 @@ addLayer("m", {
 				requirementDescription: "3 Total Magic",
 				done() { return player.m.total.gte(3) || (hasMilestone("hn", 0)) },
 				effectDescription: 'Keep all Hindrance completions on all resets.',
-				toggles: [["h", "auto"]],
 			},
 			2: {
 				requirementDescription: "10 Total Magic",
@@ -3646,7 +3649,7 @@ addLayer("ps", {
 		soulGainMult() {
 			let mult = new Decimal(1);
 			if (tmp.ps.buyables[11].effects.damned) mult = mult.times(tmp.ps.buyables[11].effects.damned||1);
-			return mult;
+			return mult.times(tmp.n.dustEffs.purple);
 		},
 		soulGain() {
 			let gain = Decimal.pow(player.ps.points, layers.ps.soulGainExp()).div(9.4).times(layers.ps.soulGainMult());
@@ -3669,7 +3672,7 @@ addLayer("ps", {
 			let eff = player.ps.souls.plus(1).pow(layers.ps.soulEffExp());
 			return eff;
 		},
-		powerGain() { return player.ps.souls.plus(1).times(tmp.ps.buyables[21].effect) },
+		powerGain() { return player.ps.souls.plus(1).times(tmp.ps.buyables[21].effect).times(tmp.n.dustEffs.purple) },
 		powerExp() { return player.ps.points.sqrt().times(tmp.ps.buyables[21].effect) },
 		tabFormat: {
 			"Main Tab": {
@@ -4302,6 +4305,103 @@ addLayer("hn", {
 				style: {"font-size": "8px"},
 			},
 		},
+})
+
+addLayer("n", {
+		name: "nebula", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "N", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        startData() { return {
+            unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			total: new Decimal(0),
+			purpleDust: new Decimal(0),
+			blueDust: new Decimal(0),
+			orangeDust: new Decimal(0),
+			first: 0,
+        }},
+        color: "#430082",
+		nodeStyle() { return {
+			"background-color": ((player.n.unlocked||canReset("n"))?"#430082":"#bf8f8f"),
+			color: "rgba(255, 255, 255, 0.75)",
+		}},
+		componentStyles: {
+			"prestige-button": {
+				color: "rgba(255, 255, 255, 0.75)",
+			},
+		},
+        requires() { return new Decimal(player[this.layer].unlockOrder>0?(1/0):"1e280") }, // Can be a function that takes requirement increases into account
+        resource: "nebula energy", // Name of prestige currency
+        baseResource: "solarity", // Name of resource prestige is based on
+        baseAmount() {return player.o.points}, // Get the current amount of baseResource
+        type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+        exponent: new Decimal(0.0075), // Prestige currency exponent
+        gainMult() { // Calculate the multiplier for main currency from bonuses
+            mult = new Decimal(1);
+            return mult
+        },
+        gainExp() { // Calculate the exponent on main currency from bonuses
+            return new Decimal(1)
+        },
+        row: 5, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "n", description: "Press N to Nebula Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+        doReset(resettingLayer){ 
+			let keep = [];
+			player.n.purpleDust = new Decimal(0);
+			player.n.blueDust = new Decimal(0);
+			player.n.orangeDust = new Decimal(0);
+			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+        layerShown(){return player.o.unlocked && player.hn.unlocked },
+        branches: ["o", ["ps", 2]],
+		tabFormat() { return ["main-display",
+			"prestige-button",
+			"resource-display",
+			"blank",
+			["column", 
+				[["row", [["display-text", ("<span style='color: #bd6afc; font-size: 24px'>"+format(player.n.purpleDust)+"</span> Purple Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.333)/20)":((tmp.n.effect.purple||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.purple||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply Damned Soul and Phantom Power gain by <span style='color: #bd6afc; font-size: 24px'>"+format(tmp.n.dustEffs.purple)+"</span>"+(tmp.nerdMode?" (Effect Formula: 10^sqrt(log(x+1)))":""))]], {"background-color": "rgba(189, 106, 252, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
+				["row", [["display-text", ("<span style='color: #7569ff; font-size: 24px'>"+format(player.n.blueDust)+"</span> Blue Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.5)/1e3)":((tmp.n.effect.blue||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.blue||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply Super-Booster base by <span style='color: #7569ff; font-size: 24px'>"+format(tmp.n.dustEffs.blue)+"</span>"+(tmp.nerdMode?" (Effect Formula: (x+1)^50)":""))]], {"background-color": "rgba(117, 105, 255, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
+				["row", [["display-text", ("<span style='color: #ffbd2e; font-size: 24px'>"+format(player.n.orangeDust)+"</span> Orange Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.2)/5)":((tmp.n.effect.orange||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.orange||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply amounts of all Solarity buyables by <span style='color: #ffbd2e; font-size: 24px'>"+format(tmp.n.dustEffs.orange)+"</span>"+(tmp.nerdMode?" (Effect Formula: (x+1)^75)":""))]], {"background-color": "rgba(255, 189, 46, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}], "blank", "blank"],
+			],
+		]},
+		effect() {
+			let amt = player.n.points;
+			return {
+				purple: amt.cbrt().div(20),
+				blue: amt.sqrt().div(1e3),
+				orange: amt.root(5).div(5),
+			};
+		},
+		dustEffs() {
+			let mod = player.n.unlocked?1:0
+			return {
+				purple: Decimal.pow(10, player.n.purpleDust.times(mod).plus(1).log10().sqrt()),
+				blue: player.n.blueDust.times(mod).plus(1).pow(50),
+				orange: player.n.orangeDust.times(mod).plus(1).pow(75),
+			}
+		},
+		effectDescription: "which generate the dusts below",
+		update(diff) {
+			if (!player.n.unlocked) return;
+			player.n.purpleDust = player.n.purpleDust.plus(tmp.n.effect.purple.times(diff));
+			player.n.blueDust = player.n.blueDust.plus(tmp.n.effect.blue.times(diff));
+			player.n.orangeDust = player.n.orangeDust.plus(tmp.n.effect.orange.times(diff));
+		},
+})
+
+addLayer("?", {
+	row: 5,
+	position: 2,
+	layerShown() { return tmp.n.layerShown?"ghost":false },
+})
+
+addLayer("??", {
+	row: 5,
+	position: 3,
+	layerShown() { return tmp.n.layerShown?"ghost":false },
 })
 
 addLayer("a", {

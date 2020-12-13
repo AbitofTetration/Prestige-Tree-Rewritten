@@ -711,11 +711,27 @@ button > * {
 	animation: honour 10s linear infinite;
 }
 
+.n.anim:not(.locked):not(.bought) {
+	animation: nebula 10s ease infinite;
+}
+
 @keyframes honour {
 	0% {
 		background-position: 0% 0%;
 	}
 	100% {
 		background-position: 400% 0%;
+	}
+}
+
+@keyframes nebula {
+	0% {
+		background-color: #430082;
+	}
+	50% {
+		background-color: #1d007a;
+	}
+	100% {
+		background-color: #430082;
 	}
 }
