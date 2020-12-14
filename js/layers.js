@@ -768,9 +768,13 @@ addLayer("t", {
 			if (player.ps.unlocked) mult = mult.times(challengeEffect("h", 32));
 			return mult;
 		},
+		effLimBaseMult() {
+			let mult = tmp.n.realDustEffs2?tmp.n.realDustEffs2.orangePurple:new Decimal(1);
+			return mult;
+		},
 		effect() { return {
 			gain: Decimal.pow(tmp.t.effBaseMult.times(tmp.t.effGainBaseMult).times(3).pow(tmp.t.effBasePow), player.t.points.plus(player.t.buyables[11]).plus(tmp.t.freeExtraTimeCapsules)).sub(1).times(player.t.points.plus(player.t.buyables[11]).gt(0)?1:0).times(tmp.t.enGainMult),
-			limit: Decimal.pow(tmp.t.effBaseMult.times(2).pow(tmp.t.effBasePow), player.t.points.plus(player.t.buyables[11]).plus(tmp.t.freeExtraTimeCapsules)).sub(1).times(100).times(player.t.points.plus(player.t.buyables[11]).gt(0)?1:0).times(tmp.t.enCapMult),
+			limit: Decimal.pow(tmp.t.effBaseMult.times(tmp.t.effLimBaseMult).times(2).pow(tmp.t.effBasePow), player.t.points.plus(player.t.buyables[11]).plus(tmp.t.freeExtraTimeCapsules)).sub(1).times(100).times(player.t.points.plus(player.t.buyables[11]).gt(0)?1:0).times(tmp.t.enCapMult),
 		}},
 		effectDescription() {
 			return "which are generating "+format(tmp.t.effect.gain)+" Time Energy/sec, but with a limit of "+format(tmp.t.effect.limit)+" Time Energy"+(tmp.nerdMode?("\n("+format(tmp.t.effBaseMult.times(tmp.t.effGainBaseMult).times(3))+"x gain each, "+format(tmp.t.effBaseMult.times(2))+"x limit each)"):"")
@@ -1974,7 +1978,7 @@ addLayer("h", {
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription() { return "<b>Timeless</b> completions boost Super Generator Power gain based on your time "+(hasUpgrade("ss", 33)?"playing this game.":"in this Row 4 reset.") },
-				rewardEffect() { return Decimal.div(9, Decimal.add((hasUpgrade("ss", 33)?(player.timePlayed||0):player.q.time), 1).cbrt().pow(hasUpgrade("ss", 23)?(-1):1)).plus(1).pow(challengeCompletions("h", 31)) },
+				rewardEffect() { return Decimal.div(9, Decimal.add((hasUpgrade("ss", 33)?(player.timePlayed||0):player.q.time), 1).cbrt().pow(hasUpgrade("ss", 23)?(-1):1)).plus(1).pow(challengeCompletions("h", 31)).times(tmp.n.realDustEffs2?tmp.n.realDustEffs2.blueOrange:new Decimal(1)) },
 				rewardDisplay() { return format(this.rewardEffect())+"x" },
 				formula() { return "(9"+(hasUpgrade("ss", 23)?"*":"/")+"cbrt(time+1)+1)^completions" },
 			},
@@ -1991,7 +1995,7 @@ addLayer("h", {
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription: "<b>Option D</b> completions multiply the Time Energy gain base.",
-				rewardEffect() { return softcap("option_d", Decimal.pow(100, Decimal.pow(challengeCompletions("h", 32), 2))) },
+				rewardEffect() { return softcap("option_d", Decimal.pow(100, Decimal.pow(challengeCompletions("h", 32), 2))).times(tmp.n.realDustEffs2?tmp.n.realDustEffs2.blueOrange:new Decimal(1)) },
 				rewardDisplay() { return format(tmp.h.challenges[32].rewardEffect)+"x" },
 				formula: "100^(completions^2)",
 				unlocked() { return tmp.ps.buyables[11].effects.hindr },
@@ -3086,7 +3090,7 @@ addLayer("m", {
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
 			if (hasAchievement("a", 74)) mult = mult.times(challengeEffect("h", 32));
-            return mult
+            return mult.times(tmp.n.realDustEffs2?tmp.n.realDustEffs2.purpleBlue:new Decimal(1));
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
             return new Decimal(1)
@@ -4351,6 +4355,23 @@ addLayer("hn", {
 				unlocked() { return player.hn.upgrades.length>=16 && player.n.unlocked },
 				style: {"font-size": "9px"},
 			},
+			53: {
+				title: "Nebulaic Luminosity",
+				description: "There are 3 new Nebula Dust effects, but you can only have 1 active at a time, and keep dusts on Row 6 resets.",
+				multiRes: [
+					{
+						cost: new Decimal(2.5e7),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("e17250000"),
+					},
+				],
+				unlocked() { return hasUpgrade("hn", 52) && player.n.unlocked },
+				style: {"font-size": "9px"},
+			},
 		},
 })
 
@@ -4366,6 +4387,7 @@ addLayer("n", {
 			purpleDust: new Decimal(0),
 			blueDust: new Decimal(0),
 			orangeDust: new Decimal(0),
+			activeSecondaries: {purpleBlue: false, blueOrange: false, orangePurple: false},
 			first: 0,
         }},
         color: "#430082",
@@ -4397,23 +4419,40 @@ addLayer("n", {
         ],
         doReset(resettingLayer){ 
 			let keep = [];
-			player.n.purpleDust = new Decimal(0);
-			player.n.blueDust = new Decimal(0);
-			player.n.orangeDust = new Decimal(0);
+			if (!hasUpgrade("hn", 53)) {
+				player.n.purpleDust = new Decimal(0);
+				player.n.blueDust = new Decimal(0);
+				player.n.orangeDust = new Decimal(0);
+			}
 			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
         layerShown(){return player.o.unlocked && player.hn.unlocked },
         branches: ["o", ["ps", 2]],
-		tabFormat() { return ["main-display",
+		tabFormat() { 
+			let second = !(!tmp.n.secondariesAvailable);
+			
+			return ["main-display",
 			"prestige-button",
 			"resource-display",
 			"blank",
 			["column", 
-				[["row", [["display-text", ("<span style='color: #bd6afc; font-size: 24px'>"+format(player.n.purpleDust)+"</span> Purple Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.333)*"+format(tmp.n.dustGainMult.div(20))+")":((tmp.n.effect.purple||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.purple||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply Damned Soul and Phantom Power gain by <span style='color: #bd6afc; font-size: 24px'>"+format(tmp.n.dustEffs.purple)+"</span>"+(tmp.nerdMode?" (Effect Formula: 10^sqrt(log(x+1)))":""))]], {"background-color": "rgba(189, 106, 252, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
+				[(second?["clickable", 14]:[]),
+				
+				"blank",
+			
+				["row", [["display-text", ("<span style='color: #bd6afc; font-size: 24px'>"+format(player.n.purpleDust)+"</span> Purple Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.333)*"+format(tmp.n.dustGainMult.div(20))+")":((tmp.n.effect.purple||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.purple||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply Damned Soul and Phantom Power gain by <span style='color: #bd6afc; font-size: 24px'>"+format(tmp.n.dustEffs.purple)+"</span>"+(tmp.nerdMode?" (Effect Formula: 10^sqrt(log(x+1)))":""))]], {"background-color": "rgba(189, 106, 252, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
+				
+				(second?["column", [["clickable", 11], ["display-text", ("Multiply Magic gain by <span style='color: #ee82ee; font-size: 24px'>"+format(tmp.n.dustEffs2.purpleBlue)+"</span>"+(tmp.nerdMode?" (Effect Formula: (purple*blue+1)^10)":" (based on Purple & Blue Dust)"))]], {"background-color": "rgba(238, 130, 238, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}]:[]),
+				
 				["row", [["display-text", ("<span style='color: #7569ff; font-size: 24px'>"+format(player.n.blueDust)+"</span> Blue Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.5)*"+format(tmp.n.dustGainMult.div(1e3))+")":((tmp.n.effect.blue||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.blue||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply Super-Booster base by <span style='color: #7569ff; font-size: 24px'>"+format(tmp.n.dustEffs.blue)+"</span>"+(tmp.nerdMode?" (Effect Formula: (x+1)^50)":""))]], {"background-color": "rgba(117, 105, 255, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
-				["row", [["display-text", ("<span style='color: #ffbd2e; font-size: 24px'>"+format(player.n.orangeDust)+"</span> Orange Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.2)*"+format(tmp.n.dustGainMult.div(5))+")":((tmp.n.effect.orange||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.orange||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply amounts of all Solarity buyables by <span style='color: #ffbd2e; font-size: 24px'>"+format(tmp.n.dustEffs.orange)+"</span>"+(tmp.nerdMode?" (Effect Formula: (x+1)^75)":""))]], {"background-color": "rgba(255, 189, 46, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}], "blank", "blank"],
-			],
-			["buyable", 11], "blank", "blank",
+				
+				(second?["column", [["clickable", 12], ["display-text", ("Multiply the <b>Timeless</b> and <b>Option D</b> rewards by <span style='color: #ba9397; font-size: 24px'>"+format(tmp.n.dustEffs2.blueOrange)+"</span><br>(unaffected by softcaps)"+(tmp.nerdMode?" (Effect Formula: (blue*orange+1)^5)":" (based on Blue & Orange Dust)"))]], {"background-color": "rgba(186, 147, 151, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}]:[]),
+				
+				["row", [["display-text", ("<span style='color: #ffbd2e; font-size: 24px'>"+format(player.n.orangeDust)+"</span> Orange Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.2)*"+format(tmp.n.dustGainMult.div(5))+")":((tmp.n.effect.orange||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.orange||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply amounts of all Solarity buyables by <span style='color: #ffbd2e; font-size: 24px'>"+format(tmp.n.dustEffs.orange)+"</span>"+(tmp.nerdMode?" (Effect Formula: (x+1)^75)":""))]], {"background-color": "rgba(255, 189, 46, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
+				
+				(second?["column", [["clickable", 13], ["display-text", ("Multiply the Time Capsule limit base by <span style='color: #94de95; font-size: 24px'>"+format(tmp.n.dustEffs2.orangePurple)+"</span><br>"+(tmp.nerdMode?" (Effect Formula: (orange*purple+1)^0.6)":" (based on Orange & Purple Dust)"))]], {"background-color": "rgba(148, 222, 149, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}]:[]),
+			]],
+			"blank", "blank", ["buyable", 11], "blank", "blank",
 		]},
 		dustGainMult() {
 			let mult = new Decimal(1);
@@ -4434,6 +4473,23 @@ addLayer("n", {
 				purple: Decimal.pow(10, player.n.purpleDust.times(mod).plus(1).log10().sqrt()),
 				blue: player.n.blueDust.times(mod).plus(1).pow(50),
 				orange: player.n.orangeDust.times(mod).plus(1).pow(75),
+			}
+		},
+		dustEffs2() {
+			let mod = hasUpgrade("hn", 53)?1:0
+			return {
+				purpleBlue: player.n.purpleDust.times(player.n.blueDust).plus(1).pow(10),
+				blueOrange: player.n.blueDust.times(player.n.orangeDust).plus(1).pow(5),
+				orangePurple: player.n.orangeDust.times(player.n.purpleDust).plus(1).pow(0.6),
+			}
+		},
+		realDustEffs2() {
+			let avail = player.n.activeSecondaries
+			let data = tmp.n.dustEffs2;
+			return {
+				purpleBlue: avail.purpleBlue?data.purpleBlue:new Decimal(1),
+				blueOrange: avail.blueOrange?data.blueOrange:new Decimal(1),
+				orangePurple: avail.orangePurple?data.orangePurple:new Decimal(1),
 			}
 		},
 		effectDescription: "which generate the dusts below",
@@ -4476,6 +4532,50 @@ addLayer("n", {
 				},
                 style() { return {'height':'200px', 'width':'200px', color:(tmp[this.layer].buyables[this.id].canAfford?"white":"black")}},
 				autoed() { return false },
+			},
+		},
+		secondariesAvailable() { return hasUpgrade("hn", 53)?1:0 },
+		secondariesActive() { 
+			let n = 0;
+			Object.values(player.n.activeSecondaries).forEach(x => function() { n += x?1:0 }());
+			return Math.min(n, layers.n.secondariesAvailable());
+		},
+		clickables: {
+			rows: 1,
+			cols: 4,
+			11: {
+				name: "purpleBlue",
+				display() { return player.n.activeSecondaries[this.name]?"ON":((!this.canClick())?"LOCKED":"OFF") },
+				unlocked() { return tmp.n.secondariesAvailable>0 },
+				canClick() { return (layers.n.secondariesActive()<layers.n.secondariesAvailable()) },
+				onClick() { player.n.activeSecondaries[this.name] = true },
+				style: {"height": "50px", "width": "50px", "background-color": "#ee82ee"},
+			},
+			12: {
+				name: "blueOrange",
+				display() { return player.n.activeSecondaries[this.name]?"ON":((!this.canClick())?"LOCKED":"OFF") },
+				unlocked() { return tmp.n.secondariesAvailable>0 },
+				canClick() { return (layers.n.secondariesActive()<layers.n.secondariesAvailable()) },
+				onClick() { player.n.activeSecondaries[this.name] = true },
+				style: {"height": "50px", "width": "50px", "background-color": "#ba9397"},
+			},
+			13: {
+				name: "orangePurple",
+				display() { return player.n.activeSecondaries[this.name]?"ON":((!this.canClick())?"LOCKED":"OFF") },
+				unlocked() { return tmp.n.secondariesAvailable>0 },
+				canClick() { return (layers.n.secondariesActive()<layers.n.secondariesAvailable()) },
+				onClick() { player.n.activeSecondaries[this.name] = true },
+				style: {"height": "50px", "width": "50px", "background-color": "#94de95"},
+			},
+			14: {
+				display: "Reset Secondary Dust Effects (forces a Row 6 reset)",
+				unlocked() { return tmp.n.secondariesAvailable>0 },
+				canClick() { return layers.n.secondariesActive()>0 },
+				onClick() { 
+					doReset("n", true);
+					player.n.activeSecondaries = {purpleBlue: false, blueOrange: false, orangePurple: false}
+				},
+				style() { return {color: this.canClick()?"white":"black"}},
 			},
 		},
 })

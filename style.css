@@ -698,8 +698,16 @@ button > * {
     margin-bottom: -2px;
 }
 
-#treeTab td button {
+#treeTab span button {
     margin: 0 10px 0 10px;
+}
+
+.nodeRow {
+	display: flex !important;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+	max-width: 100%;
 }
 
 .hn.grad:not(.locked):not(.bought) {
