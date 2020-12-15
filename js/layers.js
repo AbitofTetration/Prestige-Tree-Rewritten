@@ -1323,6 +1323,7 @@ addLayer("s", {
 			if (player.ss.unlocked) pow = pow.plus(tmp.ss.eff2);
 			if (hasUpgrade("ss", 42)) pow = pow.plus(1);
 			if (hasUpgrade("ba", 12)) pow = pow.plus(upgradeEffect("ba", 12));
+			if (player.n.buyables[11].gte(2)) pow = pow.plus(buyableEffect("o", 23));
 			if (inChallenge("h", 21)) pow = pow.sub(0.9);
 			return pow;
 		},
@@ -2826,6 +2827,32 @@ addLayer("o", {
 				canAfford() { return player.o.buyables[11].gte(1e150) },
 				buy() {
 					player.o.buyables[11] = new Decimal(0);
+					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
+				},
+				 buyMax() {
+					// I'll do this later ehehe
+				},
+                style: {'height':'140px', 'width':'140px', 'font-size':'9px'},
+				autoed() { return hasMilestone("m", 0) },
+			},
+			23: {
+				title: "Nuclear Forges",
+				gain() { return player.o.buyables[11].div(1e175).times(player.o.energy.div("1e2500").root(10)).floor() },
+				effect() {
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(2.5)
+				},
+				display() {
+					let data = tmp[this.layer].buyables[this.id]
+					return ("Sacrifice all of your Solar Cores & Solar Energy for "+formatWhole(data.gain)+" Nuclear Forges\n"+
+					"Req: 1e175 Solar Cores & 1e2,500 Solar Energy\n"+
+					"Amount: "+formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables)))+"\n"+
+					(tmp.nerdMode?("Formula: (log(log(x+1)+1)^0.4)*100"):("Effect: Space Buildings are "+format(data.effect.times(100))+"% stronger")))
+				},
+				unlocked() { return player.n.buyables[11].gte(1) },
+				canAfford() { return player.o.buyables[11].gte(1e150) },
+				buy() {
+					player.o.buyables[11] = new Decimal(0);
+					player.o.energy = new Decimal(0);
 					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
 				},
 				 buyMax() {
@@ -4504,14 +4531,14 @@ addLayer("n", {
 			cols: 1,
 			11: {
 				title: "Stellar Clusters",
-				cap() { return new Decimal(1) },
+				cap() { return new Decimal(2) },
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    let cost = { purple: Decimal.pow(1e3, x.pow(2)).cbrt().times(50), blue: Decimal.pow(1e3, x.pow(2)).sqrt(), orange: Decimal.pow(1e3, x.pow(2)).root(5).times(150) }
+                    let cost = { purple: Decimal.pow(1e3, x.pow(2)).cbrt().times(50), blue: Decimal.pow(200, x.pow(2)).sqrt(), orange: Decimal.pow(1e3, x.pow(2)).root(5).times(150) }
 					return cost;
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-                    let display = (("Cost: " + formatWhole(data.cost.purple) + " Purple Dust"+(tmp.nerdMode?" (Formula: ((1e3^(x^2))^0.333)*50)":"")+"\nCost: "+formatWhole(data.cost.blue)+" Blue Dust"+(tmp.nerdMode?" (Formula: ((1e3^(x^2))^0.5))":"")+"\nCost: "+formatWhole(data.cost.orange)+" Orange Dust")+(tmp.nerdMode?" (Formula: ((1e3^(x^2))^0.2)*150)":"")+"\n\
+                    let display = (("Cost: " + formatWhole(data.cost.purple) + " Purple Dust"+(tmp.nerdMode?" (Formula: ((1e3^(x^2))^0.333)*50)":"")+"\nCost: "+formatWhole(data.cost.blue)+" Blue Dust"+(tmp.nerdMode?" (Formula: ((200^(x^2))^0.5))":"")+"\nCost: "+formatWhole(data.cost.orange)+" Orange Dust")+(tmp.nerdMode?" (Formula: ((1e3^(x^2))^0.2)*150)":"")+"\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+" / "+formatWhole(data.cap)+"\n\
 					Unlocked "+formatWhole(player[this.layer].buyables[this.id])+" new Solarity Buyable"+(player[this.layer].buyables[this.id].eq(1)?"":"s"))
 					return display;
