@@ -26,7 +26,7 @@ const SOFTCAPS = {
 	spaceBuilding3: {
 		title: "Tertiary Space Building",
 		type: "expRoot",
-		start: new Decimal("e3e9"),
+		start: new Decimal("e1e12"),
 		mag: new Decimal(3),
 		display() { return player.s.buyables[13].gt(0) && buyableEffect("s", 13).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
