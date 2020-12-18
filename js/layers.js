@@ -4065,7 +4065,7 @@ addLayer("hn", {
 		},
 		upgrades: {
 			rows: 5,
-			cols: 4,
+			cols: 5,
 			11: {
 				title: "Begin Again",
 				description: "You can explore further Prestige Upgrades.",
@@ -4135,6 +4135,22 @@ addLayer("hn", {
 					},
 				],
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 14) && hasMilestone("hn", 7) },
+			},
+			15: {
+				title: "Lightspeed Black Hole",
+				description: "You can activate two secondary Dust effects at once.",
+				multiRes: [
+					{
+						cost: new Decimal(3.5e10),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e30000000"),
+					},
+				],
+				unlocked() { return hasUpgrade("hn", 53) && hasUpgrade("hn", 54) && player.n.unlocked },
 			},
 			21: {
 				title: "Point Efficiency",
@@ -4453,7 +4469,7 @@ addLayer("n", {
 				color: "rgba(255, 255, 255, 0.75)",
 			},
 		},
-        requires() { return new Decimal(player[this.layer].unlockOrder>0?(1/0):"1e280") }, // Can be a function that takes requirement increases into account
+        requires() { return new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 92))?"1e288":"1e280") }, // Can be a function that takes requirement increases into account
 		increaseUnlockOrder: ["hs"],
         resource: "nebula energy", // Name of prestige currency
         baseResource: "solarity", // Name of resource prestige is based on
@@ -4588,7 +4604,7 @@ addLayer("n", {
 				autoed() { return false },
 			},
 		},
-		secondariesAvailable() { return hasUpgrade("hn", 53)?1:0 },
+		secondariesAvailable() { return hasUpgrade("hn", 53)?(hasUpgrade("hn", 15)?2:1):0 },
 		secondariesActive() { 
 			let n = 0;
 			Object.values(player.n.activeSecondaries).forEach(x => function() { n += x?1:0 }());
@@ -4649,7 +4665,7 @@ addLayer("hs", {
         }},
 		roundUpCost: true,
         color: "#dfdfff",
-        requires() { return new Decimal(player[this.layer].unlockOrder>0?(1/0):360) }, // Can be a function that takes requirement increases into account
+        requires() { return new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 92))?420:360) }, // Can be a function that takes requirement increases into account
 		increaseUnlockOrder: ["n"],
         resource: "hyperspace energy", // Name of prestige currency 
         baseResource: "space energy", // Name of resource prestige is based on
@@ -5071,9 +5087,14 @@ addLayer("a", {
 				tooltip: "Reah e9,250,000 Points without any Boosters or Generators.",
 			},
 			91: {
-				name: "SPAAAAAAACE!!!!",
+				name: "SPAAACE!!!!",
 				done() { return player.n.unlocked || player.hs.unlocked },
 				tooltip: "Unlock Nebula or Hyperspace. Reward: Gain 10% more Honour.",
+			},
+			92: {
+				name: "Galactic Strats",
+				done() { return player.n.unlocked && player.hs.unlocked },
+				tooltip: "Unlock Nebula and Hyperspace. Reward: Nebula and Hyperspace behave as if they were unlocked first.",
 			},
         },
 		tabFormat: [
