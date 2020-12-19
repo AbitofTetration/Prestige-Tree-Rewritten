@@ -9,15 +9,15 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e99999999999999999999999999999999"),
-	specialEndgameText: "v1.1 Beta 7 Endgame: e55,600,000 Points",
+	specialEndgameText: "v1.1 Beta 8 Endgame: e81,000,000 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.1",
-	beta: 7,
+	beta: 8,
 	//patch: 1,
-	name: "The Honour Update",
+	name: "Hyperium Nebulae",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.

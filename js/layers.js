@@ -2628,6 +2628,7 @@ addLayer("o", {
         exponent() { 
 			let exp = new Decimal(10);
 			if (hasUpgrade("p", 34)) exp = exp.times(upgradeEffect("p", 34));
+			if (hasUpgrade("hn", 25)) exp = exp.times(upgradeEffect("hn", 25));
 			return exp;
 		}, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
@@ -2911,6 +2912,7 @@ addLayer("ss", {
 			if (hasUpgrade("ss", 41)) base = base.plus(buyableEffect("o", 21));
 			if (player.ba.unlocked) base = base.times(tmp.ba.posBuff);
 			if (tmp.q.impr[42].unlocked) base = base.times(improvementEffect("q", 42));
+			if (hasUpgrade("hn", 35)) base = base.times(upgradeEffect("hn", 35));
 			return base;
 		},
 		effect() { 
@@ -4226,6 +4228,26 @@ addLayer("hn", {
 				],
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 24) && hasMilestone("hn", 7) },
 			},
+			25: {
+				title: "Imploded Hypernova",
+				description: "Hyperspace Energy & Nebula Energy multiply the Solarity gain exponent & Dust gain.",
+				multiRes: [
+					{
+						cost: new Decimal(5e10),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e32500000"),
+					},
+				],
+				unlocked() { return hasUpgrade("hn", 53) && hasUpgrade("hn", 54) && player.n.unlocked && player.hs.unlocked },
+				effect() { return player.hs.points.times(player.n.points.pow(3)).plus(1).log10().plus(1).log10().plus(1) },
+				effectDisplay() { return format(tmp.hn.upgrades[25].effect)+"x" },
+				formula: "log(log(HS*(N^3)+1)+1)+1",
+				style: {"font-size": "9px"},
+			},
 			31: {
 				title: "Exponential Drift",
 				description: "Point gain is raised to the power of 1.05.",
@@ -4295,6 +4317,25 @@ addLayer("hn", {
 				effect() { return player.hn.total.plus(1).log10().plus(1).log10().plus(1).log10().plus(1) },
 				effectDisplay() { return format(tmp.hn.upgrades[34].effect)+"x" },
 				formula: "log(log(log(x+1)+1)+1)+1",
+			},
+			35: {
+				title: "Below Death",
+				description: "Purple & Blue Dust multiply the Subspace base.",
+				multiRes: [
+					{
+						cost: new Decimal(1.5e13),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e40000000"),
+					},
+				],
+				unlocked() { return hasUpgrade("hn", 53) && hasUpgrade("hn", 54) && player.n.unlocked },
+				effect() { return player.n.purpleDust.times(player.n.blueDust).plus(1).pow(10) },
+				effectDisplay() { return format(tmp.hn.upgrades[35].effect)+"x" },
+				formula: "(B*P+1)^10",
 			},
 			41: {
 				title: "Again and Again",
@@ -4527,6 +4568,7 @@ addLayer("n", {
 		dustGainMult() {
 			let mult = new Decimal(1);
 			if (player.n.buyables[11].gte(1)) mult = mult.times(buyableEffect("o", 22));
+			if (hasUpgrade("hn", 25)) mult = mult.times(upgradeEffect("hn", 25));
 			return mult;
 		},
 		effect() {
