@@ -2678,6 +2678,7 @@ addLayer("o", {
 			if (hasUpgrade("ss", 33)) pow = pow.plus(upgradeEffect("ss", 33));
 			if (hasUpgrade("ss", 41)) pow = pow.plus(buyableEffect("o", 21));
 			if (hasUpgrade("ba", 11)) pow = pow.plus(upgradeEffect("ba", 11));
+			if (hasUpgrade("hn", 55)) pow = pow.plus(upgradeEffect("hn", 55));
 			if (tmp.ps.impr[11].unlocked) pow = pow.times(tmp.ps.impr[11].effect);
 			return softcap("solPow", pow);
 		},
@@ -2702,7 +2703,7 @@ addLayer("o", {
 			return mult;
 		},
 		buyables: {
-			rows: 2,
+			rows: 3,
 			cols: 3,
 			11: {
 				title: "Solar Cores",
@@ -2854,11 +2855,36 @@ addLayer("o", {
 					"Amount: "+formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables)))+"\n"+
 					(tmp.nerdMode?("Formula: (log(log(x+1)+1)^0.4)*100"):("Effect: Space Buildings are "+format(data.effect.times(100))+"% stronger")))
 				},
-				unlocked() { return player.n.buyables[11].gte(1) },
-				canAfford() { return player.o.buyables[11].gte(1e150) },
+				unlocked() { return player.n.buyables[11].gte(2) },
+				canAfford() { return player.o.buyables[11].gte(1e175)&&player.o.energy.gte("1e2500") },
 				buy() {
 					player.o.buyables[11] = new Decimal(0);
 					player.o.energy = new Decimal(0);
+					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
+				},
+				 buyMax() {
+					// I'll do this later ehehe
+				},
+                style: {'height':'140px', 'width':'140px', 'font-size':'9px'},
+				autoed() { return hasMilestone("m", 0) },
+			},
+			31: {
+				title: "Blueshifted Flares",
+				gain() { return player.o.points.div("1e400").pow(10).floor() },
+				effect() {
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(5).div(10)
+				},
+				display() {
+					let data = tmp[this.layer].buyables[this.id]
+					return ("Sacrifice all of your Solarity for "+formatWhole(data.gain)+" Blueshifted Flares\n"+
+					"Req: 1e400 Solarity\n"+
+					"Amount: "+formatWhole(player[this.layer].buyables[this.id])+((tmp.o.multiplyBuyables||new Decimal(1)).eq(1)?"":(" x "+format(tmp.o.multiplyBuyables)))+"\n"+
+					(tmp.nerdMode?("Formula: (log(log(x+1)+1)^0.2)*10"):("Effect: Spells are "+format(data.effect.times(100))+"% stronger")))
+				},
+				unlocked() { return player.n.buyables[11].gte(3) },
+				canAfford() { return player.o.points.gte("1e400") },
+				buy() {
+					player.o.points = new Decimal(0);
 					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
 				},
 				 buyMax() {
@@ -3148,7 +3174,8 @@ addLayer("m", {
 		},
 		spellPower() { 
 			let power = new Decimal(1);
-			if (tmp.ps.impr[21].unlocked) power = power.times(tmp.ps.impr[21].effect);
+			if (tmp.ps.impr[21].unlocked) power = power.plus(tmp.ps.impr[21].effect.sub(1));
+			if (player.n.buyables[11].gte(3)) power = power.plus(buyableEffect("o", 31));
 			return power;
 		},
 		hexGain() { 
@@ -3180,6 +3207,7 @@ addLayer("m", {
 			"blank",
 			"milestones",
 			"blank",
+			["display-text", function() { return tmp.m.spellPower.eq(1)?"":("Spell Power: "+format(tmp.m.spellPower.times(100))+"%") }], "blank",
 			"buyables",
 			["display-text",
 				function() {return "You have "+formatWhole(player.m.hexes)+" Hexes, which are multiplying Hindrance Spirit, Quirk, Solar Energy, & Subspace gain by "+format(tmp.m.hexEff)+(tmp.nerdMode?" (2*x+1)^5":"") },
@@ -4408,6 +4436,25 @@ addLayer("hn", {
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 44) && hasMilestone("hn", 7) },
 				style: {"font-size": "8px"},
 			},
+			45: {
+				title: "Under the Fridge",
+				description: "Blue & Orange Dust multiply Nebula Energy gain.",
+				multiRes: [
+					{
+						cost: new Decimal(1e14),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e42500000"),
+					},
+				],
+				unlocked() { return hasUpgrade("hn", 53) && hasUpgrade("hn", 54) && player.n.unlocked },
+				effect() { return player.n.blueDust.times(player.n.orangeDust).plus(1).log10().plus(1).pow(3) },
+				effectDisplay() { return format(tmp.hn.upgrades[45].effect)+"x" },
+				formula: "(log(B*O+1)+1)^3",
+			},
 			51: {
 				title: "Ghostly Reduction",
 				description: "The Ghost Spirit cost is divided based on your Total Honour, and cost scales half as fast.",
@@ -4482,6 +4529,25 @@ addLayer("hn", {
 				effectDisplay() { return format(tmp.hn.upgrades[54].effect.sub(1).times(100))+"% stronger" },
 				formula: "log(log(log(x^2+1)+1)+1)*400",
 			},
+			55: {
+				title: "Beneath The Sun",
+				description: "Orange & Purple Dust boost Solar Power.",
+				multiRes: [
+					{
+						cost: new Decimal(2.5e14),
+					},
+					{
+						currencyDisplayName: "prestige points",
+						currencyInternalName: "points",
+						currencyLayer: "p",
+						cost: new Decimal("1e45000000"),
+					},
+				],
+				unlocked() { return hasUpgrade("hn", 53) && hasUpgrade("hn", 54) && player.n.unlocked },
+				effect() { return player.n.orangeDust.times(player.n.purpleDust).plus(1).log10() },
+				effectDisplay() { return "+"+format(tmp.hn.upgrades[55].effect.times(100))+"%" },
+				formula: "log(O*P+1)*100",
+			},
 		},
 })
 
@@ -4519,6 +4585,7 @@ addLayer("n", {
         exponent: new Decimal(0.03), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
+			if (hasUpgrade("hn", 45)) mult = mult.times(upgradeEffect("hn", 45));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -4616,7 +4683,7 @@ addLayer("n", {
 			cols: 1,
 			11: {
 				title: "Stellar Clusters",
-				cap() { return new Decimal(2) },
+				cap() { return new Decimal(3) },
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
                     let cost = { purple: Decimal.pow(1e3, x.pow(2)).cbrt().times(50), blue: Decimal.pow(200, x.pow(2)).sqrt(), orange: Decimal.pow(1e3, x.pow(2)).root(5).times(150) }
 					return cost;
