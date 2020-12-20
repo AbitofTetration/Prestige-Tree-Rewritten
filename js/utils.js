@@ -110,6 +110,7 @@ function startPlayerBase() {
 		spaceGlow: "normal",
 		solGlow: "normal",
 		majGlow: "normal",
+		scShown: true,
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
