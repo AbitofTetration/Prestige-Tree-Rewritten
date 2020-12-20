@@ -127,7 +127,7 @@ const SOFTCAPS = {
 		start: new Decimal("1e10000"),
 		exp: new Decimal(10),
 		display() { return player.m.unlocked && tmp.m.hexEff.gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the power of "+format(this.mag) },
+		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the power of "+format(this.exp) },
 	},
 	spell1: {
 		title: "First Spell (Booster Launch)",
