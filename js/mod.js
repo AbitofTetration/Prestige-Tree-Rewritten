@@ -9,7 +9,7 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e99999999999999999999999999999999"),
-	specialEndgameText: "v1.1 Beta 12 Endgame: ???",
+	specialEndgameText: "v1.1 Beta 12 Endgame: e206,000,000 Points & 3 Imperium Bricks",
 }
 
 // Set your version in num and name
