@@ -77,13 +77,15 @@ addLayer("p", {
 					
 					if (hasUpgrade("p", 14)) eff = eff.pow(3);
 					if (hasUpgrade("hn", 14)) eff = eff.pow(1.05);
+					if (hasUpgrade("b", 34) && player.i.buyables[12].gte(1)) eff = eff.pow(upgradeEffect("b", 34));
 					return eff;
 				},
 				unlocked() { return hasUpgrade("p", 11) },
 				effectDisplay() { return format(tmp.p.upgrades[12].effect)+"x" },
 				formula() { 
-					let exp = format(0.5*(hasUpgrade("g", 14)?1.5:1)*(hasUpgrade("g", 24)?1.4666667:1));
-					let f = "(x+2)^"+exp
+					let exp = new Decimal(0.5*(hasUpgrade("g", 14)?1.5:1)*(hasUpgrade("g", 24)?1.4666667:1));
+					if (hasUpgrade("b", 34) && player.i.buyables[12].gte(1)) exp = exp.times(upgradeEffect("b", 34));
+					let f = "(x+2)^"+format(exp)
 					if (upgradeEffect("p", 12).gte("1e3500")) {
 						if (hasChallenge("h", 22)) f = "10^(sqrt(log(x+2))*"+format(Decimal.mul(exp, 3500).sqrt())+")"
 						else f = "log(x+2)*"+format(Decimal.div("1e3500",3500).times(exp))
@@ -310,6 +312,7 @@ addLayer("b", {
 			if (hasUpgrade("q", 12)) base = base.times(upgradeEffect("q", 12));
 			if (hasUpgrade("q", 34)) base = base.times(upgradeEffect("q", 34));
 			if (player.m.unlocked) base = base.times(tmp.m.buyables[11].effect);
+			if (hasUpgrade("b", 24) && player.i.buyables[12].gte(1)) base = base.times(upgradeEffect("b", 24));
 			if (inChallenge("h", 12)) base = base.div(tmp.h.baseDiv12);
 			
 			return base.pow(tmp.b.power);
@@ -340,6 +343,7 @@ addLayer("b", {
 			points: new Decimal(0),
 			best: new Decimal(0),
 			total: new Decimal(0),
+			pseudoUpgs: [],
 			first: 0,
 			auto: false,
 		}},
@@ -359,7 +363,7 @@ addLayer("b", {
 		},
 		upgrades: {
 			rows: 3,
-			cols: 3,
+			cols: 4,
 			11: {
 				title: "BP Combo",
 				description: "Best Boosters boost Prestige Point gain.",
@@ -368,6 +372,7 @@ addLayer("b", {
 					let ret = player.b.best.sqrt().plus(1);
 					if (hasUpgrade("b", 32)) ret = Decimal.pow(1.125, player.b.best).times(ret);
 					if (hasUpgrade("s", 15)) ret = ret.pow(buyableEffect("s", 14).root(2.7));
+					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) ret = ret.pow(upgradeEffect("b", 14));
 					return ret;
 				},
 				unlocked() { return player.b.unlocked },
@@ -375,26 +380,63 @@ addLayer("b", {
 				formula() { 
 					let base = "sqrt(x)+1"
 					if (hasUpgrade("b", 32)) base = "(sqrt(x)+1)*(1.125^x)"
-					return hasUpgrade("s", 15)?("("+base+")^"+format(buyableEffect("s", 14).root(2.7))):base;
+					let exp = new Decimal(1)
+					if (hasUpgrade("s", 15)) exp = exp.times(buyableEffect("s", 14).root(2.7));
+					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) exp = exp.times(upgradeEffect("b", 14));
+					let f = exp.gt(1)?("("+base+")^"+format(exp)):base;
+					return f;
 				},
 			},
 			12: {
 				title: "Cross-Contamination",
 				description: "Generators add to the Booster effect base.",
 				cost() { return tmp.h.costMult11b.times(7) },
-				effect() { return player.g.points.add(1).log10().sqrt().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1) },
+				effect() {
+					let ret = player.g.points.add(1).log10().sqrt().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1);
+					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) ret = ret.pow(upgradeEffect("b", 14));
+					return ret;
+				},
 				unlocked() { return player.b.unlocked&&player.g.unlocked },
 				effectDisplay() { return "+"+format(tmp.b.upgrades[12].effect) },
-				formula() { return "sqrt(log(x+1))"+(hasUpgrade("e", 14)?("*"+format(upgradeEffect("e", 14).div(3))):"/3") },
+				formula() { 
+					let exp = new Decimal(1);
+					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) exp = exp.times(upgradeEffect("b", 14));
+					let f = "sqrt(log(x+1))"+(hasUpgrade("e", 14)?("*"+format(upgradeEffect("e", 14).div(3))):"/3") 
+					if (exp.gt(1)) f = "("+f+")^"+format(exp);
+					return f;
+				},
 			},
 			13: {
 				title: "PB Reversal",
 				description: "Total Prestige Points add to the Booster effect base.",
 				cost() { return tmp.h.costMult11b.times(8) },
-				effect() { return player.p.total.add(1).log10().add(1).log10().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1) },
+				effect() { 
+					let ret = player.p.total.add(1).log10().add(1).log10().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1) 
+					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) ret = ret.pow(upgradeEffect("b", 14));
+					return ret;
+				},
 				unlocked() { return player.b.unlocked&&player.b.best.gte(7) },
 				effectDisplay() { return "+"+format(tmp.b.upgrades[13].effect) },
-				formula() { return "log(log(x+1)+1)"+(hasUpgrade("e", 14)?("*"+format(upgradeEffect("e", 14).div(3))):"/3") },
+				formula() { 
+					let exp = new Decimal(1)
+					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) exp = exp.times(upgradeEffect("b", 14));
+					let f = "log(log(x+1)+1)"+(hasUpgrade("e", 14)?("*"+format(upgradeEffect("e", 14).div(3))):"/3") 
+					if (exp.gt(1)) f = "("+f+")^"+format(exp);
+					return f;
+				},
+			},
+			14: {
+				title: "Meta-Combo",
+				description: "The first 3 Booster Upgrades are stronger based on your Super Boosters, and <b>BP Combo</b> directly multiplies Point gain.",
+				cost() { return tmp.h.costMult11b.times(2250) },
+				pseudoUnl() { return player.i.buyables[12].gte(1)&&hasUpgrade("b", 13) },
+				pseudoReq: "Req: 30 Super Boosters.",
+				pseudoCan() { return player.sb.points.gte(30) },
+				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.sb.points.plus(1) },
+				effectDisplay() { return "^"+format(tmp[this.layer].upgrades[this.id].effect) },
+				formula: "x+1",
+				style: {"font-size": "9px"},
 			},
 			21: {
 				title: "Gen Z^2",
@@ -421,6 +463,18 @@ addLayer("b", {
 				effectDisplay() { return "/"+format(tmp.b.upgrades[23].effect) },
 				formula() { return "(log(x+1)+1)^"+(player.s.unlocked?format(buyableEffect("s", 14).times(3.2)):"3.2") },
 			},
+			24: {
+				title: "Boost Recursion",
+				description: "Boosters multiply their own base.",
+				cost() { return tmp.h.costMult11b.times(2225) },
+				pseudoUnl() { return player.i.buyables[12].gte(1)&&hasUpgrade("b", 23) },
+				pseudoReq: "Req: 2,150 Boosters without any Hexes.",
+				pseudoCan() { return player.b.points.gte(2150) && player.m.hexes.eq(0) },
+				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.b.points.plus(1).pow(500) },
+				effectDisplay() { return format(tmp[this.layer].upgrades[this.id].effect)+"x" },
+				formula: "(x+1)^500",
+			},
 			31: {
 				title: "Worse BP Combo",
 				description: "Super Boosters boost Prestige Point gain.",
@@ -444,6 +498,18 @@ addLayer("b", {
 				effect() { return player.sb.points.times(player.sb.points.gte(4)?2.6:2).plus(1) },
 				effectDisplay() { return format(tmp.b.upgrades[33].effect)+"x" },
 				formula() { return "x*"+(player.sb.points.gte(4)?"2.6":"2")+"+1" },
+			},
+			34: {
+				title: "Anti-Metric",
+				description: "Imperium Bricks raise <b>Prestige Boost</b> to an exponent (unaffected by softcap).",
+				cost() { return tmp.h.costMult11b.times(2275) },
+				pseudoUnl() { return player.i.buyables[12].gte(1)&&hasUpgrade("b", 33) },
+				pseudoReq: "Req: 1e15,000,000 Prestige Points while in the <b>Productionless</b> Hindrance.",
+				pseudoCan() { return player.p.points.gte("e1.5e7") && inChallenge("h", 42) },
+				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.i.points.plus(1).root(4) },
+				effectDisplay() { return "^"+format(tmp[this.layer].upgrades[this.id].effect) },
+				formula: "(x+1)^0.25",
 			},
 		},
 })
@@ -5111,7 +5177,7 @@ addLayer("i", {
         baseAmount() {return player.ss.subspace}, // Get the current amount of baseResource
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent: new Decimal(2), // Prestige currency exponent
-		base: new Decimal("1e1250"),
+		base: new Decimal("1e250"),
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
             return mult
@@ -5163,7 +5229,7 @@ addLayer("i", {
 		],
 		buyables: {
 			rows: 1,
-			cols: 1,
+			cols: 2,
 			11: {
 				title: "Imperium Building I",
 				cap() { return new Decimal(1) },
@@ -5181,7 +5247,53 @@ addLayer("i", {
 					let cost = data.cost;
                     let display = (((cost.ib?("Cost: "+formatWhole(cost.ib)+" Imperium Bricks"+(tmp.nerdMode?(" (Formula: "+data.formulas.ib+")"):"")+"\n"):"") + (cost.nb?("Cost: "+formatWhole(cost.nb)+" Nebulaic Bricks"+(tmp.nerdMode?(" (Formula: "+data.formulas.nb+")"):"")+"\n"):"") + (cost.hb?("Cost: "+formatWhole(cost.hb)+" Hyperspatial Bricks"+(tmp.nerdMode?(" (Formula: "+data.formulas.hb+")"):"")+"\n"):""))+"\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+" / "+formatWhole(data.cap)+"\n\
-					Unlocked "+formatWhole(player[this.layer].buyables[this.id])+" new Space Buildings"+(player[this.layer].buyables[this.id].eq(1)?"":"s")+" (which are not impacted by extra Space Buildings)")
+					Unlocked "+formatWhole(player[this.layer].buyables[this.id])+" new Space Building"+(player[this.layer].buyables[this.id].eq(1)?"":"s")+" (which are not impacted by extra Space Buildings)")
+					return display;
+                },
+                unlocked() { return player[this.layer].unlocked }, 
+                canAfford() {
+					let cost = tmp[this.layer].buyables[this.id].cost
+                    return player.i.unlocked && (cost.ib?player.i.points.gte(cost.ib):true) && (cost.nb?player.i.nb.gte(cost.nb):true) && (cost.hb?player.i.hb.gte(cost.hb):true) && player[this.layer].buyables[this.id].lt(tmp[this.layer].buyables[this.id].cap)},
+                buy() { 
+                    cost = tmp[this.layer].buyables[this.id].cost
+					if (cost.ib) player.i.points = player.i.points.sub(cost.ib);
+					if (cost.nb) player.i.nb = player.i.nb.sub(cost.nb);
+					if (cost.hb) player.i.hb = player.i.hb.sub(cost.hb);
+                    player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+                },
+                buyMax() {
+					// later :)
+				},
+                style: {'height':'200px', 'width':'200px'},
+				autoed() { return false },
+			},
+			12: {
+				title: "Imperium Building II",
+				cap() { return new Decimal(1) },
+				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+                    let cost = { ib: x.pow(1.2).plus(1).floor(), hb: x.pow(1.6).plus(5).floor() }
+					return cost;
+                },
+				formulas: {
+					ib: "x^1.2+1",
+					nb: "N/A",
+					hb: "x^1.6+5",
+				},
+				displayData() {
+					let amt = player[this.layer].buyables[this.id];
+					let disp = ""
+					if (amt.gte(1)) disp += "3 new Booster Upgrades\n";
+					if (disp=="") disp = "Nothing yet"
+					return disp;
+				},
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id];
+					let cost = data.cost;
+					let amt = player[this.layer].buyables[this.id];
+                    let display = (((cost.ib?("Cost: "+formatWhole(cost.ib)+" Imperium Bricks"+(tmp.nerdMode?(" (Formula: "+data.formulas.ib+")"):"")+"\n"):"") + (cost.nb?("Cost: "+formatWhole(cost.nb)+" Nebulaic Bricks"+(tmp.nerdMode?(" (Formula: "+data.formulas.nb+")"):"")+"\n"):"") + (cost.hb?("Cost: "+formatWhole(cost.hb)+" Hyperspatial Bricks"+(tmp.nerdMode?(" (Formula: "+data.formulas.hb+")"):"")+"\n"):""))+"\n\
+                    Amount: " + formatWhole(amt)+" / "+formatWhole(data.cap)+"\n\
+					Unlocked: \n"
+					+data.displayData)
 					return display;
                 },
                 unlocked() { return player[this.layer].unlocked }, 

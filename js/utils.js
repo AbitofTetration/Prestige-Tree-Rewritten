@@ -42,6 +42,7 @@ function format(decimal, precision=2) {
 	}
 	if (decimal.sign<0) return "-"+format(decimal.neg(), precision)
 	if (decimal.mag == Number.POSITIVE_INFINITY) return "Infinity"
+	if (decimal.eq(0)) return "0"
 	if (decimal.gte("eeee1000")) {
 		var slog = decimal.slog()
 		if (slog.gte(1e3)) return "10^^" + formatWhole(slog)
@@ -52,7 +53,9 @@ function format(decimal, precision=2) {
 	else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
-	else return regularFormat(decimal, precision)
+	else if (decimal.gte(Decimal.pow(0.1, precision))) return regularFormat(decimal, precision)
+	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte(1e-9)?precision:0)
+	else return "1/("+format(decimal.pow(-1), precision)+")"
 }
 
 function formatWhole(decimal) {

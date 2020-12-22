@@ -9,14 +9,14 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e99999999999999999999999999999999"),
-	specialEndgameText: "v1.1 Beta 10 Endgame: e109,000,000 Points & 5 Hyperspatial Bricks",
+	specialEndgameText: "v1.1 Beta 11 Endgame: 2 Imperium Bricks & e160,000,000 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.1",
-	beta: 10,
-	patch: 1,
+	beta: 11,
+	// patch: 1,
 	name: "Hyperium Nebulae",
 }
 
@@ -44,6 +44,7 @@ function getPointGen() {
 	if (hasUpgrade("p", 12)) gain = gain.times(upgradeEffect("p", 12));
 	if (hasUpgrade("p", 13)) gain = gain.times(upgradeEffect("p", 13));
 	if (hasUpgrade("p", 22)) gain = gain.times(upgradeEffect("p", 22));
+	if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) gain = gain.times(upgradeEffect("b", 11))
 	if (hasAchievement("a", 21)) gain = gain.times(1.1);
 	if (hasAchievement("a", 31)) gain = gain.times(1.5);
 	if (inChallenge("h", 22)) return gain.times(player.s.unlocked?buyableEffect("s", 11):1).root(inChallenge("h", 31)?tmp.h.pointRoot31:1);
