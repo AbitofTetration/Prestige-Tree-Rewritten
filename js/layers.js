@@ -795,7 +795,7 @@ addLayer("g", {
 			32: {
 				title: "Primal Instincts",
 				description: "The <b>Quaternary Space Building</b> also affects <b>Discount Two</b> at a reduced rate.",
-				cost: new Decimal(2205),
+				cost: new Decimal(2200),
 				pseudoUnl() { return player.i.buyables[12].gte(2)&&player.g.upgrades.length>=10 },
 				pseudoReq: "Req: e47,500,000 Generator Power without any Boosters.",
 				pseudoCan() { return player.g.power.gte("e4.75e7") && player.b.best.eq(0) },
@@ -817,7 +817,7 @@ addLayer("g", {
 			34: {
 				title: "Boost the Boost Again^2",
 				description: "<b>Prestige Boost</b> is raised to the power of 1.433.",
-				cost: new Decimal(2205),
+				cost: new Decimal(2200),
 				pseudoUnl() { return player.i.buyables[12].gte(2)&&player.g.upgrades.length>=10 },
 				pseudoReq: "Req: 36 Achievements.",
 				pseudoCan() { return player.a.achievements.length>=36 },

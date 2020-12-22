@@ -9,6 +9,7 @@
 	<script type="text/javascript" src="js/technical/layerSupport.js"></script>
 	<script type="text/javascript" src="js/tree.js"></script>
 	<script type="text/javascript" src="js/sc.js"></script>
+	<script type="text/javascript" src="js/help.js"></script>
 	<script type="text/javascript" src="js/layers.js"></script>
 	<script type="text/javascript" src="js/mod.js"></script>
 	<script type="text/javascript" src="js/technical/temp.js"></script>
@@ -86,6 +87,18 @@
 			<span v-for="key in hotkeys" v-if="player[key.layer].unlocked"><br>{{key.description}}</span>
 			<br>Press - to Show Formulas
 		</div>
+		<div v-if="player.tab=='help' && (typeof help_data != 'undefined')" class="col right">
+			<div v-if="typeof tmp.helpTab == 'number'">
+				<button class="back" onclick="showTab('none')">←</button><br>
+				<div v-if="player.a.achievements.length==0">Why are you even here? You haven't started yet!</div>
+				<ul v-else><br><br><br><li v-for="data in tmp.helpData"><a v-if="data.unlocked" class="link" v-on:click="tmp.helpTab = data.id" v-html="data.title"></a><br></li></ul>
+			</div>
+			<div v-else>
+				<button class="back" onclick="tmp.helpTab = NaN">←</button><br>
+				<h2 v-html="tmp.helpData[tmp.helpTab].title"></h2><br><br>
+				<div v-html="tmp.helpData[tmp.helpTab].text"></div>
+			</div>
+		</div>
 		<div v-if="player.tab=='options'" class="col right">
 			<button class="back" onclick="showTab('none')">←</button><br>
 			<div class="upgTable" style="padding-top: 25px; margin-bottom: 24px;">
@@ -138,6 +151,7 @@
 			<div id="version" class="overlayThing" style="margin-right: 25px">{{VERSION.withoutName}}</div>
 			<img id="optionWheel"  class="overlayThing" v-if="player.tab!='options'" src="options_wheel.png" onclick="showTab('options')"></img>
 			<div id="info" v-if="player.tab!='info'"  class="overlayThing" onclick="showTab('info')"><br>i</div>
+			<div id="help" v-if="player.tab!='help' && (typeof help_data != 'undefined')"  class="overlayThing" onclick="showTab('help')"><br>HELP</div>
 			<div id="discord" class="overlayThing">
 				<img onclick="window.open((modInfo.discordLink ? modInfo.discordLink : 'https://discord.gg/F3xveHV'),'mywindow')" src="discord.png"  target="_blank"></img>
 				<ul id="discord-links">

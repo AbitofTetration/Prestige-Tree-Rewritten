@@ -329,6 +329,25 @@ h1, h2, h3, b, input {
 	transform: rotate(360deg);
 }
 
+#help {
+	font-size: 20px;
+	color: white;
+	position: absolute;
+	top: 100px;
+	left: 4px;
+	cursor: pointer;
+	width: 40px;
+	height: 40px;
+	-webkit-text-stroke-width: 1px;
+	-webkit-text-stroke-color: #e0f000;
+}
+
+#help:hover {
+	transform: scale(1.2, 1.2);
+	text-shadow: 5px 0px 10px #e0f000,
+              -3px 0px 12px #e0f000;
+}
+
 #info {
 	font-size: 20px;
 	color: white;
@@ -350,7 +369,7 @@ h1, h2, h3, b, input {
 
 #discord {
 	position: absolute;
-	top: 120px;
+	top: 170px;
 	left: 4px;
 	width: 40px;
 	height: 40px;

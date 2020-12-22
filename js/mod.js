@@ -16,7 +16,7 @@ let modInfo = {
 let VERSION = {
 	num: "1.1",
 	beta: 12,
-	// patch: 1,
+	patch: 1,
 	name: "Hyperium Nebulae",
 }
 
