@@ -10,19 +10,19 @@ let help_data = {
 	r2: {
 		id: "r2",
 		title: "Row 2",
-		text: "Insert Row 2 advice here",
+		text: "At this point, you have a choice between Boosters and Generators, but since you can eventually get both, there is no wrong decision here. Generators involve generating a resource whereas Boosters involve just a flat boost, so if you want to play more actively without waiting, Boosters are probably the choice for you.<br><br>Continue to purchase Booster & Generator Upgrades (stockpile Points beforehand to make buying them back easier), and try to strive for the milestones as much as you can, as they will make the runs more automated and faster. <br><br>Once you unlock both Boosters and Generators, it's smooth sailing to complete this phase of the game, just keep buying upgrades, getting milestones, and getting Boosters & Generators.",
 		unlocked() { return player.b.unlocked || player.g.unlocked },
 	},
 	r3: {
 		id: "r3",
 		title: "Row 3",
-		text: "Insert Row 3 advice here",
-		unlocked() { return player.t.unlocked || player.e.unlocked || player.s.unlocked },
+		text: "You have a choice between Time, Enhance, and Space here, and you will be able to unlock them in any order you choose. All combinations are viable, but some are faster than others. Enhance will tend to be the fastest to get milestones, since it is more Point-based, and its milestones involve both Boosters & Generators, so it may be beneficial to go there first.<br><br>Time & Space on the other hand fully automate  Boosters & Generators respectively, so if you're finding Generators more tedious to purchase on every reset than Boosters, maybe go with Space before Time. When it comes to Space specifically, Space Buildings should be purchased where the later buildings are given more priority (prioritize Tertiary Buildings over Secondary Buildings, and those over Primary Buildings).<br><br>Once all three layers are unlocked, just continue to manage all three of them, purchase Upgrades, and strive to unlock Super-Boosters and eventually Super-Generators, which power up Boosters & Generators respectively. From here it's just a push to complete this phase of the game.",
+		unlocked() { return player.t.unlocked || player.e.unlocked || player.s.unlocked || player.sb.unlocked || player.sg.unlocked },
 	},
 	qh: {
 		id: "qh",
 		title: "Quirks & Hindrances",
-		text: "Insert Quirk/Hindrance advice here",
+		text: "Once you unlock Quirks, just try to get as many Total Quirks as possible, getting Quirk Layers whenever possible (which generate Quirk Energy), and strive for the milestones to make runs faster and more automated, until you can unlock Hindrances. Make sure to get plenty of Hindrance Spirit before even trying the first Hindrance, since its effect is quite useful for the challenge.<br><br>The first Hindrance (Upgrade Desert) can be completed by choosing your Prestige/Booster Upgrades very carefully. For Prestige Upgrades, purchase upgrades 1, 2, 3, and 6, whereas for Booster Upgrades, purchase Upgrades 1, 2, & 4. This should push you through the challenge fairly easily. If you are unable to complete a Hindrance in a reasonable amount of time, you can always exit, push Quirks and Hindrance Spirit a little more, and come back later, as there is no penalty for doing so.<br><br>This will unlock Quirk Upgrades, which increase in cost over time, but the costs reset on a Row 4 reset. This means that you should be striving for more Quirk Layers, and keep an eye on the upgrades for the first 10-20 seconds after a Row 4 reset to see if you can afford any of them during that time.<br><br>To Be Continued...",
 		unlocked() { return player.q.unlocked || player.h.unlocked },
 	},
 	oss: {

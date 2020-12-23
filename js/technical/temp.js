@@ -83,7 +83,7 @@ function updateTemp() {
 		tmp.displayThings.push(text) 
 	}
 	
-	if (typeof help_data != "undefined" /*&& player.tab=='help'*/) {
+	if (typeof help_data != "undefined" && player.tab=='help') {
 		updateTempData(help_data, tmp.helpData);
 	}
 }
