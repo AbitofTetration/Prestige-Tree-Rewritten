@@ -1105,7 +1105,7 @@ addLayer("t", {
 				cost: new Decimal(750),
 				pseudoUnl() { return player.i.buyables[12].gte(4)&&player.t.upgrades.length>=9 },
 				pseudoReq: "Req: 30 Phantom Souls",
-				pseudoCan() { return player.ps.points.gte(31) },
+				pseudoCan() { return player.ps.points.gte(30) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 				effect() { return player.t.energy.plus(1).log10().plus(1).pow(3.5) },
 				effectDisplay() { return format(tmp.t.upgrades[33].effect)+"x" },

@@ -1,14 +1,10 @@
 // ************ Number formatting ************
 
 function exponentialFormat(num, precision) {
-	let e = num.log10().floor()
-	let m = num.div(Decimal.pow(10, e))
-	if(m.toStringWithDecimalPlaces(precision) == 10) {
-		m = new Decimal(1)
-		e = e.add(1)
-	}
-	e = (e.gte(1000) ? commaFormat(e, 0) : e.toStringWithDecimalPlaces(0))
-	return m.toStringWithDecimalPlaces(precision)+"e"+e
+	let e = num.exponent;
+	let m = num.mantissa;
+	e = ((e>=1000) ? commaFormat(new Decimal(e), 0) : new Decimal(e).toStringWithDecimalPlaces(0))
+	return new Decimal(m).toStringWithDecimalPlaces(precision)+"e"+e
 }
 
 function commaFormat(num, precision) {
