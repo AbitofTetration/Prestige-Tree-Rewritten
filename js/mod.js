@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("1e99999999999999999999999999999999"),
-	specialEndgameText: "v1.1 Beta 13 Endgame: e270,000,000 Points & 9 Nebulaic Bricks",
+	specialEndgameText: "v1.1 Beta 14 Endgame: e355,000,000 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.1",
-	beta: 13,
+	beta: 14,
 	//patch: 1,
 	name: "Hyperium Nebulae",
 }

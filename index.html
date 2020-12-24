@@ -152,7 +152,7 @@
 				<div id="version" class="overlayThing" style="margin-right: 25px">{{VERSION.withoutName}}</div>
 				<img id="optionWheel"  class="overlayThing" v-if="player.tab!='options'" src="options_wheel.png" onclick="showTab('options')"></img>
 				<div id="info" v-if="player.tab!='info'"  class="overlayThing" onclick="showTab('info')"><br>i</div>
-				<div id="help" v-if="player.tab!='help' && (typeof help_data != 'undefined')"  class="overlayThing" onclick="showTab('help')"><br>HELP</div>
+				<div id="help" v-if="player.tab!='help' && (typeof help_data != 'undefined')"  class="overlayThing" onclick="showTab('help')"><br>?</div>
 				<div id="discord" class="overlayThing">
 					<img onclick="window.open((modInfo.discordLink ? modInfo.discordLink : 'https://discord.gg/F3xveHV'),'mywindow')" src="discord.png"  target="_blank"></img>
 					<ul id="discord-links">
