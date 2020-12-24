@@ -232,6 +232,7 @@ const STATIC_SCALE_DATA = [
 		start_adj: {
 			"2": function() {
 				let start = new Decimal(1225);
+				if (hasUpgrade("t", 34) && player.i.buyables[12].gte(4)) start = new Decimal(1400);
 				if (inChallenge("h", 42)) start = new Decimal(1);
 				return start;
 			},

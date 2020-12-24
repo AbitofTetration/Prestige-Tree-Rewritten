@@ -929,7 +929,9 @@ addLayer("t", {
 		},
 		enEff2() {
 			if (!hasUpgrade("t", 24)) return new Decimal(0);
-			let eff = player.t.energy.max(0).plus(1).log10().root(1.8);
+			let exp = 5/9
+			if (hasUpgrade("t", 35) && player.i.buyables[12].gte(4)) exp = .565;
+			let eff = player.t.energy.max(0).plus(1).log10().pow(exp);
 			return eff.floor();
 		},
 		nextEnEff2() {
@@ -1074,21 +1076,27 @@ addLayer("t", {
 				formula: "log(x+1)/1.2",
 			},
 			31: {
-				title: "t31",
-				description: "???",
-				cost: new Decimal(1/0),
+				title: "Cheap Time",
+				description: "Extra Time Capsule cost scaling is removed, and their cost exponent is decreased by 0.2.",
+				cost: new Decimal("e3600000"),
+				currencyDisplayName: "time energy",
+				currencyInternalName: "energy",
+				currencyLayer: "t",
 				pseudoUnl() { return player.i.buyables[12].gte(4)&&player.t.upgrades.length>=9 },
-				pseudoReq: "Req: Wait for the next update :)",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 1e42 Honour",
+				pseudoCan() { return player.hn.points.gte(1e42) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 			32: {
-				title: "t32",
-				description: "???",
-				cost: new Decimal(1/0),
+				title: "The Hypertime Continuum",
+				description: "Hyperspace cost scales 33.33% slower.",
+				cost: new Decimal("e4240000"),
+				currencyDisplayName: "time energy",
+				currencyInternalName: "energy",
+				currencyLayer: "t",
 				pseudoUnl() { return player.i.buyables[12].gte(4)&&player.t.upgrades.length>=9 },
-				pseudoReq: "Req: Keep on waiting for the next update :(",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 1e31 Hyperspace Energy",
+				pseudoCan() { return player.hs.points.gte(1e31) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 			33: {
@@ -1104,21 +1112,27 @@ addLayer("t", {
 				formula: "(log(x+1)+1)^3.5",
 			},
 			34: {
-				title: "t34",
-				description: "???",
-				cost: new Decimal(1/0),
+				title: "Scalings Galore",
+				description: "Post-1,225 Booster & Generator cost scalings start at 1,400 instead.",
+				cost: new Decimal("e4240000"),
+				currencyDisplayName: "time energy",
+				currencyInternalName: "energy",
+				currencyLayer: "t",
 				pseudoUnl() { return player.i.buyables[12].gte(4)&&player.t.upgrades.length>=9 },
-				pseudoReq: "Req: I'm tired of waiting for the next update >:(",
-				pseudoCan() { return false },
+				pseudoReq: 'Req: Reach e124,000,000 Prestige Points while in the "Productionless" Hindrance and without any Hyper Buildings.',
+				pseudoCan() { return player.p.points.gte("e1.24e8") && inChallenge("h", 42) && player.hs.spentHS.eq(0) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 			35: {
-				title: "t35",
-				description: "???",
-				cost: new Decimal(1/0),
+				title: "Don't Kill Time",
+				description: "Time Energy's second effect exponent is increased (0.556 -> 0.565)",
+				cost: new Decimal("e3600000"),
+				currencyDisplayName: "time energy",
+				currencyInternalName: "energy",
+				currencyLayer: "t",
 				pseudoUnl() { return player.i.buyables[12].gte(4)&&player.t.upgrades.length>=9 },
-				pseudoReq: "Req: I've accepted my fate of waiting for the next update :|",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 1e13 Purple Dust",
+				pseudoCan() { return player.n.purpleDust.gte(1e13) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 		},
@@ -1134,15 +1148,23 @@ addLayer("t", {
 			cols: 1,
 			11: {
 				title: "Extra Time Capsules",
+				costScalingEnabled() {
+					return !(hasUpgrade("t", 31) && player.i.buyables[12].gte(4))
+				},
+				costExp() {
+					let exp = new Decimal(1.2);
+					if (hasUpgrade("t", 31) && player.i.buyables[12].gte(4)) exp = exp.sub(.2);
+					return exp;
+				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    if (x.gte(25)) x = x.pow(2).div(25)
-                    let cost = x.times(0.4).pow(1.2).add(1).times(10)
+                    if (x.gte(25) && tmp[this.layer].buyables[this.id].costScalingEnabled) x = x.pow(2).div(25)
+                    let cost = x.times(0.4).pow(tmp[this.layer].buyables[this.id].costExp).add(1).times(10)
                     return cost.floor()
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
 					let e = tmp.t.freeExtraTimeCapsules;
-                    let display = (tmp.nerdMode?("Cost Formula: "+(player[this.layer].buyables[this.id].gte(25)?"(((x^2)/25":"((x")+"*0.4)^1.2+1)*10"):("Cost: " + formatWhole(data.cost) + " Boosters"))+"\n\
+                    let display = (tmp.nerdMode?("Cost Formula: "+((player[this.layer].buyables[this.id].gte(25)&&data.costScalingEnabled)?"(((x^2)/25":"((x")+"*0.4)^"+format(data.costExp)+"+1)*10"):("Cost: " + formatWhole(data.cost) + " Boosters"))+"\n\
                     Amount: " + formatWhole(player[this.layer].buyables[this.id])+(e.gt(0)?(" + "+formatWhole(e)):"")+(inChallenge("h", 31)?("\nPurchases Left: "+String(10-player.h.chall31bought)):"")
 					return display;
                 },
@@ -1158,8 +1180,8 @@ addLayer("t", {
                 buyMax() {
 					if (!this.canAfford()) return;
 					if (inChallenge("h", 31)) return;
-					let tempBuy = player.b.points.plus(1).div(10).sub(1).max(0).root(1.2).div(0.4);
-					if (tempBuy.gte(25)) tempBuy = tempBuy.times(25).sqrt();
+					let tempBuy = player.b.points.plus(1).div(10).sub(1).max(0).root(tmp[this.layer].buyables[this.id].costExp).div(0.4);
+					if (tempBuy.gte(25) && tmp[this.layer].buyables[this.id].costScalingEnabled) tempBuy = tempBuy.times(25).sqrt();
 					let target = tempBuy.plus(1).floor();
 					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
 				},
@@ -4848,7 +4870,7 @@ addLayer("hn", {
 				unlocked() { return player.hn.unlocked && hasUpgrade("p", 43) && hasMilestone("hn", 7) },
 				effect() { return Decimal.pow(10, tmp.q.enEff.max(1).log10().root(1.8)) },
 				effectDisplay() { return format(tmp.hn.upgrades[43].effect)+"x" },
-				formula: "10^(log(quirkEnergyEff)^0.556)",
+				formula() { return "10^(log(quirkEnergyEff)^"+((hasUpgrade("t", 35) && player.i.buyables[12].gte(4))?"0.565":"0.556")+")" },
 			},
 			44: {
 				title: "Numerical Lexicon",
@@ -5276,15 +5298,22 @@ addLayer("hs", {
             respecText: "Respec Hyper Buildings", // Text on Respec button, optional
 			11: {
 				title: "Hyperspace",
+				scaleRate() {
+					let rate = new Decimal(1);
+					if (hasUpgrade("t", 32) && player.i.buyables[12].gte(4)) rate = new Decimal(2/3);
+					return rate;
+				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    let y = x;
+                    x = x.times(tmp[this.layer].buyables[this.id].scaleRate);
+					let y = x;
 					if (y.gte(10)) y = y.pow(5).div(1e4);
 					let cost = {hs: Decimal.pow(10, y.pow(0.9)).floor(), ba: Decimal.pow(10, x.max(x.div(1.5).pow(2)).times(40).add(360))}
 					return cost;
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
-                    let display = ("Cost: " + formatWhole(data.cost.hs) + " Hyperspace Energy"+(tmp.nerdMode?" (Formula: (10^("+(player[this.layer].buyables[this.id].gte(10)?"((x^5)/1e4)":"x")+"^0.9)))":"")+"\nCost: "+formatWhole(data.cost.ba)+" Balance Energy"+(tmp.nerdMode?" (Formula: (10^(((x/1.5)^2)*40+360)))":"")+"\n\
+					let primeX = "x"+(data.scaleRate.eq(1)?"":("*"+format(data.scaleRate)))
+                    let display = ("Cost: " + formatWhole(data.cost.hs) + " Hyperspace Energy"+(tmp.nerdMode?" (Formula: (10^("+(player[this.layer].buyables[this.id].gte(10)?"(("+primeX+"^5)/1e4)":primeX)+"^0.9)))":"")+"\nCost: "+formatWhole(data.cost.ba)+" Balance Energy"+(tmp.nerdMode?" (Formula: (10^(((x*"+format(data.scaleRate.div(1.5))+")^2)*40+360)))":"")+"\n\
 					Amount: " + formatWhole(tmp.hs.hyperspace)+" / "+formatWhole(player[this.layer].buyables[this.id]))
 					return display;
                 },
