@@ -1140,7 +1140,7 @@ addLayer("t", {
 				cost: new Decimal(1050),
 				pseudoUnl() { return player.i.buyables[12].gte(4)&&player.t.upgrades.length>=9 },
 				pseudoReq: "Req: 1e60 Honour & 1e575 Phantom Power",
-				pseudoCan() { return player.hn.points.gte(1e60) && player.ps.power.gte(1e575) },
+				pseudoCan() { return player.hn.points.gte(1e60) && player.ps.power.gte("1e575") },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 		},
