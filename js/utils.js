@@ -3,6 +3,10 @@
 function exponentialFormat(num, precision) {
 	let e = num.exponent;
 	let m = num.mantissa;
+	if (Number(new Decimal(m).toStringWithDecimalPlaces(precision))==10) {
+		m = 1
+		e++;
+	}
 	e = ((e>=1000) ? commaFormat(new Decimal(e), 0) : new Decimal(e).toStringWithDecimalPlaces(0))
 	return new Decimal(m).toStringWithDecimalPlaces(precision)+"e"+e
 }
