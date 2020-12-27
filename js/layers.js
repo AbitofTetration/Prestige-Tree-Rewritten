@@ -1438,6 +1438,7 @@ addLayer("e", {
                     if (x.gte(0)) eff.first = Decimal.pow(25, x.pow(power.times(1.1)))
                     else eff.first = Decimal.pow(1/25, x.times(-1).pow(power.times(1.1)))
 					if (hasUpgrade("q", 24)) eff.first = eff.first.pow(7.5);
+					eff.first = softcap("enh1", eff.first)
                 
                     if (x.gte(0)) eff.second = x.pow(power.times(0.8))
                     else eff.second = x.times(-1).pow(power.times(0.8)).times(-1)
@@ -1543,16 +1544,23 @@ addLayer("s", {
 			if (inChallenge("h", 21)) space = space.div(10);
 			return space.floor().sub(player.s.spent).max(0);
 		},
-		buildingBaseCosts: {
-			11: new Decimal(1e3),
-			12: new Decimal(1e10),
-			13: new Decimal(1e25),
-			14: new Decimal(1e48),
-			15: new Decimal(1e250),
-			16: new Decimal("e3e7"),
-			17: new Decimal("e4.5e7"),
-			18: new Decimal("e6e7"),
+		buildingBaseRoot() {
+			let root = new Decimal(1);
+			if (hasUpgrade("s", 34) && player.i.buyables[12].gte(5)) root = root.times(upgradeEffect("s", 34));
+			return root;
 		},
+		buildingBaseCosts() { 
+			let rt = tmp.s.buildingBaseRoot;
+			return {
+				11: new Decimal(1e3).root(rt),
+				12: new Decimal(1e10).root(rt),
+				13: new Decimal(1e25).root(rt),
+				14: new Decimal(1e48).root(rt),
+				15: new Decimal(1e250).root(rt),
+				16: new Decimal("e3e7").root(rt),
+				17: new Decimal("e4.5e7").root(rt),
+				18: new Decimal("e6e7").root(rt),
+		}},
 		tabFormat: ["main-display",
 			"prestige-button",
 			"blank",
@@ -1610,6 +1618,7 @@ addLayer("s", {
 			if (hasUpgrade("ss", 42)) pow = pow.plus(1);
 			if (hasUpgrade("ba", 12)) pow = pow.plus(upgradeEffect("ba", 12));
 			if (player.n.buyables[11].gte(2)) pow = pow.plus(buyableEffect("o", 23));
+			if (hasAchievement("a", 103)) pow = pow.plus(.1);
 			if (inChallenge("h", 21)) pow = pow.sub(0.9);
 			return pow;
 		},
@@ -1724,40 +1733,60 @@ addLayer("s", {
 				style: {"font-size": "9px"},
 			},
 			32: {
-				title: "s32",
-				description: "Never gonna give you up...",
-				cost: new Decimal(1/0),
+				title: "Poincaré Recurrence",
+				description: "Each Space Building's bought Level adds to the previous building's Extra Level.",
+				cost: new Decimal("e2.25e8"),
+				currencyDisplayName: "generator power",
+				currencyInternalName: "power",
+				currencyLayer: "g",
 				pseudoUnl() { return player.i.buyables[12].gte(5)&&player.s.upgrades.length>=9 },
-				pseudoReq: "Req: Wait for yet another update :)",
-				pseudoCan() { return false },
+				pseudoReq: "Req: e1e9 Points",
+				pseudoCan() { return player.points.gte("e1e9") },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 			33: {
-				title: "s33",
-				description: "Never gonna let you down...",
-				cost: new Decimal(1/0),
+				title: "Noncontinuous Spectrum",
+				description: "<b>Contiguous Dimension</b> multiplies Nebula Energy & Hyperspace Energy gain at a reduced rate.",
+				cost: new Decimal("e2.75e8"),
+				currencyDisplayName: "generator power",
+				currencyInternalName: "power",
+				currencyLayer: "g",
 				pseudoUnl() { return player.i.buyables[12].gte(5)&&player.s.upgrades.length>=9 },
-				pseudoReq: "Req: Wait for yet another update :)",
-				pseudoCan() { return false },
+				pseudoReq: "Req: Have at least 13 Space Upgrades, 39 Achievements, and the upgrade <b>Contiguous Dimension</b>.",
+				pseudoCan() { return player.a.achievements.length>=39 && player.s.upgrades.length>=13 && hasUpgrade("s", 35) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return upgradeEffect("s", 35).sqrt() },
+				effectDisplay() { return format(upgradeEffect("s", 33))+"x" },
+				formula: "sqrt(x)",
+				style: {"font-size": "8px"},
 			},
 			34: {
-				title: "s34",
-				description: "Never gonna turn around...",
-				cost: new Decimal(1/0),
+				title: "Energetic Reduction",
+				description: "The first five Space Buildings' cost bases are reduced based on your Space Energy.",
+				cost: new Decimal("e1.95e8"),
+				currencyDisplayName: "generator power",
+				currencyInternalName: "power",
+				currencyLayer: "g",
 				pseudoUnl() { return player.i.buyables[12].gte(5)&&player.s.upgrades.length>=9 },
-				pseudoReq: "Req: Wait for yet another update :)",
-				pseudoCan() { return false },
+				pseudoReq: "Req: e160,000,000 Generator Power without any bought Space Buildings.",
+				pseudoCan() { return player.g.power.gte("e1.6e8") && tmp.s.manualBuildingLevels.eq(0) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.s.points.plus(1).log10().plus(1).log10().plus(1) },
+				effectDisplay() { return "brought to the "+format(tmp.s.upgrades[this.id].effect)+"th root" },
+				formula: "log(log(x+1)+1)+1",
+				style: {"font-size": "9px"},
 			},
 			35: {
-				title: "s35",
-				description: "And desert you!",
-				cost: new Decimal(1/0),
+				title: "Contiguous Dimension",
+				description: "Unspent Space multiplies Honour gain.",
+				cost: new Decimal(1255),
 				pseudoUnl() { return player.i.buyables[12].gte(5)&&player.s.upgrades.length>=9 },
-				pseudoReq: "Req: Wait for yet another update :)",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 9e16 Space",
+				pseudoCan() { return tmp.s.space.gte(9e16) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return tmp.s.space.plus(1) },
+				effectDisplay() { return format(tmp.s.upgrades[this.id].effect)+"x" },
+				formula: "x+1",
 			},
 		},
 		divBuildCosts() {
@@ -1794,15 +1823,20 @@ addLayer("s", {
 					if (x.eq(0)) return new Decimal(0);
 					return Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(tmp[this.layer].buyables[this.id].costExp)).times(base).div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[11+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.pow(x.plus(1).plus(tmp.s.freeSpaceBuildings).times(tmp.s.buildingPower), player.s.points.sqrt()).times(x.plus(tmp.s.freeSpaceBuildings).plus(tmp.s.freeSpaceBuildings1to4).times(tmp.s.buildingPower).max(1).times(4));
+					let eff = Decimal.pow(x.plus(1).plus(tmp.s.freeSpaceBuildings).times(tmp.s.buildingPower), player.s.points.sqrt()).times(x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).max(1).times(4));
 					if (player.hs.unlocked) eff = eff.pow(buyableEffect("hs", 21));
 					return eff;
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x"+("*"+format(tmp.s.buildScalePower))+")^"+format(tmp[this.layer].buyables[this.id].costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
                    "+(tmp.nerdMode?("Formula: level^sqrt(spaceEnergy)*level*4"):(" Space Energy boosts Point gain & Prestige Point gain by " + format(data.effect) +"x"))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -1842,15 +1876,20 @@ addLayer("s", {
 					let base = tmp.s.buildingBaseCosts[this.id];
 					return Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(tmp[this.layer].buyables[this.id].costExp)).times(base).div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[12+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = x.plus(tmp.s.freeSpaceBuildings).plus(tmp.s.freeSpaceBuildings1to4).times(tmp.s.buildingPower).sqrt();
+					let eff = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).sqrt();
 					if (player.hs.unlocked) eff = eff.pow(buyableEffect("hs", 22));
 					return eff;
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(tmp[this.layer].buyables[this.id].costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
                     "+(tmp.nerdMode?("Formula: sqrt(level)"):("Adds to base of Booster/Generator effects by +" + format(data.effect)))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -1890,8 +1929,13 @@ addLayer("s", {
 					let base = tmp.s.buildingBaseCosts[this.id];
 					return Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(tmp[this.layer].buyables[this.id].costExp)).times(base).div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[13+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let eff = Decimal.pow(1e18, x.plus(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4)).times(tmp.s.buildingPower).pow(0.9))
+					let eff = Decimal.pow(1e18, x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).pow(0.9))
 					if (player.hs.unlocked) eff = eff.pow(buyableEffect("hs", 23));
 					eff = softcap("spaceBuilding3", eff);
 					return eff;
@@ -1899,7 +1943,7 @@ addLayer("s", {
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(tmp[this.layer].buyables[this.id].costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).times(tmp.s.buildingPower).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(data.freeLevels.times(tmp.s.buildingPower).gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
                     "+(tmp.nerdMode?("Formula: "+(data.effect.gte("e3e9")?"10^((level^0.3)*5.45e6)":"1e18^(level^0.9)")):("Divide Booster/Generator cost by " + format(data.effect)))
                 },
                 unlocked() { return player[this.layer].unlocked }, 
@@ -1941,8 +1985,13 @@ addLayer("s", {
 					if (hasUpgrade("s", 15)) cost = cost.root(3);
 					return cost.div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[14+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let ret = x.plus(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4)).times(tmp.s.buildingPower).times((hasUpgrade("s", 15))?3:1).add(1).pow(1.25);
+					let ret = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).times((hasUpgrade("s", 15))?3:1).add(1).pow(1.25);
 					ret = softcap("spaceBuilding4", ret);
 					if (player.hs.unlocked) ret = ret.times(buyableEffect("hs", 24));
 					return ret;
@@ -1951,7 +2000,7 @@ addLayer("s", {
                     let data = tmp[this.layer].buyables[this.id]
 					let extForm = hasUpgrade("s", 15)?3:1
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(tmp[this.layer].buyables[this.id].costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+(hasUpgrade("s", 15)?"^(1/3)":"")+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4).gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings.plus(tmp.s.freeSpaceBuildings1to4))):"") + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
 					"+(tmp.nerdMode?("Formula: "+(data.effect.gte(1e6)?("log(level"+(extForm==1?"":"*3")+"+1)*2.08e5"):("(level"+(extForm==1?"":"*3")+"+1)^1.25"))):("<b>Discount One</b> is raised to the power of " + format(data.effect)))
                 },
                 unlocked() { return player[this.layer].unlocked&&hasUpgrade("s", 14) }, 
@@ -1987,8 +2036,13 @@ addLayer("s", {
 					let cost = Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(1.35)).times(base);
 					return cost.div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = tmp.s.freeSpaceBuildings;
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[15+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let ret = x.plus(tmp.s.freeSpaceBuildings).times(tmp.s.buildingPower).div(2);
+					let ret = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).div(2);
 					if (hasUpgrade("q", 32)) ret = ret.times(2);
 					if (player.hs.unlocked) ret = ret.times(buyableEffect("hs", 25));
 					return ret.floor();
@@ -1996,7 +2050,7 @@ addLayer("s", {
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^1.35)*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(tmp.s.freeSpaceBuildings.gt(0)?(" + "+formatWhole(tmp.s.freeSpaceBuildings)):"") + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id])+(data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
 					"+(tmp.nerdMode?("Formula: level"+(hasUpgrade("q", 32)?"":"/2")):("Add " + formatWhole(data.effect)+" levels to all previous Space Buildings."))
                 },
                 unlocked() { return player[this.layer].unlocked&&hasUpgrade("s", 25) }, 
@@ -2033,15 +2087,20 @@ addLayer("s", {
 					let cost = Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(tmp.s.buyables[this.id].costExp)).times(base);
 					return cost.div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = new Decimal(0);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[16+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let ret = x.times(tmp.s.buildingPower).plus(1).sqrt();
+					let ret = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).plus(1).sqrt();
 					if (player.hs.unlocked) ret = ret.pow(buyableEffect("hs", 26));
 					return ret.floor();
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(data.costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id]) + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id]) + (data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
 					"+(tmp.nerdMode?("Formula: sqrt(level+1)"):("Multiply Damned Soul gain by " + format(data.effect)+"."))
                 },
                 unlocked() { return player[this.layer].unlocked&&player.i.buyables[11].gte(1) }, 
@@ -2078,15 +2137,20 @@ addLayer("s", {
 					let cost = Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(tmp.s.buyables[this.id].costExp)).times(base);
 					return cost.div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = new Decimal(0);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[17+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let ret = Decimal.pow("1e20000", x.times(tmp.s.buildingPower).pow(1.2));
+					let ret = Decimal.pow("1e20000", x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).pow(1.2));
 					if (player.hs.unlocked) ret = ret.pow(buyableEffect("hs", 27));
 					return ret.floor();
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(data.costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id]) + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id]) + (data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
 					"+(tmp.nerdMode?("Formula: 1e20,000^(level^1.2)"):("Divide the requirement of Phantom Souls by " + format(data.effect)+"."))
                 },
                 unlocked() { return player[this.layer].unlocked&&player.i.buyables[11].gte(2) }, 
@@ -2123,15 +2187,20 @@ addLayer("s", {
 					let cost = Decimal.pow(base, x.times(tmp.s.buildScalePower).pow(tmp.s.buyables[this.id].costExp)).times(base);
 					return cost.div(tmp.s.divBuildCosts);
                 },
+				freeLevels() {
+					let levels = new Decimal(0);
+					if (hasUpgrade("s", 32) && player.i.buyables[12].gte(5)) levels = levels.plus(player.s.buyables[18+1]||0);
+					return levels;
+				},
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
-					let ret = x.times(tmp.s.buildingPower).div(1.5)
+					let ret = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).div(1.5)
 					if (player.hs.unlocked) ret = ret.times(buyableEffect("hs", 28));
 					return ret;
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(data.costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
-                    Level: " + formatWhole(player[this.layer].buyables[this.id]) + "\n\
+                    Level: " + formatWhole(player[this.layer].buyables[this.id]) + (data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
 					"+(tmp.nerdMode?("Formula: level/1.5"):("Get " + format(data.effect)+" more Free Quirk Layers."))
                 },
                 unlocked() { return player[this.layer].unlocked&&player.i.buyables[11].gte(3) }, 
@@ -4514,6 +4583,7 @@ addLayer("hn", {
 			if (player.n.buyables[11].gte(1)) mult = mult.times(buyableEffect("o", 22));
 			if (hasAchievement("a", 91)) mult = mult.times(1.1);
 			if (hasUpgrade("g", 35) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 35));
+			if (hasUpgrade("s", 35) && player.i.buyables[12].gte(5)) mult = mult.times(upgradeEffect("s", 35));
 			return mult;
 		},
 		getResetGain() {
@@ -5118,6 +5188,7 @@ addLayer("n", {
             mult = new Decimal(1);
 			if (hasUpgrade("hn", 45)) mult = mult.times(upgradeEffect("hn", 45));
 			if (hasUpgrade("g", 35) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 35));
+			if (hasUpgrade("s", 33) && player.i.buyables[12].gte(5)) mult = mult.times(upgradeEffect("s", 33));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -5319,6 +5390,7 @@ addLayer("hs", {
 			if (hasUpgrade("g", 35) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 35));
 			if (hasUpgrade("e", 41) && player.i.buyables[12].gte(3)) mult = mult.times(upgradeEffect("e", 41));
 			if (hasUpgrade("t", 41) && player.i.buyables[12].gte(4)) mult = mult.times(2.5e3);
+			if (hasUpgrade("s", 33) && player.i.buyables[12].gte(5)) mult = mult.times(upgradeEffect("s", 33));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6012,6 +6084,11 @@ addLayer("a", {
 				name: "We're Not Beyond This?",
 				done() { return inChallenge("h", 31) && player.h.challenges[31]>=30 && player.points.gte("e2e7") },
 				tooltip: 'Reach e20,000,000 Points while in the "Timeless" hindrance (which must be completed at least 30 times).',
+			},
+			103: {
+				name: "One Billion Zeros",
+				done() { return player.points.gte("e1e9") },
+				tooltip: "Reach e1e9 Points. Reward: Add 10% to Space Building Power.",
 			},
         },
 		tabFormat: [

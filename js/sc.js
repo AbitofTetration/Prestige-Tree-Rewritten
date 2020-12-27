@@ -1,4 +1,12 @@
 const SOFTCAPS = {
+	normal_layers: {
+		title: "Non-Static Layer Gain",
+		type: "root",
+		start: new Decimal("e1e7"),
+		mag: new Decimal(2),
+		display() { return player.p.points.gte("e1e6") },
+		info() { return "Starts at "+format(this.start)+", square rooted" },
+	},
 	p12: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "log",
@@ -14,6 +22,14 @@ const SOFTCAPS = {
 		mag() { return new Decimal(2).sub((hasUpgrade("hn", 21)) ? upgradeEffect("hn", 21) : 0) },
 		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
 		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+(this.mag().eq(2)?"2nd":(format(this.mag())+"th"))+" root" },
+	},
+	enh1: {
+		title: "First Enhancer Effect",
+		type: "expRoot",
+		start: new Decimal("e5e9"),
+		mag: new Decimal(3),
+		display() { return tmp.e.buyables[11].effect.first.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
 	},
 	e12: {
 		title: "Enhance Upgrade 2 (Enhanced Prestige)",

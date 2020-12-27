@@ -889,15 +889,18 @@ function focused(x) {
 function gainFormulaNormal(layer) {
 	let start = tmp[layer].requires;
 	let mult = tmp[layer].gainMult;
-	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
-	return "(x / "+format(start)+")^"+format(exp)+(mult.eq(1)?"":(mult.lt(1)?(" / "+format(mult.pow(-1))):(" * "+format(mult))))
+	let exp1 = tmp[layer].exponent;
+	let exp2 = tmp[layer].gainExp;
+	let f = "(x / "+format(start)+")^"+format(exp1)+(mult.eq(1)?"":(mult.lt(1)?(" / "+format(mult.pow(-1))):(" * "+format(mult))));
+	if (!exp2.eq(1)) f = "("+f+")^"+format(exp2)
+	return f;
 }
 
 function costFormulaStatic(layer) {
 	let start = tmp[layer].requires;
 	let mult = tmp[layer].gainMult.times(start);
 	if (!mult) mult = new Decimal(1);
-	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
+	let exp = new Decimal(tmp[layer].exponent).times(tmp[layer].gainExp);
 	let base = tmp[layer].base;
 	let resDiv = new Decimal(1);
 	
