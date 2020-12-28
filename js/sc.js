@@ -75,10 +75,14 @@ const SOFTCAPS = {
 	qe: {
 		title: "Quirk Energy Effect",
 		type: "expRoot",
-		start: new Decimal("e1800000"),
+		start() { 
+			let start = new Decimal("e1800000") 
+			if (hasUpgrade("q", 15) && player.i.buyables[12].gte(6)) start = start.times(upgradeEffect("q", 15));
+			return start;
+		},
 		mag: new Decimal(2),
-		display() { return player.q.unlocked && tmp.q.enEff.gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return player.q.unlocked && tmp.q.enEff.gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
 	},
 	q14_h: {
 		title: "Quirk Upgrade 4 (Row 4 Synergy) - Quirk Boost",
