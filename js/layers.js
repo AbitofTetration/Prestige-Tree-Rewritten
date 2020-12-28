@@ -2253,7 +2253,7 @@ addLayer("s", {
                     let data = tmp[this.layer].buyables[this.id]
                     return (tmp.nerdMode?("Cost Formula: "+format(tmp.s.buildingBaseCosts[this.id])+"^((x*"+format(tmp.s.buildScalePower)+")^"+format(data.costExp)+")*"+format(tmp.s.buildingBaseCosts[this.id])+"/"+format(tmp.s.divBuildCosts)):("Cost: " + formatWhole(data.cost) + " Generator Power"))+"\n\
                     Level: " + formatWhole(player[this.layer].buyables[this.id]) + (data.freeLevels.gt(0)?(" + "+formatWhole(data.freeLevels)):"") + "\n\
-					"+(tmp.nerdMode?("Formula: level/1,000+1"):("The Hyperspace Energy exponent is multiplied by " + format(data.effect)+"."))
+					"+(tmp.nerdMode?("Formula: level/1,000+1"):("The Hyperspace Energy gain exponent is multiplied by " + format(data.effect)+"."))
                 },
                 unlocked() { return player[this.layer].unlocked&&player.i.buyables[11].gte(4) }, 
                 canAfford() {
@@ -2942,7 +2942,7 @@ addLayer("q", {
 				title: "Quirk Extension",
 				description: "Quirks make the Quirk Energy effect softcap start later.",
 				cost() { return Decimal.pow("e1e6", player.q.time.times(10).plus(1).log10().pow(2)).times("e1.5e7") },
-				costFormula: "???*(time+1)^???",
+				costFormula: "(e1,000,000^(log(time*10+1)^2))*e15,000,000",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
