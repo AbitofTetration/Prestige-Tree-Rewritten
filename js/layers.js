@@ -1377,7 +1377,7 @@ addLayer("e", {
 				pseudoReq: "Req: 30,300 Free Enhancers.",
 				pseudoCan() { return tmp.e.freeEnh.gte(30300) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
-				effect() { return player.hn.best.plus(1).log10().pow(3.25).floor() },
+				effect() { return softcap("e32", player.hn.best.plus(1).log10().pow(3.25)).floor() },
 				effectDisplay() { return "+"+format(tmp[this.layer].upgrades[this.id].effect) },
 				formula: "log(x+1)^3.25",
 			},
@@ -2486,7 +2486,9 @@ addLayer("h", {
 		effect() { 
 			let h = player.h.points.times(player.points.plus(1).log("1e1000").plus(1));
 			h = softcap("hindr_base", h);
-			return h.plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1).pow(hasUpgrade("ba", 21)?8:1)
+			let eff = h.plus(1).pow(3).pow(hasChallenge("h", 11)?1.2:1).pow(hasUpgrade("ba", 21)?8:1);
+			if (hasUpgrade("q", 45) && player.i.buyables[12].gte(6)) eff = eff.pow(100);
+			return eff;
 		},
 		effectDescription() {
 			return "which are multiplying Point gain, Time Energy gain, & the Time Energy cap by "+format(tmp.h.effect)+" ("+(tmp.nerdMode?(tmp.h.effect.gte(15e4)?("(10^sqrt(log(hindranceSpirit/1e3*(log(points+1)+1))/log(1.5e5))+1)^("+((hasChallenge("h", 11)?3.6:3)*(hasUpgrade("ba", 21)?8:1))+")"):("(hindranceSpirit/1e3*(log(points+1)+1)+1)^("+((hasChallenge("h", 11)?3.6:3)*(hasUpgrade("ba", 21)?8:1))+")")):"boosted by Points")+")"
@@ -2796,6 +2798,7 @@ addLayer("q", {
 					if (hasUpgrade("q", 43)) base = base.sub(.25);
 					if (hasChallenge("h", 42)) base = base.sub(.15);
 					if (hasAchievement("a", 101)) base = base.sub(.2);
+					if (hasUpgrade("q", 25) && player.i.buyables[12].gte(6)) base = base.root(upgradeEffect("q", 25));
 					return base;
 				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
@@ -3001,14 +3004,20 @@ addLayer("q", {
 				unlocked() { return hasUpgrade("q", 14)&&hasUpgrade("q", 22) },
 			},
 			25: {
-				title: "q25",
-				description: "???",
-				cost() { return player.q.time.plus(1).pow(1).times(1/0) },
-				costFormula: "???*(time+1)^???",
+				title: "Advanced Onion",
+				description: "Nebulaic Bricks reduce the Quirk Layer cost base.",
+				cost() { return Decimal.pow("e3e6", player.q.time.times(10).plus(1).log10().pow(2)).times("e2e7") },
+				costFormula: "(e3,000,000^(log(time*10+1)^2))*e20,000,000",
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
 				pseudoUnl() { return player.i.buyables[12].gte(6) },
-				pseudoReq: "Req: Wait for next update.",
-				pseudoCan() { return false },
+				pseudoReq: "Req: 1e200 Honour.",
+				pseudoCan() { return player.hn.points.gte(1e200) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.i.nb.plus(1).log10().plus(1).pow(3) },
+				effectDisplay() { return "brought to the "+format(upgradeEffect("q", 25))+"th root" },
+				formula: "(log(x+1)+1)^3",
 			},
 			31: {
 				title: "Scale Softening",
@@ -3057,14 +3066,20 @@ addLayer("q", {
 				formula: "(x+1)^0.4",
 			},
 			35: {
-				title: "q35",
-				description: "???",
-				cost() { return player.q.time.plus(1).pow(1).times(1/0) },
-				costFormula: "???*(time+1)^???",
+				title: "Millennial Abilities",
+				description: "Hyperspatial Bricks make Quirk Improvements scale slower.",
+				cost() { return Decimal.pow("e5e6", player.q.time.times(10).plus(1).log10().pow(3)).times("e4e7") },
+				costFormula: "(e5,000,000^(log(time*10+1)^3))*e40,000,000",
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
 				pseudoUnl() { return player.i.buyables[12].gte(6) },
-				pseudoReq: "Req: Wait for next update.",
-				pseudoCan() { return false },
+				pseudoReq: "Req: e5,000,000 Quirk Energy without any bought Quirk Layers or Space Buildings.",
+				pseudoCan() { return player.q.energy.gte("e5e6") && player.q.buyables[11].eq(0) && tmp.s.manualBuildingLevels.eq(0) },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
+				effect() { return player.i.hb.sqrt().div(25).plus(1) },
+				effectDisplay() { return format(upgradeEffect("q", 35).sub(1).times(100))+"% slower" },
+				formula: "sqrt(x)*4%",
 			},
 			41: {
 				title: "Quirkier",
@@ -3103,13 +3118,15 @@ addLayer("q", {
 				unlocked() { return hasUpgrade("q", 43) },
 			},
 			45: {
-				title: "q45",
-				description: "???",
-				cost() { return player.q.time.plus(1).pow(1).times(1/0) },
-				costFormula: "???*(time+1)^???",
+				title: "Anti-Hindrance",
+				description: "The Hindrance Spirit effect is raised to the power of 100 (after softcaps), and gain 200x more Nebula Energy.",
+				cost: new Decimal("e55555555"),
+				currencyDisplayName: "quirk energy",
+				currencyInternalName: "energy",
+				currencyLayer: "q",
 				pseudoUnl() { return player.i.buyables[12].gte(6) },
-				pseudoReq: "Req: Wait for next update.",
-				pseudoCan() { return false },
+				pseudoReq: "Req: e1.7e10 Prestige Points.",
+				pseudoCan() { return player.p.points.gte("e1.7e10") },
 				unlocked() { return player[this.layer].pseudoUpgs.includes(Number(this.id)) },
 			},
 		},
@@ -3117,6 +3134,7 @@ addLayer("q", {
 			scaleSlow() {
 				let slow = new Decimal(1);
 				if (tmp.ps.impr[22].unlocked) slow = slow.times(tmp.ps.impr[22].effect);
+				if (hasUpgrade("q", 35) && player.i.buyables[12].gte(6)) slow = slow.times(upgradeEffect("q", 35));
 				return slow;
 			},
 			baseReq() { 
@@ -5314,6 +5332,7 @@ addLayer("n", {
 			if (hasUpgrade("hn", 45)) mult = mult.times(upgradeEffect("hn", 45));
 			if (hasUpgrade("g", 35) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 35));
 			if (hasUpgrade("s", 33) && player.i.buyables[12].gte(5)) mult = mult.times(upgradeEffect("s", 33));
+			if (hasUpgrade("q", 45) && player.i.buyables[12].gte(6)) mult = mult.times(200);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses

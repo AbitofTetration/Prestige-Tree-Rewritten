@@ -39,6 +39,14 @@ const SOFTCAPS = {
 		display() { return hasUpgrade("e", 12) && upgradeEffect("e", 12).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, square rooted" },
 	},
+	e32: {
+		title: "Enhance Upgrade (Supplementation)",
+		type: "expRoot",
+		start: new Decimal(1.25e8),
+		mag: new Decimal(4),
+		display() { return hasUpgrade('e', 32) && upgradeEffect("e", 32).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the fourth root" },
+	},
 	spaceBuilding3: {
 		title: "Tertiary Space Building",
 		type: "expRoot",

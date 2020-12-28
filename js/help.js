@@ -28,7 +28,7 @@ let help_data = {
 	oss: {
 		id: "oss",
 		title: "Solarity & Subspace",
-		text: "Insert Solarity/Subspace advice here",
+		text: "Once you unlock Solarity/Subspace, you can choose either one, but there is a difference in how they progress. Solarity is more of an active layer, requiring you to be on the game more often, but it is faster than Subspace, which is more idle and requires more waiting. There is no wrong choice here, just go with what works with your playstyle, you'll end up getting the other one later anyway.<br><br>For Solarity, do resets and purchase Solarity buyables, continue this cycle over time and grind up. For Subspace, just let Subspace build up, buy Subspace Upgrades, and do resets. Keep in mind that both of these layers reset Space Buildings, so having that Auto-Space Building milestone in the Quirk tab is very useful in making these runs less painful.<br><br>Eventually, you will unlock both Solarity & Subspace, at which point you continue to grind up as much as possible, remembering to check all relevant layers when you feel stuck to see if you're missing any upgrades or anything else. Continue this push until you can unlock Magic or Balance in Row 5.",
 		unlocked() { return player.q.unlocked || player.h.unlocked },
 	},
 	r5: {
