@@ -5369,13 +5369,13 @@ addLayer("n", {
         color: "#430082",
 		nodeStyle() { return {
 			"background-color": ((player.n.unlocked||canReset("n"))?"#430082":"#bf8f8f"),
-			color: "rgba(255, 255, 255, 0.75)",
+			color: (player.oldStyle?"white":"rgba(255, 255, 255, 0.75)"),
 		}},
-		componentStyles: {
+		componentStyles() { return {
 			"prestige-button": {
-				color: "rgba(255, 255, 255, 0.75)",
+				color: (player.oldStyle?"white":"rgba(255, 255, 255, 0.75)"),
 			},
-		},
+		}},
         requires() { return new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 92))?"1e288":"1e280") }, // Can be a function that takes requirement increases into account
 		increaseUnlockOrder: ["hs"],
         resource: "nebula energy", // Name of prestige currency

@@ -7,8 +7,8 @@
 }
 
 *:focus {
-	outline: thin dotted white;
-	webkit-outline: thin dotted white;
+	outline: none;
+	webkit-outline: none;
 }
 
 body {
@@ -64,11 +64,11 @@ h1, h2, h3, b, input {
 .treeNode {
 	height: 100px;
 	width: 100px;
-	border-width: 5px;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-width: 1px;
+	border-color: black;
 	border-radius: 50%;
 	font-size: 40px;
-	color: rgba(0, 0, 0, 0.5);
+	color: black;
 	padding: 0;
 }
 
@@ -76,11 +76,11 @@ h1, h2, h3, b, input {
 .treeButton {
 	height: 100px;
 	width: 100px;
-	border-width: 5px;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-width: 1px;
+	border-color: black;
 	border-radius: 33%;
 	font-size: 40px;
-	color: rgba(0, 0, 0, 0.5);
+	color: black;
 	padding: 0;
 }
 
@@ -88,11 +88,11 @@ h1, h2, h3, b, input {
 .smallNode {
 	height: 60px;
 	width: 60px;
-	border-width: 5px;
-	border-color: rgba(0, 0, 0, 0.125);
+	border-width: 1px;
+	border-color: black;
 	border-radius: 50%;
 	font-size: 30px;
-	color: rgba(0, 0, 0, 0.5);
+	color: black;
 	padding: 0;
 
 }

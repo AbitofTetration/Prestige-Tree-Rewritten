@@ -34,25 +34,25 @@ let help_data = {
 	r5: {
 		id: "r5",
 		title: "Row 5",
-		text: "Insert Row 5 advice here",
+		text: /*Once you reach your first Row 5 reset, it does not matter whether you do a Magic or Balance reset first, as long as you do the other layer reset for the second reset. Magic has three Spells, which you can cast (which last 1 minute each at first) but cost 1 Magic each, and give you 1 Hex for casting. Start with the Spell that multiplies the Time base, and cast the others once runs get fast enough to have multiple Spells active at once. Balance Energy generates Positivity and Negativity based on the location of the slider, and there are also Balance Upgrades to buy. Use both ends of the slider at their extremes to get the most out of Positivity & Negativity gains, their nerfs are not important enough to warrant having only one of the resources, so just try to keep their amounts roughly equal.<br><br>Keep grinding both layers until you are able to unlock Phantom Souls, remembering to */"",
 		unlocked() { return player.m.unlocked || player.ba.unlocked },
 	},
 	hn: {
 		id: "hn",
 		title: "Honour",
-		text: "Insert Honour advice here",
+		text: "WIP",
 		unlocked() { return player.hn.unlocked },
 	},
 	nhs: {
 		id: "nhs",
 		title: "Nebula & Hyperspace",
-		text: "Insert Nebula/Hyperspace advice here",
+		text: "WIP",
 		unlocked() { return player.n.unlocked || player.hs.unlocked },
 	},
 	i: {
 		id: "i",
 		title: "Imperium",
-		text: "Insert Imperium advice here",
+		text: "WIP",
 		unlocked() { return player.i.unlocked },
 	},
 }
