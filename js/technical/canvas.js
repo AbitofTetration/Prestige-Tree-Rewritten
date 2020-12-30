@@ -17,8 +17,8 @@ function resizeCanvas() {
 	if (!retrieveCanvasData()) return
 	canvas.width = 0;
     canvas.height = 0;
-	canvas.width  = document.body.scrollWidth;
-	canvas.height = document.body.scrollHeight;
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
 	drawTree();
 }
 
@@ -43,7 +43,7 @@ function drawTree() {
 		if (tmp[layer].layerShown == true && tmp[layer].branches){
 			for (branch in tmp[layer].branches)
 				{
-					drawTreeBranch(layer, tmp[layer].branches[branch])
+					drawTreeBranch(layer, tmp[layer].branches[branch]);
 				}
 		}
 	}
@@ -57,20 +57,23 @@ function drawTreeBranch(num1, data) { // taken from Antimatter Dimensions & adju
 	if (Array.isArray(data)){
 		num2 = data[0]
 		color_id = data[1]
-	}
+	} 
 
-	if(typeof(color_id) == "number")
-		color_id = colors_theme[color_id]
+	if (typeof color_id == "number") color_id = colors_theme[color_id]
 
-	if (document.getElementById(num1) == null || document.getElementById(num2) == null)
+	let el1 = document.getElementById(num1);
+	let el2 = document.getElementById(num2);
+	let tab = document.body;
+
+	if (el1 == null || el2 == null)
 		return
 
-	let start = document.getElementById(num1).getBoundingClientRect();
-    let end = document.getElementById(num2).getBoundingClientRect();
-    let x1 = start.left + (start.width / 2) + document.body.scrollLeft;
-    let y1 = start.top + (start.height / 2) + document.body.scrollTop;
-    let x2 = end.left + (end.width / 2) + document.body.scrollLeft;
-    let y2 = end.top + (end.height / 2) + document.body.scrollTop;
+	let start = el1.getBoundingClientRect();
+    let end = el2.getBoundingClientRect();
+    let x1 = start.left + (start.width / 2) + tab.scrollLeft;
+    let y1 = start.top + (start.height / 2) + tab.scrollTop;
+    let x2 = end.left + (end.width / 2) + tab.scrollLeft;
+    let y2 = end.top + (end.height / 2) + tab.scrollTop;
     ctx.lineWidth = 15;
     ctx.beginPath();
     ctx.strokeStyle = color_id

@@ -8,23 +8,23 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("1e20500000"),
-	//specialEndgameText: "v1.0 Beta 8 Endgame: e20,500,000 Points",
+	endgame: new Decimal("e1.25e10"),
+	// specialEndgameText: "v1.1 Beta 21 Endgame: e1.25e10 Points & 100 Phantom Souls",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0",
-	//beta: 8,
-	//patch: 1,
-	name: "The Honour Update",
+	num: "1.1",
+	// beta: 21,
+	// patch: 1,
+	name: "Hyperium Nebulae",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
 var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything", "castAllSpells"]
 
-var alwaysKeepTheseVariables = ["primeMiles", "auto", "autoExt", "autoBld", "autoW", "keepPosNeg", "distrAll", "spellInput"]
+var alwaysKeepTheseVariables = ["primeMiles", "auto", "autoExt", "autoBld", "autoW", "keepPosNeg", "distrAll", "spellInput", "pseudoUpgs"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)
@@ -44,6 +44,7 @@ function getPointGen() {
 	if (hasUpgrade("p", 12)) gain = gain.times(upgradeEffect("p", 12));
 	if (hasUpgrade("p", 13)) gain = gain.times(upgradeEffect("p", 13));
 	if (hasUpgrade("p", 22)) gain = gain.times(upgradeEffect("p", 22));
+	if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) gain = gain.times(upgradeEffect("b", 11))
 	if (hasAchievement("a", 21)) gain = gain.times(1.1);
 	if (hasAchievement("a", 31)) gain = gain.times(1.5);
 	if (inChallenge("h", 22)) return gain.times(player.s.unlocked?buyableEffect("s", 11):1).root(inChallenge("h", 31)?tmp.h.pointRoot31:1);

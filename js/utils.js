@@ -1,14 +1,14 @@
 // ************ Number formatting ************
 
 function exponentialFormat(num, precision) {
-	let e = num.log10().floor()
-	let m = num.div(Decimal.pow(10, e))
-	if(m.toStringWithDecimalPlaces(precision) == 10) {
-		m = new Decimal(1)
-		e = e.add(1)
+	let e = num.exponent;
+	let m = num.mantissa;
+	if (Number(new Decimal(m).toStringWithDecimalPlaces(precision))==10) {
+		m = 1
+		e++;
 	}
-	e = (e.gte(1000) ? commaFormat(e, 0) : e.toStringWithDecimalPlaces(0))
-	return m.toStringWithDecimalPlaces(precision)+"e"+e
+	e = ((e>=1000) ? commaFormat(new Decimal(e), 0) : new Decimal(e).toStringWithDecimalPlaces(0))
+	return new Decimal(m).toStringWithDecimalPlaces(precision)+"e"+e
 }
 
 function commaFormat(num, precision) {
@@ -42,6 +42,7 @@ function format(decimal, precision=2) {
 	}
 	if (decimal.sign<0) return "-"+format(decimal.neg(), precision)
 	if (decimal.mag == Number.POSITIVE_INFINITY) return "Infinity"
+	if (decimal.eq(0)) return "0"
 	if (decimal.gte("eeee1000")) {
 		var slog = decimal.slog()
 		if (slog.gte(1e3)) return "10^^" + formatWhole(slog)
@@ -52,7 +53,9 @@ function format(decimal, precision=2) {
 	else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
-	else return regularFormat(decimal, precision)
+	else if (decimal.gte(Decimal.pow(0.1, precision))) return regularFormat(decimal, precision)
+	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte(1e-9)?precision:0)
+	else return "1/("+format(decimal.pow(-1), precision)+")"
 }
 
 function formatWhole(decimal) {
@@ -110,6 +113,8 @@ function startPlayerBase() {
 		spaceGlow: "normal",
 		solGlow: "normal",
 		majGlow: "normal",
+		scShown: true,
+		oldStyle: false,
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -310,7 +315,7 @@ function exportSave() {
 function importSave(imported=undefined, forced=false) {
 	if (imported===undefined) imported = prompt("Paste your save here")
 	try {
-		tempPlr = Object.assign(getStartPlayer(), JSON.parse(atob(imported)))
+		let tempPlr = Object.assign(getStartPlayer(), JSON.parse(atob(imported)))
 		if(tempPlr.versionType != modInfo.id && !forced && !confirm("This save appears to be for a different mod! Are you sure you want to import?")) // Wrong save (use "Forced" to force it to accept.)
 			return
 		player = tempPlr;
@@ -434,7 +439,7 @@ function updateStyle() {
 }
 
 function changeTreeQuality() {
-	var on = player.hqTree
+	var on = player.hqTree && !player.oldStyle
 	document.body.style.setProperty('--hqProperty1', on ? "2px solid" : "4px solid")
 	document.body.style.setProperty('--hqProperty2a', on ? "-4px -4px 4px rgba(0, 0, 0, 0.25) inset" : "-4px -4px 4px rgba(0, 0, 0, 0) inset")
 	document.body.style.setProperty('--hqProperty2b', on ? "0px 0px 20px var(--background)" : "")
@@ -885,15 +890,18 @@ function focused(x) {
 function gainFormulaNormal(layer) {
 	let start = tmp[layer].requires;
 	let mult = tmp[layer].gainMult;
-	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
-	return "(x / "+format(start)+")^"+format(exp)+(mult.eq(1)?"":(mult.lt(1)?(" / "+format(mult.pow(-1))):(" * "+format(mult))))
+	let exp1 = tmp[layer].exponent;
+	let exp2 = tmp[layer].gainExp;
+	let f = "(x / "+format(start)+")^"+format(exp1)+(mult.eq(1)?"":(mult.lt(1)?(" / "+format(mult.pow(-1))):(" * "+format(mult))));
+	if (!exp2.eq(1)) f = "("+f+")^"+format(exp2)
+	return f;
 }
 
 function costFormulaStatic(layer) {
 	let start = tmp[layer].requires;
 	let mult = tmp[layer].gainMult.times(start);
 	if (!mult) mult = new Decimal(1);
-	let exp = tmp[layer].gainExp.times(tmp[layer].exponent);
+	let exp = new Decimal(tmp[layer].exponent).times(tmp[layer].gainExp);
 	let base = tmp[layer].base;
 	let resDiv = new Decimal(1);
 	

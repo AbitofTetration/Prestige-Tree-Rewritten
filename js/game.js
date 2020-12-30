@@ -22,7 +22,7 @@ function getResetGain(layer, useType = null) {
 	} else if (type=="normal"){
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return new Decimal(0)
 		let gain = tmp[layer].baseAmount.div(tmp[layer].requires).pow(tmp[layer].exponent).times(tmp[layer].gainMult).pow(tmp[layer].gainExp)
-		if (gain.gte("e1e7")) gain = gain.sqrt().times("e5e6")
+		gain = softcap("normal_layers", gain)
 		return gain.floor().max(0);
 	} else if (type=="custom"){
 		return layers[layer].getResetGain()
@@ -51,7 +51,7 @@ function getNextAt(layer, canMax=false, useType = null) {
 		return cost;
 	} else if (type=="normal"){
 		let next = tmp[layer].resetGain.add(1)
-		if (next.gte("e1e7")) next = next.div("e5e6").pow(2)
+		next = reverse_softcap("normal_layers", next)
 		next = next.root(tmp[layer].gainExp).div(tmp[layer].gainMult).root(tmp[layer].exponent).times(tmp[layer].requires).max(tmp[layer].requires)
 		if (tmp[layer].roundUpCost) next = next.ceil()
 		return next;
@@ -315,6 +315,8 @@ VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "
 
 
 function gameLoop(diff) {
+	styleCooldown = Math.max(styleCooldown-diff, 0);
+	
 	if (isEndgame() || gameEnded) gameEnded = 1
 
 	if (isNaN(diff)) diff = 0

@@ -1,4 +1,12 @@
 const SOFTCAPS = {
+	normal_layers: {
+		title: "Non-Static Layer Gain",
+		type: "root",
+		start: new Decimal("e1e7"),
+		mag: new Decimal(2),
+		display() { return player.p.points.gte("e1e6") },
+		info() { return "Starts at "+format(this.start)+", square rooted" },
+	},
 	p12: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "log",
@@ -15,6 +23,14 @@ const SOFTCAPS = {
 		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
 		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+(this.mag().eq(2)?"2nd":(format(this.mag())+"th"))+" root" },
 	},
+	enh1: {
+		title: "First Enhancer Effect",
+		type: "expRoot",
+		start: new Decimal("e5e9"),
+		mag: new Decimal(3),
+		display() { return tmp.e.buyables[11].effect.first.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
+	},
 	e12: {
 		title: "Enhance Upgrade 2 (Enhanced Prestige)",
 		type: "root",
@@ -23,10 +39,18 @@ const SOFTCAPS = {
 		display() { return hasUpgrade("e", 12) && upgradeEffect("e", 12).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, square rooted" },
 	},
+	e32: {
+		title: "Enhance Upgrade (Supplementation)",
+		type: "expRoot",
+		start: new Decimal(1.25e8),
+		mag: new Decimal(4),
+		display() { return hasUpgrade('e', 32) && upgradeEffect("e", 32).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the fourth root" },
+	},
 	spaceBuilding3: {
 		title: "Tertiary Space Building",
 		type: "expRoot",
-		start: new Decimal("e3e9"),
+		start: new Decimal("e1e12"),
 		mag: new Decimal(3),
 		display() { return player.s.buyables[13].gt(0) && buyableEffect("s", 13).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, exponent cube rooted" },
@@ -59,10 +83,14 @@ const SOFTCAPS = {
 	qe: {
 		title: "Quirk Energy Effect",
 		type: "expRoot",
-		start: new Decimal("e1800000"),
+		start() { 
+			let start = new Decimal("e1800000") 
+			if (hasUpgrade("q", 15) && player.i.buyables[12].gte(6)) start = start.times(upgradeEffect("q", 15));
+			return start;
+		},
 		mag: new Decimal(2),
-		display() { return player.q.unlocked && tmp.q.enEff.gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return player.q.unlocked && tmp.q.enEff.gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
 	},
 	q14_h: {
 		title: "Quirk Upgrade 4 (Row 4 Synergy) - Quirk Boost",
@@ -127,7 +155,7 @@ const SOFTCAPS = {
 		start: new Decimal("1e10000"),
 		exp: new Decimal(10),
 		display() { return player.m.unlocked && tmp.m.hexEff.gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the power of "+format(this.mag) },
+		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the power of "+format(this.exp) },
 	},
 	spell1: {
 		title: "First Spell (Booster Launch)",
@@ -232,6 +260,7 @@ const STATIC_SCALE_DATA = [
 		start_adj: {
 			"2": function() {
 				let start = new Decimal(1225);
+				if (hasUpgrade("t", 34) && player.i.buyables[12].gte(4)) start = new Decimal(1400);
 				if (inChallenge("h", 42)) start = new Decimal(1);
 				return start;
 			},

@@ -15,6 +15,8 @@ for (item in noCall) {
 
 function setupTemp() {
 	tmp = {}
+	tmp.helpTab = NaN;
+	tmp.helpData = {};
 	tmp.nerdMode = false
 	tmp.pointGen = {}
 	tmp.displayThings = []
@@ -30,6 +32,7 @@ function setupTemp() {
 		tmp[layer].prestigeButtonText = {}
 		setupBarStyles(layer)
 	}
+	if (typeof help_data != "undefined") setupTempData(help_data, tmp.helpData);
 }
 
 function setupTempData(layerData, tmpData) {
@@ -79,7 +82,10 @@ function updateTemp() {
 		if (isFunction(text)) text = text()
 		tmp.displayThings.push(text) 
 	}
-
+	
+	if (typeof help_data != "undefined" && player.tab=='help') {
+		updateTempData(help_data, tmp.helpData);
+	}
 }
 
 function updateTempData(layerData, tmpData) {
