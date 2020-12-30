@@ -114,6 +114,7 @@ function startPlayerBase() {
 		solGlow: "normal",
 		majGlow: "normal",
 		scShown: true,
+		oldStyle: false,
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
@@ -438,7 +439,7 @@ function updateStyle() {
 }
 
 function changeTreeQuality() {
-	var on = player.hqTree
+	var on = player.hqTree && !player.oldStyle
 	document.body.style.setProperty('--hqProperty1', on ? "2px solid" : "4px solid")
 	document.body.style.setProperty('--hqProperty2a', on ? "-4px -4px 4px rgba(0, 0, 0, 0.25) inset" : "-4px -4px 4px rgba(0, 0, 0, 0) inset")
 	document.body.style.setProperty('--hqProperty2b', on ? "0px 0px 20px var(--background)" : "")

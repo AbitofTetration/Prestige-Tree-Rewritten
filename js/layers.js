@@ -3339,10 +3339,10 @@ addLayer("o", {
 		roundUpCost: true,
         color: "rgb(255, 205, 0)",
 		nodeStyle() {return {
-			"background": ((player.o.unlocked||canReset("o")))?(player.grad?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" ,
+			"background": ((player.o.unlocked||canReset("o")))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" ,
         }},
 		componentStyles: {
-			"prestige-button"() {return { "background": (canReset("o"))?(player.grad?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" }},
+			"prestige-button"() {return { "background": (canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" }},
 		},
         requires() { 
 			let req = new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 62))?16:14).sub(tmp.o.solEnEff);

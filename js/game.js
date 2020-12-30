@@ -315,6 +315,8 @@ VERSION.withName = VERSION.withoutName + (VERSION.name ? ": " + VERSION.name : "
 
 
 function gameLoop(diff) {
+	styleCooldown = Math.max(styleCooldown-diff, 0);
+	
 	if (isEndgame() || gameEnded) gameEnded = 1
 
 	if (isNaN(diff)) diff = 0

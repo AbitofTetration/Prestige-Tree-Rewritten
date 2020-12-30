@@ -119,9 +119,9 @@ function loadVue() {
 	Vue.component('challenge', {
 		props: ['layer', 'data', 'cl'],
 		template: `
-		<div v-if="tmp[layer].challenges && tmp[layer].challenges[data]!== undefined && tmp[layer].challenges[data].unlocked && !(player.hideChallenges && hasChallenge(layer, [data]))" v-bind:class="{hChallenge: true, done: cl=='done', canComplete: cl=='canComplete', anim: player.anim, grad: player.grad}">
+		<div v-if="tmp[layer].challenges && tmp[layer].challenges[data]!== undefined && tmp[layer].challenges[data].unlocked && !(player.hideChallenges && hasChallenge(layer, [data]))" v-bind:class="{hChallenge: true, done: cl=='done', canComplete: cl=='canComplete', anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}">
 			<br><h3 v-html="tmp[layer].challenges[data].name"></h3><br><br>
-			<button v-bind:class="{ longUpg: true, can: true, [layer]: true, anim: player.anim, grad: player.grad }" v-bind:style="{'background-color': tmp[layer].color}" v-on:click="startChallenge(layer, data)">{{player[layer].activeChallenge==(data)?(canCompleteChallenge(layer, data)?"Finish":"Exit Early"):(hasChallenge(layer, data)?"Completed":"Start")}}</button><br><br>
+			<button v-bind:class="{ longUpg: true, can: true, [layer]: true, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }" v-bind:style="{'background-color': tmp[layer].color}" v-on:click="startChallenge(layer, data)">{{player[layer].activeChallenge==(data)?(canCompleteChallenge(layer, data)?"Finish":"Exit Early"):(hasChallenge(layer, data)?"Completed":"Start")}}</button><br><br>
 			<span v-html="tmp[layer].challenges[data].challengeDescription"></span><br>
 			Goal: {{format(tmp[layer].challenges[data].goal)}} {{tmp[layer].challenges[data].currencyDisplayName ? tmp[layer].challenges[data].currencyDisplayName : "points"}}<br>
 			Reward: <span v-html="tmp[layer].challenges[data].rewardDescription"></span><br>
@@ -150,10 +150,10 @@ function loadVue() {
 		props: ['layer', 'data', 'cl', 'pcl'],
 		template: `
 		<div v-if="tmp[layer].upgrades && tmp[layer].upgrades[data]!==undefined">
-			<button v-if="pseudoUnl(layer, data) && !(tmp[layer].upgrades[data].unlocked)" v-bind:class="{ [layer]: true, upg: true, pseudo: true, plocked: pcl=='locked', can: pcl=='can', anim: player.anim, grad: player.grad }" v-on:click="unlockUpg(layer, data)">
+			<button v-if="pseudoUnl(layer, data) && !(tmp[layer].upgrades[data].unlocked)" v-bind:class="{ [layer]: true, upg: true, pseudo: true, plocked: pcl=='locked', can: pcl=='can', anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }" v-on:click="unlockUpg(layer, data)">
 				<h3>Explore A New Upgrade</h3><br><span v-html="tmp[layer].upgrades[data].pseudoReq"></span>
 			</button>
-			<button v-if="tmp[layer].upgrades[data].unlocked" v-on:click="buyUpg(layer, data)" v-bind:class="{ [layer]: true, upg: true, bought: cl?(cl=='bought'):hasUpgrade(layer, data), locked: cl?(cl=='locked'):(!hasUpgrade(layer, data)&&!canAffordUpgrade(layer, data)), can: cl?(cl=='can'):(!hasUpgrade(layer, data)&&canAffordUpgrade(layer, data)), anim: player.anim, grad: player.grad}"
+			<button v-if="tmp[layer].upgrades[data].unlocked" v-on:click="buyUpg(layer, data)" v-bind:class="{ [layer]: true, upg: true, bought: cl?(cl=='bought'):hasUpgrade(layer, data), locked: cl?(cl=='locked'):(!hasUpgrade(layer, data)&&!canAffordUpgrade(layer, data)), can: cl?(cl=='can'):(!hasUpgrade(layer, data)&&canAffordUpgrade(layer, data)), anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 				v-bind:style="[((!hasUpgrade(layer, data) && canAffordUpgrade(layer, data)) ? {'background-color': tmp[layer].color} : {}), tmp[layer].upgrades[data].style]">
 				<span v-if= "tmp[layer].upgrades[data].title"><h3 v-html="tmp[layer].upgrades[data].title"></h3><br></span>
 				<span v-html="tmp[layer].upgrades[data].description"></span>
@@ -182,7 +182,7 @@ function loadVue() {
 	Vue.component('improvement', {
 		props: ['layer', 'data'],
 		template: `
-		<button v-if="tmp[layer].impr && tmp[layer].impr[data]!== undefined && tmp[layer].impr[data].unlocked" v-bind:class="{ [layer]: true, upg: true, bought: getImprovements(layer, data).gt(0), locked: getImprovements(layer, data).lte(0), anim: player.anim, grad: player.grad}"
+		<button v-if="tmp[layer].impr && tmp[layer].impr[data]!== undefined && tmp[layer].impr[data].unlocked" v-bind:class="{ [layer]: true, upg: true, bought: getImprovements(layer, data).gt(0), locked: getImprovements(layer, data).lte(0), anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 			v-bind:style="[tmp[layer].impr[data].style]">
 			<span v-if= "tmp[layer].impr[data].title"><h3 v-html="tmp[layer].impr[data].title"></h3><br></span>
 			<span v-html="tmp[layer].impr[data].description"></span>
@@ -210,7 +210,7 @@ function loadVue() {
 	Vue.component('milestone', {
 		props: ['layer', 'data', 'cl', 'shown', 'locked'],
 		template: `
-		<td v-if="tmp[layer].milestones && tmp[layer].milestones[data]!== undefined && shown" v-bind:style="[locked ? {'visibility': 'hidden'} : {}, tmp[layer].milestones[data].style]" v-bind:class="{milestone: cl=='milestone', milestoneDone: cl=='milestoneDone', anim: player.anim, grad: player.grad}">
+		<td v-if="tmp[layer].milestones && tmp[layer].milestones[data]!== undefined && shown" v-bind:style="[locked ? {'visibility': 'hidden'} : {}, tmp[layer].milestones[data].style]" v-bind:class="{milestone: cl=='milestone', milestoneDone: cl=='milestoneDone', anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}">
 			<h3 v-html="tmp[layer].milestones[data].requirementDescription"></h3><br>
 			<span v-html="tmp[layer].milestones[data].effectDescription"></span><br>
 		<span v-if="(tmp[layer].milestones[data].toggles)&&(hasMilestone(layer, data))" v-for="toggle in tmp[layer].milestones[data].toggles"><toggle :data= "toggle" :type="((toggle instanceof Array)?'normal':'multi')" v-bind:style="tmp[layer].componentStyles.toggle"></toggle>&nbsp;</span></td></tr>
@@ -228,7 +228,7 @@ function loadVue() {
 	Vue.component('prestige-button', {
 		props: ['layer', 'data'],
 		template: `
-		<button v-if="(tmp[layer].type !== 'none')" v-bind:class="{ [layer]: true, reset: true, locked: !tmp[layer].canReset, can: tmp[layer].canReset, anim: player.anim, grad: player.grad}"
+		<button v-if="(tmp[layer].type !== 'none')" v-bind:class="{ [layer]: true, reset: true, locked: !tmp[layer].canReset, can: tmp[layer].canReset, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 			v-bind:style="[tmp[layer].canReset ? {'background-color': tmp[layer].color} : {}, tmp[layer].componentStyles['prestige-button']]"
 			v-html="tmp[layer].prestigeButtonText" v-on:click="doReset(layer)">
 		</button>
@@ -278,7 +278,7 @@ function loadVue() {
 		props: ['layer', 'data', 'size'],
 		template: `
 		<div v-if="tmp[layer].buyables && tmp[layer].buyables[data]!== undefined && tmp[layer].buyables[data].unlocked" style="display: grid">
-			<button v-bind:class="{ buyable: true, can: tmp[layer].buyables[data].canAfford, locked: !tmp[layer].buyables[data].canAfford, anim: player.anim, grad: player.grad}"
+			<button v-bind:class="{ buyable: true, can: tmp[layer].buyables[data].canAfford, locked: !tmp[layer].buyables[data].canAfford, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 			v-bind:style="[tmp[layer].buyables[data].canAfford ? {'background-color': tmp[layer].color} : {}, size ? {'height': size, 'width': size} : {}, tmp[layer].componentStyles.buyable, tmp[layer].buyables[data].style]"
 			v-on:click="buyBuyable(layer, data)">
 				<span v-if= "tmp[layer].buyables[data].title"><h2 v-html="tmp[layer].buyables[data].title"></h2><br></span>
@@ -294,7 +294,7 @@ function loadVue() {
 	Vue.component('respec-button', {
 		props: ['layer', 'data'],
 		template: `
-			<button v-if="tmp[layer].buyables && tmp[layer].buyables.respec && !(tmp[layer].buyables.showRespec !== undefined && tmp[layer].buyables.showRespec == false)" v-on:click="respecBuyables(layer)" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: player.anim, grad: player.grad }">{{tmp[layer].buyables.respecText ? tmp[layer].buyables.respecText : "Respec"}}</button>
+			<button v-if="tmp[layer].buyables && tmp[layer].buyables.respec && !(tmp[layer].buyables.showRespec !== undefined && tmp[layer].buyables.showRespec == false)" v-on:click="respecBuyables(layer)" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }">{{tmp[layer].buyables.respecText ? tmp[layer].buyables.respecText : "Respec"}}</button>
 	`
 	})
 
@@ -320,7 +320,7 @@ function loadVue() {
 		template: `
 		<button 
 			v-if="tmp[layer].clickables && tmp[layer].clickables[data]!== undefined && tmp[layer].clickables[data].unlocked" 
-			v-bind:class="{ upg: true, can: tmp[layer].clickables[data].canClick, locked: !tmp[layer].clickables[data].canClick, anim: player.anim, grad: player.grad}"
+			v-bind:class="{ upg: true, can: tmp[layer].clickables[data].canClick, locked: !tmp[layer].clickables[data].canClick, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 			v-bind:style="[tmp[layer].clickables[data].canClick ? {'background-color': tmp[layer].color} : {}, size ? {'height': size, 'width': size} : {}, tmp[layer].clickables[data].style]"
 			v-on:click="clickClickable(layer, data)">
 			<span v-if= "tmp[layer].clickables[data].title"><h2 v-html="tmp[layer].clickables[data].title"></h2><br></span>
@@ -332,7 +332,7 @@ function loadVue() {
 	Vue.component('master-button', {
 		props: ['layer', 'data'],
 		template: `
-		<button v-if="tmp[layer].clickables && tmp[layer].clickables.masterButtonPress && !(tmp[layer].clickables.showMasterButton !== undefined && tmp[layer].clickables.showMasterButton == false)" v-on:click="tmp[layer].clickables.masterButtonPress()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: player.anim, grad: player.grad }">{{tmp[layer].clickables.masterButtonText ? tmp[layer].clickables.masterButtonText : "Click me!"}}</button>
+		<button v-if="tmp[layer].clickables && tmp[layer].clickables.masterButtonPress && !(tmp[layer].clickables.showMasterButton !== undefined && tmp[layer].clickables.showMasterButton == false)" v-on:click="tmp[layer].clickables.masterButtonPress()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }">{{tmp[layer].clickables.masterButtonText ? tmp[layer].clickables.masterButtonText : "Click me!"}}</button>
 	`
 	})
 
@@ -389,7 +389,7 @@ function loadVue() {
 	Vue.component('achievement', {
 		props: ['layer', 'data'],
 		template: `
-		<div v-if="tmp[layer].achievements && tmp[layer].achievements[data]!== undefined && tmp[layer].achievements[data].unlocked" v-bind:class="{ [layer]: true, achievement: true, locked: !hasAchievement(layer, data), bought: hasAchievement(layer, data), anim: player.anim, grad: player.grad}"
+		<div v-if="tmp[layer].achievements && tmp[layer].achievements[data]!== undefined && tmp[layer].achievements[data].unlocked" v-bind:class="{ [layer]: true, achievement: true, locked: !hasAchievement(layer, data), bought: hasAchievement(layer, data), anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 			v-bind:tooltip="
 				hasAchievement(layer, data) ? (tmp[layer].achievements[data].doneTooltip ? tmp[layer].achievements[data].doneTooltip : (tmp[layer].achievements[data].tooltip ? tmp[layer].achievements[data].tooltip : 'You did it!'))
 				: (tmp[layer].achievements[data].goalTooltip ? tmp[layer].achievements[data].goalTooltip : (tmp[layer].achievements[data].tooltip ? tmp[layer].achievements[data].tooltip : 'LOCKED'))
@@ -420,13 +420,13 @@ function loadVue() {
 	Vue.component('sell-one', {
 		props: ['layer', 'data'],
 		template: `
-			<button v-if="tmp[layer].buyables && tmp[layer].buyables[data].sellOne && !(tmp[layer].buyables[data].canSellOne !== undefined && tmp[layer].buyables[data].canSellOne == false)" v-on:click="tmp[layer].buyables[data].sellOne()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: player.anim, grad: player.grad }">{{tmp[layer].buyables.sellOneText ? tmp[layer].buyables.sellOneText : "Sell One"}}</button>
+			<button v-if="tmp[layer].buyables && tmp[layer].buyables[data].sellOne && !(tmp[layer].buyables[data].canSellOne !== undefined && tmp[layer].buyables[data].canSellOne == false)" v-on:click="tmp[layer].buyables[data].sellOne()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }">{{tmp[layer].buyables.sellOneText ? tmp[layer].buyables.sellOneText : "Sell One"}}</button>
 	`
 	})
 	Vue.component('sell-all', {
 		props: ['layer', 'data'],
 		template: `
-			<button v-if="tmp[layer].buyables && tmp[layer].buyables[data].sellAll && !(tmp[layer].buyables[data].canSellAll !== undefined && tmp[layer].buyables[data].canSellAll == false)" v-on:click="tmp[layer].buyables[data].sellAll()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: player.anim, grad: player.grad }">{{tmp[layer].buyables.sellAllText ? tmp[layer].buyables.sellAllText : "Sell All"}}</button>
+			<button v-if="tmp[layer].buyables && tmp[layer].buyables[data].sellAll && !(tmp[layer].buyables[data].canSellAll !== undefined && tmp[layer].buyables[data].canSellAll == false)" v-on:click="tmp[layer].buyables[data].sellAll()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }">{{tmp[layer].buyables.sellAllText ? tmp[layer].buyables.sellAllText : "Sell All"}}</button>
 	`
 	})
 

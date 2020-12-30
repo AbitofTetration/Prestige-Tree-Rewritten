@@ -3,7 +3,7 @@
 ### v1.1: Hyperium Nebulae
 - Added the "N" layer (replaces "L"), and ported the "HS" & "I" layers
 - Added the next section of achievements
-- More minor bugfixes/QoL improvements were made
+- A few more minor bugfixes/QoL improvements were made
 
 ### v1.0: The Honour Update
 - Added the "HN" layer (replaces "SP")
