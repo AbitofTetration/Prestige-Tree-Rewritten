@@ -8,23 +8,23 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("e1.25e10"),
-	// specialEndgameText: "v1.1 Beta 21 Endgame: e1.25e10 Points & 100 Phantom Souls",
+	endgame: new Decimal("eeee1000"),
+	specialEndgameText: "v1.2 Beta 1 Endgame: ???",
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.1",
-	// beta: 21,
+	num: "1.2",
+	beta: 1,
 	// patch: 1,
-	name: "Hyperium Nebulae",
+	name: "Mechanical Mastery",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
 // (The ones here are examples, all official functions are already taken care of)
-var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything", "castAllSpells"]
+var doNotCallTheseFunctionsEveryTick = ["doReset", "buy", "onPurchase", "blowUpEverything", "castAllSpells", "completeInBulk", "startMastery", "completeMastery"]
 
-var alwaysKeepTheseVariables = ["primeMiles", "auto", "autoExt", "autoBld", "autoW", "keepPosNeg", "distrAll", "spellInput", "pseudoUpgs"]
+var alwaysKeepTheseVariables = ["primeMiles", "auto", "autoExt", "autoBld", "autoW", "autoGhost", "keepPosNeg", "distrAll", "spellInput", "pseudoUpgs"]
 
 function getStartPoints(){
     return new Decimal(modInfo.initialStartPoints)

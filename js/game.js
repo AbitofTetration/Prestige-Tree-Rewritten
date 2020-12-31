@@ -95,6 +95,7 @@ function shouldNotify(layer){
 					}
 				} else if (layer=="m") {
 					if (player.majGlow=="never" || (player.m.auto && hasMilestone("hn", 2))) continue;
+					if (player.majGlow=="uncasted") if (Object.values(player.m.spellTimes).some(x => Decimal.eq(x, 0))) continue;
 				}
 				return true
 			}
@@ -336,9 +337,10 @@ function gameLoop(diff) {
 	for (x = 0; x <= maxRow; x++){
 		for (item in TREE_LAYERS[x]) {
 			let layer = TREE_LAYERS[x][item]
+			if (!player[layer].unlocked) player[layer].first += diff;
+			if (!unl(layer)) continue;
 			if (tmp[layer].passiveGeneration) generatePoints(layer, diff*tmp[layer].passiveGeneration);
 			if (layers[layer].update) layers[layer].update(diff);
-			if (!player[layer].unlocked) player[layer].first += diff;
 		}
 	}
 
@@ -353,6 +355,7 @@ function gameLoop(diff) {
 	for (x = maxRow; x >= 0; x--){
 		for (item in TREE_LAYERS[x]) {
 			let layer = TREE_LAYERS[x][item]
+			if (!unl(layer)) continue;
 			if (tmp[layer].autoPrestige && tmp[layer].canReset) doReset(layer);
 			if (layers[layer].automate) layers[layer].automate();
 		}

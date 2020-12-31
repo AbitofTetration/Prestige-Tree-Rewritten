@@ -124,7 +124,7 @@ h1, h2, h3, b, input {
 }
 
 
-.resetNotify {
+.resetNotify:not(.locked) {
 	box-shadow: var(--hqProperty2a), 0px 0px 8px #ffffff;
 	z-index: 3
 }
@@ -135,7 +135,7 @@ h1, h2, h3, b, input {
 	z-index: 4
 }
 
-.notify {
+.notify:not(.locked) {
 	transform: scale(1.05, 1.05);
 	border-color: rgba(0, 0, 0, 0.125);
 	box-shadow: var(--hqProperty2a), 0px 0px 20px #ff0000;
@@ -742,6 +742,16 @@ button > * {
 	animation: nebula 10s ease infinite;
 }
 
+.ma.grad:not(.locked):not(.bought) {
+	background: radial-gradient(circle, rgba(255,100,100,1) 0%, rgba(255,159,127,1) 50%);
+	background-size: 200%;
+	background-position: center;
+}
+
+.ma:anim:not(.locked):not(.bought) {
+	animation: mastery 4s infinite;
+}
+
 @keyframes honour {
 	0% {
 		background-position: 0% 0%;
@@ -760,5 +770,17 @@ button > * {
 	}
 	100% {
 		background-color: #430082;
+	}
+}
+
+@keyframes mastery {
+	0% {
+		background-size: 200%;
+	}
+	50% {
+		background-size: 100%;
+	}
+	100% {
+		background-size: 200%;
 	}
 }

@@ -421,7 +421,7 @@ function adjustGlow(type) {
 			data.push("never")
 			return data;
 		},
-		maj() { return ["normal", "never"] },
+		maj() { return ["normal", "uncasted", "never"] },
 	}
 	let data = glowData[type]()
 	let index = data.indexOf(player[type+"Glow"]);
@@ -505,7 +505,7 @@ function canAffordUpgrade(layer, id) {
 }
 
 function hasUpgrade(layer, id){
-	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString()))
+	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString())) && unl(layer)
 }
 
 function hasMilestone(layer, id){
@@ -513,11 +513,11 @@ function hasMilestone(layer, id){
 }
 
 function hasAchievement(layer, id){
-	return (player[layer].achievements.includes(toNumber(id)) || player[layer].achievements.includes(id.toString()))
+	return (player[layer].achievements.includes(toNumber(id)) || player[layer].achievements.includes(id.toString())) && unl(layer)
 }
 
 function hasChallenge(layer, id){
-	return (player[layer].challenges[id]>=tmp[layer].challenges[id].completionLimit)
+	return (player[layer].challenges[id]>=tmp[layer].challenges[id].completionLimit) && unl(layer)
 }
 
 function maxedChallenge(layer, id){
@@ -525,11 +525,11 @@ function maxedChallenge(layer, id){
 }
 
 function challengeCompletions(layer, id){
-	return (player[layer].challenges[id])
+	return unl(layer)?(player[layer].challenges[id]):0
 }
 
 function getBuyableAmount(layer, id){
-	return (player[layer].buyables[id])
+	return unl(layer)?(player[layer].buyables[id]):0
 }
 
 function setBuyableAmount(layer, id, amt){
@@ -565,6 +565,7 @@ function achievementEffect(layer, id){
 }
 
 function getImprovements(layer, id) {
+	if (!unl(layer)) return new Decimal(0);
 	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.activeRows*tmp[layer].impr.activeCols).plus(1).floor().max(0)):new Decimal(0);
 }
 
@@ -787,7 +788,13 @@ function nodeShown(layer) {
 	return false
 }
 
+function unl(layer) {
+	if (Array.isArray(tmp.ma.canBeMastered)) if (player.ma.selectionActive&&tmp[layer].row<6&&!tmp.ma.canBeMastered.includes(layer)) return false;
+	return player[layer].unlocked;
+}
+
 function layerunlocked(layer) {
+	if (player.ma.selectionActive&&tmp[layer].row<6&&!tmp.ma.canBeMastered.includes(layer)) return false;
 	if (tmp[layer] && tmp[layer].type == "none") return (player[layer].unlocked)
 	return LAYERS.includes(layer) && (player[layer].unlocked || (tmp[layer].baseAmount.gte(tmp[layer].requires) && tmp[layer].layerShown))
 }

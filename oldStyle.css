@@ -112,7 +112,7 @@ h1, h2, h3, b, input {
 }
 
 
-.resetNotify {
+.resetNotify:not(.locked) {
 	box-shadow: 0px 0px 8px #ffffff;
 	z-index: 3
 }
@@ -122,7 +122,7 @@ h1, h2, h3, b, input {
 	z-index: 4
 }
 
-.notify {
+.notify:not(.locked) {
 	transform: scale(1.05, 1.05);
 	border-color: rgba(0, 0, 0, 0.125);
 	box-shadow: 0px 0px 20px #ff0000;
