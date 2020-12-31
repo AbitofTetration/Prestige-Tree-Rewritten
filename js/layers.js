@@ -6322,7 +6322,7 @@ addLayer("ma", {
 				},
 				unlocked() { return player.ma.unlocked },
 				req() { return Math.floor(Math.pow(tmp.ma.amtMastered||0, 1.5)*3+2) },
-				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:player.ma.points.gte(tmp[this.layer].clickables[this.id].req)) && tmp.ma.amtMastered<this.cap },
+				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
 						if (!confirm("Are you sure you want to exit this Mastery run?")) return;

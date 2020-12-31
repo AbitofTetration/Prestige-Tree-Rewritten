@@ -9,14 +9,14 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("eeee1000"),
-	specialEndgameText: "v1.2 Beta 1 Endgame: 5 Mastery",
+	specialEndgameText: "v1.2 Beta 1 Patch 1 Endgame: 5 Mastery",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.2",
 	beta: 1,
-	// patch: 1,
+	patch: 1,
 	name: "Mechanical Mastery",
 }
 
