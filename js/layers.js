@@ -283,8 +283,8 @@ addLayer("b", {
         baseAmount() {return player.points}, // Get the current amount of baseResource
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
 		branches: ["p"],
-        exponent: 1.25, // Prestige currency exponent
-		base: 5,
+        exponent() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?0.75:1.25 }, // Prestige currency exponent
+		base() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.5:5 },
 		gainMult() { 
 			let mult = new Decimal(1);
 			if (hasUpgrade("b", 23)) mult = mult.div(upgradeEffect("b", 23));
@@ -298,7 +298,7 @@ addLayer("b", {
         ],
         layerShown(){return player.p.unlocked},
 		automate() {},
-		resetsNothing() { return hasMilestone("t", 4) },
+		resetsNothing() { return hasMilestone("t", 4)&&player.ma.current!="b" },
 		addToBase() {
 			let base = new Decimal(0);
 			if (hasUpgrade("b", 12)) base = base.plus(upgradeEffect("b", 12));
@@ -357,7 +357,7 @@ addLayer("b", {
 			first: 0,
 			auto: false,
 		}},
-		autoPrestige() { return (hasMilestone("t", 3) && player.b.auto) },
+		autoPrestige() { return (hasMilestone("t", 3) && player.b.auto)&&player.ma.current!="b" },
 		increaseUnlockOrder: ["g"],
 		milestones: {
 			0: {
@@ -377,12 +377,13 @@ addLayer("b", {
 			11: {
 				title: "BP Combo",
 				description: "Best Boosters boost Prestige Point gain.",
-				cost() { return tmp.h.costMult11b.times(3) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1438:3) },
 				effect() { 
 					let ret = player.b.best.sqrt().plus(1);
 					if (hasUpgrade("b", 32)) ret = Decimal.pow(1.125, player.b.best).times(ret);
 					if (hasUpgrade("s", 15)) ret = ret.pow(buyableEffect("s", 14).root(2.7));
 					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) ret = ret.pow(upgradeEffect("b", 14));
+					if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)) ret = ret.pow(1.5);
 					return ret;
 				},
 				unlocked() { return player.b.unlocked },
@@ -393,6 +394,7 @@ addLayer("b", {
 					let exp = new Decimal(1)
 					if (hasUpgrade("s", 15)) exp = exp.times(buyableEffect("s", 14).root(2.7));
 					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) exp = exp.times(upgradeEffect("b", 14));
+					if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)) exp = exp.times(1.5);
 					let f = exp.gt(1)?("("+base+")^"+format(exp)):base;
 					return f;
 				},
@@ -400,7 +402,7 @@ addLayer("b", {
 			12: {
 				title: "Cross-Contamination",
 				description: "Generators add to the Booster effect base.",
-				cost() { return tmp.h.costMult11b.times(7) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1250:7) },
 				effect() {
 					let ret = player.g.points.add(1).log10().sqrt().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1);
 					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) ret = ret.pow(upgradeEffect("b", 14));
@@ -419,7 +421,7 @@ addLayer("b", {
 			13: {
 				title: "PB Reversal",
 				description: "Total Prestige Points add to the Booster effect base.",
-				cost() { return tmp.h.costMult11b.times(8) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1436:8) },
 				effect() { 
 					let ret = player.p.total.add(1).log10().add(1).log10().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1) 
 					if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) ret = ret.pow(upgradeEffect("b", 14));
@@ -438,7 +440,7 @@ addLayer("b", {
 			14: {
 				title: "Meta-Combo",
 				description: "The first 3 Booster Upgrades are stronger based on your Super Boosters, and <b>BP Combo</b> directly multiplies Point gain.",
-				cost() { return tmp.h.costMult11b.times(2250) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2088:2250) },
 				pseudoUnl() { return player.i.buyables[12].gte(1)&&hasUpgrade("b", 13) },
 				pseudoReq: "Req: 30 Super Boosters.",
 				pseudoCan() { return player.sb.points.gte(30) },
@@ -451,32 +453,33 @@ addLayer("b", {
 			21: {
 				title: "Gen Z^2",
 				description: "Square the Generator Power effect.",
-				cost() { return tmp.h.costMult11b.times(9) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2000:9) },
 				unlocked() { return hasUpgrade("b", 11) && hasUpgrade("b", 12) },
 			},
 			22: {
 				title: "Up to the Fifth Floor",
 				description: "Raise the Generator Power effect ^1.2.",
-				cost() { return tmp.h.costMult11b.times(15) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2075:15) },
 				unlocked() { return hasUpgrade("b", 12) && hasUpgrade("b", 13) },
 			},
 			23: {
 				title: "Discount One",
 				description: "Boosters are cheaper based on your Points.",
-				cost() { return tmp.h.costMult11b.times(18) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2088:18) },
 				effect() { 
 					let ret = player.points.add(1).log10().add(1).pow(3.2);
 					if (player.s.unlocked) ret = ret.pow(buyableEffect("s", 14));
+					if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)) ret = ret.pow(1.5);
 					return ret;
 				},
 				unlocked() { return hasUpgrade("b", 21) || hasUpgrade("b", 22) },
 				effectDisplay() { return "/"+format(tmp.b.upgrades[23].effect) },
-				formula() { return "(log(x+1)+1)^"+(player.s.unlocked?format(buyableEffect("s", 14).times(3.2)):"3.2") },
+				formula() { return "(log(x+1)+1)^"+(player.s.unlocked?format(buyableEffect("s", 14).times(3.2).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.5:1)):"3.2") },
 			},
 			24: {
 				title: "Boost Recursion",
 				description: "Boosters multiply their own base.",
-				cost() { return tmp.h.costMult11b.times(2225) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1438:2225) },
 				pseudoUnl() { return player.i.buyables[12].gte(1)&&hasUpgrade("b", 23) },
 				pseudoReq: "Req: 2,150 Boosters without any Hexes.",
 				pseudoCan() { return player.b.points.gte(2150) && player.m.hexes.eq(0) },
@@ -490,14 +493,20 @@ addLayer("b", {
 				description: "Super Boosters boost Prestige Point gain.",
 				cost() { return tmp.h.costMult11b.times(103) },
 				unlocked() { return hasAchievement("a", 41) },
-				effect() { return Decimal.pow(1e20, player.sb.points.pow(1.5)) },
+				effect() { 
+					let exp = ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2e4:1
+					return Decimal.pow(1e20, player.sb.points.pow(1.5)).pow(exp); 
+				},
 				effectDisplay() { return format(tmp.b.upgrades[31].effect)+"x" },
-				formula: "1e20^(x^1.5)",
+				formula() { 
+					let exp = ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2e4:1
+					return "1e20^(x^1.5)"+(exp==1?"":("^"+format(exp)));
+				},
 			},
 			32: {
 				title: "Better BP Combo",
 				description() { return "<b>BP Combo</b> uses a better formula"+(tmp.nerdMode?" (sqrt(x+1) -> (1.125^x)*sqrt(x+1))":"")+"." },
-				cost() { return tmp.h.costMult11b.times(111) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1438:111) },
 				unlocked() { return hasAchievement("a", 41) },
 			},
 			33: {
@@ -505,14 +514,19 @@ addLayer("b", {
 				description: "<b>More Additions</b> is stronger based on your Super Boosters.",
 				cost() { return tmp.h.costMult11b.times(118) },
 				unlocked() { return hasAchievement("a", 41) },
-				effect() { return player.sb.points.times(player.sb.points.gte(4)?2.6:2).plus(1) },
+				effect() { return player.sb.points.times(player.sb.points.gte(4)?2.6:2).plus(1).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?3:1) },
 				effectDisplay() { return format(tmp.b.upgrades[33].effect)+"x" },
-				formula() { return "x*"+(player.sb.points.gte(4)?"2.6":"2")+"+1" },
+				formula() { 
+					let exp = ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?3:1
+					let f = "x*"+(player.sb.points.gte(4)?"2.6":"2")+"+1"
+					if (exp==1) return f;
+					else return "("+f+")^"+format(exp);
+				},
 			},
 			34: {
 				title: "Anti-Metric",
 				description: "Imperium Bricks raise <b>Prestige Boost</b> to an exponent (unaffected by softcap).",
-				cost() { return tmp.h.costMult11b.times(2275) },
+				cost() { return tmp.h.costMult11b.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2021:2275) },
 				pseudoUnl() { return player.i.buyables[12].gte(1)&&hasUpgrade("b", 33) },
 				pseudoReq: "Req: 1e15,000,000 Prestige Points while in the <b>Productionless</b> Hindrance.",
 				pseudoCan() { return player.p.points.gte("e1.5e7") && inChallenge("h", 42) },
@@ -535,8 +549,8 @@ addLayer("g", {
         baseAmount() {return player.points}, // Get the current amount of baseResource
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
 		branches: ["p"],
-        exponent: 1.25, // Prestige currency exponent
-		base: 5,
+        exponent() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1.25 }, // Prestige currency exponent
+		base() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2.5:5 },
 		gainMult() {
 			let mult = new Decimal(1);
 			if (hasUpgrade("g", 22)) mult = mult.div(upgradeEffect("g", 22));
@@ -550,7 +564,7 @@ addLayer("g", {
         ],
         layerShown(){return player.p.unlocked},
 		automate() {},
-		resetsNothing() { return hasMilestone("s", 4) },
+		resetsNothing() { return hasMilestone("s", 4)&&player.ma.current!="g" },
 		effBase() {
 			let base = new Decimal(2);
 			
@@ -595,12 +609,13 @@ addLayer("g", {
 			first: 0,
 			auto: false,
 		}},
-		autoPrestige() { return (hasMilestone("s", 3) && player.g.auto) },
+		autoPrestige() { return (hasMilestone("s", 3) && player.g.auto)&&player.ma.current!="g" },
 		powerExp() {
 			let exp = new Decimal(1/3);
 			if (hasUpgrade("b", 21)) exp = exp.times(2);
 			if (hasUpgrade("b", 22)) exp = exp.times(1.2);
 			if (hasUpgrade("q", 13)) exp = exp.times(1.25);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) exp = exp.times(1.05);
 			return exp;
 		},
 		powerEff() {
@@ -654,16 +669,16 @@ addLayer("g", {
 			11: {
 				title: "GP Combo",
 				description: "Best Generators boost Prestige Point gain.",
-				cost: new Decimal(3),
-				effect() { return player.g.best.sqrt().plus(1) },
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?380:3) },
+				effect() { return player.g.best.sqrt().plus(1).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?5e5:1) },
 				unlocked() { return player.g.unlocked },
 				effectDisplay() { return format(tmp.g.upgrades[11].effect)+"x" },
-				formula: "sqrt(x)+1",
+				formula() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"(x+1)^250,000":"sqrt(x)+1" },
 			},
 			12: {
 				title: "I Need More!",
 				description: "Boosters add to the Generator base.",
-				cost: new Decimal(7),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?375:7) },
 				effect() { 
 					let ret = player.b.points.add(1).log10().sqrt().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1);
 					if (hasUpgrade("s", 24)) ret = ret.times(upgradeEffect("s", 24));
@@ -680,7 +695,7 @@ addLayer("g", {
 			13: {
 				title: "I Need More II",
 				description: "Best Prestige Points add to the Generator base.",
-				cost: new Decimal(8),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?381:8) },
 				effect() { 
 					let ret = player.p.best.add(1).log10().add(1).log10().div(3).times(hasUpgrade("e", 14)?upgradeEffect("e", 14):1);
 					if (hasUpgrade("s", 24)) ret = ret.times(upgradeEffect("s", 24));
@@ -697,13 +712,13 @@ addLayer("g", {
 			14: {
 				title: "Boost the Boost",
 				description() { return "<b>Prestige Boost</b> is raised to the power of 1.5." },
-				cost: new Decimal(13),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?378:13) },
 				unlocked() { return player.g.best.gte(10) },
 			},
 			15: {
 				title: "Outer Synergy",
 				description: "<b>Self-Synergy</b> is stronger based on your Generators.",
-				cost: new Decimal(15),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?382:15) },
 				effect() { 
 					let eff = player.g.points.sqrt().add(1);
 					if (eff.gte(400)) eff = eff.cbrt().times(Math.pow(400, 2/3))
@@ -716,27 +731,31 @@ addLayer("g", {
 			21: {
 				title: "I Need More III",
 				description: "Generator Power boost its own generation.",
-				cost: new Decimal(1e10),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"1e314":1e10) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
 				effect() { 
 					let ret = player.g.power.add(1).log10().add(1);
 					if (hasUpgrade("s", 24)) ret = ret.pow(upgradeEffect("s", 24));
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) ret = ret.pow(1e4)
 					return ret;
 				},
 				unlocked() { return hasUpgrade("g", 15) },
 				effectDisplay() { return format(tmp.g.upgrades[21].effect)+"x" },
 				formula() { 
+					let exp = new Decimal(1);
+					if (hasUpgrade("s", 24)) exp = exp.times(upgradeEffect("s", 24));
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) exp = exp.times(1e4);
 					let f = "log(x+1)+1";
-					if (hasUpgrade("s", 24)) f = "("+f+")^"+format(upgradeEffect("s", 24));
+					if (exp.gt(1)) f = "("+f+")^"+format(exp);
 					return f;
 				},
 			},
 			22: {
 				title: "Discount Two",
 				description: "Generators are cheaper based on your Prestige Points.",
-				cost: new Decimal(1e11),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"5e47141":1e11) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -752,7 +771,7 @@ addLayer("g", {
 			23: {
 				title: "Double Reversal",
 				description: "<b>Reverse Prestige Boost</b> is stronger based on your Boosters.",
-				cost: new Decimal(1e12),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"2e47525":1e12) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -764,13 +783,13 @@ addLayer("g", {
 			24: {
 				title: "Boost the Boost Again",
 				description: "<b>Prestige Boost</b> is raised to the power of 1.467.",
-				cost: new Decimal(20),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?690:20) },
 				unlocked() { return hasUpgrade("g", 14)&&(hasUpgrade("g", 21)||hasUpgrade("g", 22)) },
 			},
 			25: {
 				title: "I Need More IV",
 				description: "Prestige Points boost Generator Power gain.",
-				cost: new Decimal(1e14),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"1e47526":1e14) },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -790,7 +809,7 @@ addLayer("g", {
 			31: {
 				title: "Absurd Generation",
 				description: "Generator Power multiplies the Super Generator base.",
-				cost: new Decimal("e4.4e7"),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"1e47545":"e4.4e7") },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -805,7 +824,7 @@ addLayer("g", {
 			32: {
 				title: "Primal Instincts",
 				description: "The <b>Quaternary Space Building</b> also affects <b>Discount Two</b> at a reduced rate.",
-				cost: new Decimal(2200),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1260:2200) },
 				pseudoUnl() { return player.i.buyables[12].gte(2)&&player.g.upgrades.length>=10 },
 				pseudoReq: "Req: e47,500,000 Generator Power without any Boosters.",
 				pseudoCan() { return player.g.power.gte("e4.75e7") && player.b.best.eq(0) },
@@ -818,7 +837,7 @@ addLayer("g", {
 			33: {
 				title: "Dust Production",
 				description: "Generators boost Dust gain.",
-				cost: new Decimal("e5.6e7"),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"1e48000":"e5.6e7") },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -833,7 +852,7 @@ addLayer("g", {
 			34: {
 				title: "Boost the Boost Again^2",
 				description: "<b>Prestige Boost</b> is raised to the power of 1.433.",
-				cost: new Decimal(2200),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1257:2200) },
 				pseudoUnl() { return player.i.buyables[12].gte(2)&&player.g.upgrades.length>=10 },
 				pseudoReq: "Req: 36 Achievements.",
 				pseudoCan() { return player.a.achievements.length>=36 },
@@ -842,7 +861,7 @@ addLayer("g", {
 			35: {
 				title: "Into The Future",
 				description: "Nebula Energy, Honour, and Hyperspace Energy gains are boosted by Generator Power.",
-				cost: new Decimal("e4.4e7"),
+				cost() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"1e47540":"e4.4e7") },
 				currencyDisplayName: "generator power",
                 currencyInternalName: "power",
                 currencyLayer: "g",
@@ -939,7 +958,7 @@ addLayer("t", {
 			let eff = player.t.energy.add(1).pow(1.2);
 			if (hasUpgrade("t", 14)) eff = eff.pow(1.3);
 			if (hasUpgrade("q", 24)) eff = eff.pow(7.5);
-			return eff;
+			return softcap("timeEnEff", eff);
 		},
 		enEff2() {
 			if (!unl(this.layer)) return new Decimal(0);
@@ -2414,6 +2433,8 @@ addLayer("sb", {
 			if (hasUpgrade("e", 31) && player.i.buyables[12].gte(3)) base = base.plus(buyableEffect("e", 11).second);
 			
 			if (player.o.unlocked) base = base.times(buyableEffect("o", 12));
+			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes('b'):false) && hasUpgrade("b", 12)) base = base.times(upgradeEffect("b", 12).max(1));
+			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes('b'):false) && hasUpgrade("b", 13)) base = base.times(upgradeEffect("b", 13).max(1));
 			return base.times(tmp.n.dustEffs.blue);
 		},
 		effect() {
@@ -6274,13 +6295,28 @@ addLayer("ma", {
 		autoPrestige() { return false },
         layerShown(){return player.ps.unlocked && player.i.unlocked},
         branches: ["hn", "hs", ["ps", 2]],
-		tabFormat: ["main-display",
-			"prestige-button",
-			"resource-display",
-			"blank", "milestones",
-			"blank", "blank",
-			"clickables",
-		],
+		tabFormat: {
+			Mastery: {
+				content: ["main-display",
+					"prestige-button",
+					"resource-display",
+					"blank", "milestones",
+					"blank", "blank",
+					"clickables",
+				],
+			}, 
+			"Mastery Rewards": {
+				buttonStyle() { return {'background-color': '#ff9f7f', 'color': 'black'} },
+				content: ["blank", "blank", "blank", ["raw-html", function() { return tmp.ma.rewardDesc }]],
+			},
+		},
+		rewardDesc() {
+			let desc = "";
+			if (player.ma.mastered.includes("p")) desc += "<h2>Prestige</h2><br><br><ul><li>Base Prestige gain exponent is better (0.5 -> 0.75)</li><li><b>Prestige Boost</b> is raised ^1.1 (after softcaps)</li><li><b>Self Synergy</b> is raised ^75</li><li><b>More Prestige</b> is much stronger (+80% -> +1e52%)</li><li><b>Upgrade Power</b> is raised ^40</li><li><b>Reverse Prestige Boost</b> is raised ^1.5</li></ul><br><br>";
+			if (player.ma.mastered.includes("b")) desc += "<h2>Boosters</h2><br><br><ul><li>Booster cost base is reduced (5 -> 1.5)</li><li>Base Booster cost exponent is reduced (1.25 -> 0.75)</li><li><b>BP Combo</b> & <b>Discount One</b> are raised ^1.5</li><li><b>Cross Contamination</b> & <b>PB Reversal</b> also multiply the SB base</li><li><b>Worse BP Combo</b> is raised ^20,000</li><li><b>Even More Additions</b> is cubed</li></ul><br><br>";
+			if (player.ma.mastered.includes("g")) desc += "<h2>Generators</h2><br><br><ul><li>Generator cost base is reduced (5 -> 2.5)</li><li>Base Generator cost exponent is reduced (1.25 -> 1.1)</li><li>Generator Power effect is raised ^1.05</li><li><b>GP Combo</b> is raised ^500,000</li><li><b>I Need More III</b> is raised ^10,000</li></ul><br><br>"
+			return desc;
+		},
 		milestones: {
 			0: {
 				requirementDescription: "1 Mastery",
@@ -6315,13 +6351,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 1,
+				cap: 3,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
 					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return Math.floor(Math.pow(tmp.ma.amtMastered||0, 1.5)*3+2) },
+				req() { return [2,5,7,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6346,10 +6382,12 @@ addLayer("ma", {
 		canBeMastered() {
 			if (!player.ma.selectionActive) return [];
 			if (player.ma.mastered.length==0) return ["p"];
-			let rows = player.ma.mastered.map(x => tmp[x].row);
-			let furthestRow = Math.max(...rows)+((player.ma.current !== null)?0:1);
-			let m = Object.keys(layers).filter(x => tmp[x].row<=furthestRow);
+			let rows = player.ma.mastered.map(x => tmp[x].row)
+			let realRows = rows.filter(y => Object.keys(ROW_LAYERS[y]).every(z => player.ma.mastered.includes(z)));
+			let furthestRow = Math.max(...realRows)+((player.ma.current !== null)?0:1);
+			let m = Object.keys(layers).filter(x => (tmp[x].row<=furthestRow)||player.ma.mastered.includes(x));
 			if (player.ma.current !== null) m.push(player.ma.current);
+			
 			return m;
 		},
 		startMastery(layer) {
@@ -6370,6 +6408,8 @@ addLayer("ma", {
 		},
 		masteryGoal: {
 			p: new Decimal("1e11488"),
+			b: new Decimal(2088),
+			g: new Decimal(1257),
 		},
 })
 

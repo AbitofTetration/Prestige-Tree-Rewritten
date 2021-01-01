@@ -23,6 +23,14 @@ const SOFTCAPS = {
 		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
 		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+(this.mag().eq(2)?"2nd":(format(this.mag())+"th"))+" root" },
 	},
+	timeEnEff: {
+		title: "First Time Energy Effect",
+		type: "expRoot",
+		start() { return new Decimal(player.ma.mastered.includes("b")?"e2.75e9":"e2.5e9") },
+		mag: new Decimal(5),
+		display() { return player.t.unlocked && tmp.t.enEff.gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent brought to the fifth root" },
+	},
 	enh1: {
 		title: "First Enhancer Effect",
 		type: "expRoot",
