@@ -26,10 +26,18 @@ const SOFTCAPS = {
 	timeEnEff: {
 		title: "First Time Energy Effect",
 		type: "expRoot",
-		start() { return new Decimal(player.ma.mastered.includes("b")?"e2.75e9":"e2.5e9") },
+		start() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("t"):false)?new Decimal("e3.1e9"):(new Decimal(player.ma.mastered.includes("b")?(player.ma.mastered.includes("g")?"e2.838e9":"e2.75e9"):"e2.5e9")) },
 		mag: new Decimal(5),
 		display() { return player.t.unlocked && tmp.t.enEff.gte(this.start()) },
 		info() { return "Starts at "+format(this.start())+"x, exponent brought to the fifth root" },
+	},
+	epGain: {
+		title: "Enhance Point Gain",
+		type: "expRoot",
+		start: new Decimal("e1.8e9"),
+		mag: new Decimal(3),
+		display() { return player.e.unlocked && new Decimal(tmp.e.resetGain||0).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+", exponent cube rooted" },
 	},
 	enh1: {
 		title: "First Enhancer Effect",

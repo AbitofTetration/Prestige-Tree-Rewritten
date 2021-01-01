@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("eeee1000"),
-	specialEndgameText: "v1.2 Beta 2 Endgame: e6.75e10 Points & 7 Mastery",
+	specialEndgameText: "v1.2 Beta 3 Endgame: e2.75e11 Points & 10 Mastery",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.2",
-	beta: 2,
+	beta: 3,
 	// patch: 1,
 	name: "Mechanical Mastery",
 }
@@ -45,6 +45,7 @@ function getPointGen() {
 	if (hasUpgrade("p", 13)) gain = gain.times(upgradeEffect("p", 13));
 	if (hasUpgrade("p", 22)) gain = gain.times(upgradeEffect("p", 22));
 	if (hasUpgrade("b", 14) && player.i.buyables[12].gte(1)) gain = gain.times(upgradeEffect("b", 11))
+	if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("e"):false) && hasUpgrade("e", 12)) gain = gain.times(upgradeEffect("e", 12))
 	if (hasAchievement("a", 21)) gain = gain.times(1.1);
 	if (hasAchievement("a", 31)) gain = gain.times(1.5);
 	if (inChallenge("h", 22)) return gain.times(player.s.unlocked?buyableEffect("s", 11):1).root(inChallenge("h", 31)?tmp.h.pointRoot31:1);
@@ -60,6 +61,12 @@ function getPointGen() {
 	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt("e1e6")?1.1:1.01);
 	if (hasUpgrade("hn", 31)) gain = gain.pow(1.05);
 	return gain
+}
+
+function getRow1to6Speed() {
+	let speed = new Decimal(1);
+	if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("t"):false) speed = speed.times(tmp.t.effect2)
+	return speed;
 }
 
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values

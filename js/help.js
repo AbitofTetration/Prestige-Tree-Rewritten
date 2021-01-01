@@ -55,4 +55,10 @@ let help_data = {
 		text: "WIP",
 		unlocked() { return player.i.unlocked },
 	},
+	ma: {
+		id: "ma",
+		title: "Mastery",
+		text: "WIP",
+		unlocked() { return player.ma.unlocked },
+	},
 }

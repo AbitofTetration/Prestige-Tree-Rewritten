@@ -23,6 +23,7 @@ function getResetGain(layer, useType = null) {
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return new Decimal(0)
 		let gain = tmp[layer].baseAmount.div(tmp[layer].requires).pow(tmp[layer].exponent).times(tmp[layer].gainMult).pow(tmp[layer].gainExp)
 		gain = softcap("normal_layers", gain)
+		if (layer=="e") gain = softcap("epGain", gain);
 		return gain.floor().max(0);
 	} else if (type=="custom"){
 		return layers[layer].getResetGain()
@@ -339,8 +340,9 @@ function gameLoop(diff) {
 			let layer = TREE_LAYERS[x][item]
 			if (!player[layer].unlocked) player[layer].first += diff;
 			if (!unl(layer)) continue;
-			if (tmp[layer].passiveGeneration) generatePoints(layer, diff*tmp[layer].passiveGeneration);
-			if (layers[layer].update) layers[layer].update(diff);
+			let speed = (x<6)?tmp.row1to6spd:new Decimal(1)
+			if (tmp[layer].passiveGeneration) generatePoints(layer, speed.times(diff*tmp[layer].passiveGeneration));
+			if (layers[layer].update) layers[layer].update(speed.times(diff));
 		}
 	}
 

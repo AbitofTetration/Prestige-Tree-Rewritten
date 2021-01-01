@@ -19,6 +19,7 @@ function setupTemp() {
 	tmp.helpData = {};
 	tmp.nerdMode = false
 	tmp.pointGen = {}
+	tmp.row1to6spd = new Decimal(1)
 	tmp.displayThings = []
 
 	setupTempData(layers, tmp)
@@ -76,6 +77,7 @@ function updateTemp() {
 	}
 
 	tmp.pointGen = getPointGen()
+	tmp.row1to6spd = getRow1to6Speed()
 	tmp.displayThings = []
 	for (thing in displayThings){
 		let text = displayThings[thing]
