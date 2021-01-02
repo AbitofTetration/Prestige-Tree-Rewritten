@@ -253,6 +253,14 @@ const SOFTCAPS = {
 		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
 	},
+	hsBuilds: {
+		title: "Hyper Buildings",
+		type: "root",
+		start: new Decimal(3),
+		mag: new Decimal(5),
+		display() { return player.hs.unlocked && tmp.hs.buildLimit.gt(this.start) },
+		info() { return "Starts at Level "+format(this.start.plus(1))+", brought to the fifth root" },
+	},
 }
 
 const STATIC_SCALE_DATA = [

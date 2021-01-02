@@ -144,6 +144,9 @@
 							<td><button class="opt" onclick="toggleOpt('hideChallenges')">Completed Challenges: {{ player.hideChallenges?"HIDDEN":"SHOWN" }}</button></td>
 							<td><button v-if="hasAchievement('a', 21)" class="opt" onclick="toggleOpt('scShown')">Softcap Node: {{player.scShown?"SHOWN":"HIDDEN"}}</button></td>
 						</tr>
+						<tr>
+							<td><button v-if="player.ma.unlocked" class="opt" onclick="toggleOpt('hideStars')">Mastery Stars: {{ player.hideStars?"HIDDEN":"SHOWN" }}</button></td>
+						</tr>
 					</table>
 				</div><div v-if="player.optTab=='notifyOpt'">
 					<table>

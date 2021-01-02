@@ -115,6 +115,7 @@ function startPlayerBase() {
 		majGlow: "normal",
 		scShown: true,
 		oldStyle: false,
+		hideStars: false,
 		showStory: true,
 		points: modInfo.initialStartPoints,
 		subtabs: {},

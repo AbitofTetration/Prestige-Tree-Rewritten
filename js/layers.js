@@ -334,7 +334,7 @@ addLayer("b", {
 		},
 		effect() {
 			if (!unl(this.layer)) return new Decimal(1);
-			return Decimal.pow(tmp.b.effectBase, player.b.points).max(0).times(hasUpgrade("p", 43)?tmp.q.enEff:1);
+			return Decimal.pow(tmp.b.effectBase, player.b.points.plus(tmp.sb.spectralTotal)).max(0).times(hasUpgrade("p", 43)?tmp.q.enEff:1);
 		},
 		effectDescription() {
 			return "which are boosting Point generation by "+format(tmp.b.effect)+"x"+(tmp.nerdMode?("\n ("+format(tmp.b.effectBase)+"x each)"):"")
@@ -348,6 +348,10 @@ addLayer("b", {
 			if (hasMilestone("t", 2) || hasAchievement("a", 64)) keep.push("upgrades")
 			if (hasMilestone("e", 2) && resettingLayer=="e") keep.push("upgrades")
 			if (layers[resettingLayer].row > this.row) layerDataReset("b", keep)
+		},
+		extraAmtDisplay() {
+			if (tmp.sb.spectralTotal.eq(0)) return "";
+			return "<h3 style='color: #8882ba; text-shadow: #7f78c4 0px 0px 10px;'> + "+formatWhole(tmp.sb.spectralTotal)+"</h3>"
 		},
 		startData() { return {
 			unlocked: false,
@@ -586,7 +590,7 @@ addLayer("g", {
 		},
 		effect() {
 			if (!unl(this.layer)) return new Decimal(0);
-			let eff = Decimal.pow(this.effBase(), player.g.points).sub(1).max(0);
+			let eff = Decimal.pow(this.effBase(), player.g.points.plus(tmp.sg.spectralTotal)).sub(1).max(0);
 			if (hasUpgrade("g", 21)) eff = eff.times(upgradeEffect("g", 21));
 			if (hasUpgrade("g", 25)) eff = eff.times(upgradeEffect("g", 25));
 			if (hasUpgrade("t", 15)) eff = eff.times(tmp.t.enEff);
@@ -597,6 +601,10 @@ addLayer("g", {
 		},
 		effectDescription() {
 			return "which are generating "+format(tmp.g.effect)+" Generator Power/sec"+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"")
+		},
+		extraAmtDisplay() {
+			if (tmp.sg.spectralTotal.eq(0)) return "";
+			return "<h3 style='color: #84b88a; text-shadow: #78c48f 0px 0px 10px;'> + "+formatWhole(tmp.sg.spectralTotal)+"</h3>"
 		},
 		update(diff) {
 			if (player.g.unlocked) player.g.power = player.g.power.plus(tmp.g.effect.times(diff));
@@ -2438,14 +2446,15 @@ addLayer("sb", {
 		roundUpCost: true,
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
 		branches: ["b"],
-        exponent: 1.25, // Prestige currency exponent
-		base: 1.05,
+        exponent() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.075:1.25 }, // Prestige currency exponent
+		base() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.025:1.05 },
 		gainMult() { 
 			let mult = new Decimal(1);
 			if (hasUpgrade("ss", 21)) mult = mult.div(1.2);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) mult = mult.div(4/3);
 			return mult;
 		},
-		autoPrestige() { return player.sb.auto && hasMilestone("q", 4) },
+		autoPrestige() { return player.sb.auto && hasMilestone("q", 4) && player.ma.current!="sb" },
 		canBuyMax() { return hasMilestone("q", 7) },
         row: 2, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
@@ -2453,7 +2462,7 @@ addLayer("sb", {
         ],
         layerShown(){return player.t.unlocked&&player.e.unlocked&&player.s.unlocked},
 		automate() {},
-		resetsNothing() { return hasMilestone("q", 5) },
+		resetsNothing() { return hasMilestone("q", 5)&&player.ma.current!="sb" },
 		effectBase() {
 			let base = new Decimal(5);
 			if (hasChallenge("h", 12)) base = base.plus(.25);
@@ -2462,7 +2471,8 @@ addLayer("sb", {
 			if (player.o.unlocked) base = base.times(buyableEffect("o", 12));
 			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes('b'):false) && hasUpgrade("b", 12)) base = base.times(upgradeEffect("b", 12).max(1));
 			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes('b'):false) && hasUpgrade("b", 13)) base = base.times(upgradeEffect("b", 13).max(1));
-			return base.times(tmp.n.dustEffs.blue);
+			base = base.times(tmp.n.dustEffs.blue);
+			return base
 		},
 		effect() {
 			if (!unl(this.layer)) return new Decimal(1);
@@ -2475,6 +2485,18 @@ addLayer("sb", {
 			let keep = []
             if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
+		spectralEach() {
+			if (!((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)) return new Decimal(0);
+			return player.sb.points;
+		},
+		spectralTotal() {
+			return tmp.sb.spectralEach.times(player.sb.points);
+		},
+		tabFormat: ["main-display",
+			"prestige-button",
+			"blank",
+			["display-text", function() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("sb"):false)?("Your Super Boosters are providing you with <h3 style='color: #8882ba; text-shadow: #7f78c4 0px 0px 10px;'>"+formatWhole(tmp.sb.spectralTotal)+"</h3> Spectral Boosters"+(tmp.nerdMode?(" ("+formatWhole(tmp.sb.spectralEach)+" per SB)"):"")+", which contribute to the Booster effect but not to any Booster-related upgrade effects."):"" }],
+		],
 		startData() { return {
 			unlocked: false,
 			points: new Decimal(0),
@@ -2496,16 +2518,18 @@ addLayer("sg", {
 		roundUpCost: true,
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
 		branches: ["g"],
-        exponent: 1.25, // Prestige currency exponent
-		base: 1.05,
+        exponent() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.225:1.25 }, // Prestige currency exponent
+		base() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.04:1.05 },
 		gainMult() { 
 			let mult = new Decimal(1);
 			if (hasUpgrade("ss", 21)) mult = mult.div(1.2);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) mult = mult.div(1.1);
 			return mult;
 		},
-		autoPrestige() { return player.sg.auto && hasMilestone("q", 6) },
+		autoPrestige() { return player.sg.auto && hasMilestone("q", 6) && player.ma.current!="sg" },
 		update(diff) {
 			player.sg.power = player.sg.power.plus(tmp.sg.effect.times(diff));
+			player.sg.time = player.sg.time.plus(diff);
 		},
 		canBuyMax() { return hasMilestone("q", 7) },
         row: 2, // Row the layer is in on the tree (0 is the first row)
@@ -2513,7 +2537,7 @@ addLayer("sg", {
             {key: "G", description: "Press Shift+G to perform a super generator reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
         ],
 		layerShown(){return (hasUpgrade("q", 33)||player.ma.selectionActive)&&player.q.unlocked},
-		resetsNothing() { return hasMilestone("q", 6) },
+		resetsNothing() { return hasMilestone("q", 6) && player.ma.current!="sg" },
 		effectBase() {
 			let base = new Decimal(5);
 			if (hasUpgrade("ss", 32)) base = base.plus(upgradeEffect("ss", 32));
@@ -2536,18 +2560,26 @@ addLayer("sg", {
 		enEff() {
 			if (!unl(this.layer)) return new Decimal(1);
 			let eff = player.sg.power.plus(1).sqrt();
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("sg"):false) eff = eff.pow(2);
 			return eff;
 		},
 		doReset(resettingLayer){ 
 			let keep = []
             if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
+		spectralTotal() {
+			if (!((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("sg"):false)) return new Decimal(0);
+			return player.sg.time.plus(1).log10().times(player.sg.points.pow(2)).pow(.95).times(1.2).floor();
+		},
 		tabFormat: ["main-display",
 			"prestige-button",
 			"blank",
 			["display-text",
 				function() {return 'You have ' + format(player.sg.power) + ' Super Generator Power, which multiplies the Generator base by '+format(tmp.sg.enEff)+'x'+(tmp.nerdMode?(" (sqrt(x+1))"):"")},
-					{}]],
+					{}],
+			"blank",
+			["display-text", function() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("sg"):false)?("Your Super Generators are providing you with <h3 style='color: #84b88a; text-shadow: #78c48f 0px 0px 10px;'>"+formatWhole(tmp.sg.spectralTotal)+"</h3> Spectral Generators"+(tmp.nerdMode?(" (((log(timeSinceRow4Reset+1)*(SG^2))^0.95)*1.2)"):"")+", which contribute to the Generator effect but not to any Generator-related upgrade effects."):"" }],
+		],
 		startData() { return {
 			unlocked: false,
 			points: new Decimal(0),
@@ -2555,6 +2587,7 @@ addLayer("sg", {
 			power: new Decimal(0),
 			first: 0,
 			auto: false,
+			time: new Decimal(0),
 		}},
 })
 
@@ -4903,6 +4936,7 @@ addLayer("hn", {
 				let layer = vars[i];
 				let start = tmp.hn.req[layer];
 				let exp = tmp.hn.exp[layer];
+				if (i>0) txt += ", "
 				txt += layer.toUpperCase()+": (x / "+format(start)+")^"+format(exp)
 			}
 			return txt;
@@ -5828,7 +5862,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).times(5e3).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).times(5e3).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -5857,7 +5891,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).times(40).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).times(40).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -5886,7 +5920,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).pow(0.8).times(800).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).pow(0.8).times(800).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -5915,7 +5949,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).pow(0.8).times(5e3).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).pow(0.8).times(5e3).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -5944,7 +5978,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).pow(0.75).times(0.25).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).pow(0.75).times(0.25).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -5973,7 +6007,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).pow(1.1).div(1.2).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).pow(1.1).div(1.2).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -6002,7 +6036,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).div(5).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).div(5).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -6031,7 +6065,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).div(1.15).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).div(1.15).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -6060,7 +6094,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).div(5).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).div(5).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -6089,7 +6123,7 @@ addLayer("hs", {
 					return player.hs.unlocked && player[this.layer].buyables[this.id].lt(player.hs.buildLim) && layers.hs.hyperspace().gte(1);
 				},
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.hs.buildingPower).sqrt().div(1.5).plus(1);
+					return softcap("hsBuilds", player[this.layer].buyables[this.id]).times(tmp.hs.buildingPower).sqrt().div(1.5).plus(1);
 				},
                 buy() { 
 					player.hs.spentHS = player.hs.spentHS.plus(1);
@@ -6345,6 +6379,8 @@ addLayer("ma", {
 			if (player.ma.mastered.includes("t")) desc += "<h2>Time</h2><br><br><ul><li>Time cost base is reduced (1e15 -> 10)</li><li>Base Time cost exponent is reduced (1.85 -> 1.4)</li><li>Time Capsules have a new effect</li><li>Anything that multiplies the Time Energy limit base now multiplies the Booster & Generator bases</li><li>The first Time Energy effect softcaps later (e3.1e9)</li><li>The Extra Time Capsule cost is raised ^0.9</li><li><b>Pseudo-Boost</b> & <b>Basic</b> also multiply the Time Energy gain base, and are both cubed</li><li><b>Enhanced Time</b> is raised to the power of 1.1</li></ul><br><br>";
 			if (player.ma.mastered.includes("e")) desc += "<h2>Enhance</h2><br><br><ul><li>Enhance cost exponent is increased (0.02 -> 0.025)</li><li>The second Enhancer effect is raised to the power of 100</li><li><b>Enhanced Prestige</b> also affects Point gain, and it is raised ^1.5</li><li><b>Enter the E-Space</b> is 250% stronger</li><li><b>Monstrous Growth</b>'s base is much better (1.1 -> 1e2,000)</li><li><b>To the Next Level</b> is cubed</li></ul><br><br>";
 			if (player.ma.mastered.includes("s")) desc += "<h2>Space</h2><br><br><ul><li>Space cost base is reduced (1e10 -> 10)</li><li>Base Space cost exponent is reduced (1.85 -> 1.4)</li><li>Space Building Power is divided by 3.85, but Space Buildings cost scale 5x slower</li></ul><br><br>";
+			if (player.ma.mastered.includes("sb")) desc += "<h2>Super Boosters</h2><br><br><ul><li>Super Booster cost base is reduced (1.05 -> 1.025)</li><li>Base Super Booster cost exponent is reduced (1.25 -> 1.075)</li><li>The Super Booster cost is divided by 1.333</li><li>Super Boosters provide Spectral Boosters</li></ul><br><br>";
+			if (player.ma.mastered.includes("sg")) desc += "<h2>Super Generators</h2><br><br><ul><li>Super Generator cost base is reduced (1.05 -> 1.04)</li><li>Base Super Booster cost exponent is reduced (1.25 -> 1.225)</li><li>The Super Generator cost is divided by 1.1</li><li>The Super Generator Power effect is squared</li><li>Super Generators give Spectral Generators over time</li></ul><br><br>";
 			return desc;
 		},
 		milestones: {
@@ -6381,13 +6417,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 6,
+				cap: 8,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
 					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return [2,5,7,8,9,9,(1e300)][tmp.ma.amtMastered||0] },
+				req() { return [2,5,7,8,9,9,10,10,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6439,6 +6475,7 @@ addLayer("ma", {
 		specialReqs: {
 			sb: ["t","e","s"],
 			sg: ["t","e","s"],
+			h: ["q"],
 			o: ["q","h"],
 			ss: ["q","h"],
 			ps: ["m","ba"],
@@ -6453,6 +6490,8 @@ addLayer("ma", {
 			t: new Decimal(814),
 			e: new Decimal("e3469000"),
 			s: new Decimal(817),
+			sb: new Decimal(36),
+			sg: new Decimal(20),
 		},
 })
 
@@ -6673,6 +6712,11 @@ addLayer("a", {
 				name: "Realm of Creation",
 				done() { return player.ma.unlocked },
 				tooltip: 'Perform a Row 7 reset. Reward: Keep Imperium Building II on all resets, you can complete "Timeless" and "Option D" in bulk, and those challenges do not get more lethal with more completions.',
+			},
+			112: {
+				name: "True Mastery",
+				done() { return player.ma.points.gte(10) },
+				tooltip: "Reach 10 Mastery.",
 			},
         },
 		tabFormat: [

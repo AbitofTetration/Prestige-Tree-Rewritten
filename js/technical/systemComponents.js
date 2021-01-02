@@ -69,7 +69,7 @@ var systemComponents = {
 			v-bind:style="[layerunlocked(layer) ? {
 				'background-color': tmp[layer].color,
 			} : {}, tmp[layer].nodeStyle]">
-			{{abb}}
+			<stars :layer='layer'></stars>{{abb}}
 		</button>
 		`
 	},

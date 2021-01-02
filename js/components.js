@@ -60,9 +60,9 @@ function loadVue() {
 		<div class="upgTable instant">
 			<div class="upgCol">
 				<div v-for="item in data">
-					<div v-if="!Array.isArray(item)" v-bind:is="item" :layer= "layer" v-bind:style="tmp[layer].componentStyles[item]"></div>
-					<div v-else-if="item.length==3" v-bind:style="[tmp[layer].componentStyles[item[0]], (item[2] ? item[2] : {})]" v-bind:is="item[0]" :layer= "layer" :data= "item[1]"></div>
-					<div v-else-if="item.length==2" v-bind:is="item[0]" :layer= "layer" :data= "item[1]" v-bind:style="tmp[layer].componentStyles[item[0]]"></div>
+					<div v-if="!Array.isArray(item)" v-bind:is="item" :layer= "layer" v-bind:style="(item=='prestige-button')?{}:tmp[layer].componentStyles[item]"></div>
+					<div v-else-if="item.length==3" v-bind:style="[(item[0]=='prestige-button')?{}:tmp[layer].componentStyles[item[0]], (item[2] ? item[2] : {})]" v-bind:is="item[0]" :layer= "layer" :data= "item[1]"></div>
+					<div v-else-if="item.length==2" v-bind:is="item[0]" :layer= "layer" :data= "item[1]" v-bind:style="(item[0]=='prestige-button')?{}:tmp[layer].componentStyles[item[0]]"></div>
 				</div>
 			</div>
 		</div>
@@ -245,7 +245,7 @@ function loadVue() {
 	Vue.component('main-display', {
 		props: ['layer'],
 		template: `
-		<div v-if="!!player[layer].points"><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': '0px 0px 10px' + tmp[layer].color}">{{formatWhole(player[layer].points)}}</h2> <h3 v-if="tmp.ma.mastered.includes(layer)" v-bind:style="{'color': tmp.ma.color, 'text-shadow': '0px 0px 10px', 'font-weight': 'bold'}">mastered</h3> {{tmp[layer].resource}}<span v-if="tmp[layer].effectDescription">, {{tmp[layer].effectDescription}}</span><br><br></span>
+		<div v-if="!!player[layer].points"><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': '0px 0px 10px' + tmp[layer].color}">{{formatWhole(player[layer].points)}}</h2><span v-if="tmp[layer].extraAmtDisplay"><span v-html="tmp[layer].extraAmtDisplay"></span></span> <h3 v-if="tmp.ma.mastered.includes(layer)" v-bind:style="{'color': tmp.ma.color, 'text-shadow': '0px 0px 10px', 'font-weight': 'bold'}">mastered</h3> {{tmp[layer].resource}}<span v-if="tmp[layer].effectDescription">, {{tmp[layer].effectDescription}}</span><br><br></span>
 		`
 	})
 
@@ -404,6 +404,16 @@ function loadVue() {
 			<span v-if= "tmp[layer].achievements[data].name"><br><h3 v-html="tmp[layer].achievements[data].name"></h3><br></span>
 		</div>
 		`
+	})
+	
+	Vue.component('stars', {
+		props: ['layer'],
+		template: `<div v-if='!player.hideStars'><div v-if='player.ma.mastered.includes(layer)' class='star' style='position: absolute; left: -10px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; left: 13px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; left: 36px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; left: 59px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; right: -10px; top: -10px;'></div>
+		</div>`
 	})
 
 	// Data is an array with the structure of the tree
