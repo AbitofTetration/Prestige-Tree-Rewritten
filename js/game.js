@@ -302,7 +302,7 @@ function completeChallenge(layer, x) {
 		player[layer].activeChallenge = null;
 		return
 	}
-	if (player[layer].challenges[x] < tmp[layer].challenges[x].completionLimit) {
+	if ((player[layer].challenges[x]||0) < tmp[layer].challenges[x].completionLimit) {
 		needCanvasUpdate = true
 		player[layer].challenges[x] += 1
 		if (layers[layer].challenges[x].onComplete) layers[layer].challenges[x].onComplete()

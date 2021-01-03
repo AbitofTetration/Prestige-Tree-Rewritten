@@ -2472,6 +2472,7 @@ addLayer("sb", {
 			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes('b'):false) && hasUpgrade("b", 12)) base = base.times(upgradeEffect("b", 12).max(1));
 			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes('b'):false) && hasUpgrade("b", 13)) base = base.times(upgradeEffect("b", 13).max(1));
 			base = base.times(tmp.n.dustEffs.blue);
+			if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false) && hasChallenge("h", 12)) base = base.times(player.hs.points.plus(1));
 			return base
 		},
 		effect() {
@@ -2601,6 +2602,7 @@ addLayer("h", {
 			best: new Decimal(0),
 			chall31bought: 0,
 			first: 0,
+			auto: false,
         }},
         color: "#a14040",
         requires: new Decimal(1e30), // Can be a function that takes requirement increases into account
@@ -2608,7 +2610,7 @@ addLayer("h", {
         baseResource: "time energy", // Name of resource prestige is based on
         baseAmount() {return player.t.energy}, // Get the current amount of baseResource
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-        exponent: new Decimal(.125), // Prestige currency exponent
+        exponent() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?.2:.125) }, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
 			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).h);
@@ -2636,8 +2638,9 @@ addLayer("h", {
 		update(diff) {
 			if (hasAchievement("a", 111)) {
 				let cd = tmp[this.layer].challenges;
-				if (cd[31].unlocked && player.h.activeChallenge==31) cd[31].completeInBulk()
-				if (cd[32].unlocked && player.h.activeChallenge==32) cd[32].completeInBulk()
+				let auto = hasMilestone("h", 0) && player.h.auto;
+				if (cd[31].unlocked && (player.h.activeChallenge==31 || auto)) cd[31].completeInBulk()
+				if (cd[32].unlocked && (player.h.activeChallenge==32 || auto)) cd[32].completeInBulk()
 			}
 		},
         layerShown(){return (player.t.unlocked&&hasMilestone("q", 4))||player.m.unlocked||player.ba.unlocked},
@@ -2680,7 +2683,16 @@ addLayer("h", {
 			let root = Decimal.add(2, Decimal.pow(x, 1.5).div(16))
 			return root;
 		},
-		passiveGeneration() { return hasMilestone("m", 2)?1:0 },
+		passiveGeneration() { return (hasMilestone("m", 2)&&player.ma.current!="h")?1:0 },
+		milestones: {
+			0: {
+				unlocked() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false) },
+				requirementDescription: "e300,000,000 Hindrance Spirit",
+				done() { return player.h.points.gte("e3e8") },
+				effectDescription: "Unlock the Repeatable Hindrance Automator.",
+				toggles: [["h", "auto"]],
+			},
+		},
 		challenges: {
 			rows: 4,
 			cols: 2,
@@ -2689,12 +2701,12 @@ addLayer("h", {
 				completionLimit: 1,
 				challengeDescription: "Prestige/Booster Upgrades are reset regardless of your milestones, and every Prestige/Booster Upgrade you buy drastically increases the costs of the others.",
 				unlocked() { return player.h.unlocked },
-				goal: new Decimal("1e1325"),
+				goal() { return new Decimal(player.ma.current=="h"?"e1.37e8":"1e1325") },
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription: "Unlock Quirk Upgrades, and the Hindrance Spirit effect is raised to the power of 1.2.",
 				onStart(testInput=false) { 
-					if (testInput && !hasAchievement("a", 81)) {
+					if (testInput && !(hasAchievement("a", 81)&&player.ma.current!="h")) {
 						player.p.upgrades = []; 
 						player.b.upgrades = [];
 					}
@@ -2705,24 +2717,24 @@ addLayer("h", {
 				completionLimit: 1,
 				challengeDescription: "The Booster/Generator bases are divided more over time (this effect is magnified by your Super-Boosters).",
 				unlocked() { return hasChallenge("h", 11) },
-				goal: new Decimal("1e3550"),
+				goal() { return new Decimal(player.ma.current=="h"?"e5e8":"1e3550") },
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
-				rewardDescription: "Add 0.25 to the Super Booster base.",
+				rewardDescription() { return "Add 0.25 to the Super Booster base"+(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?(" and multiply it by your Hyperspace Energy."):"")+"." },
 			},
 			21: {
 				name: "Out of Room",
 				completionLimit: 1,
 				challengeDescription: "Space Buildings are respecced, your Space is divided by 10, and Space Building Power is decreased by 90%.",
 				unlocked() { return hasChallenge("h", 12) },
-				goal: new Decimal("1e435"),
+				goal() { return new Decimal(player.ma.current=="h"?"e5.7e7":"1e435") },
 				currencyDisplayName: "generator power",
 				currencyInternalName: "power",
 				currencyLayer: "g",
 				rewardDescription: "Space Energy boosts the strength of Space Buildings.",
-				rewardEffect() { return player.s.points.div(2) },
+				rewardEffect() { return player.s.points.div(2).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?1.4:1) },
 				rewardDisplay() { return format(this.rewardEffect())+"% stronger (additive)" },
-				formula: "(x/2)%",
+				formula() { return "(x*"+format(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?.7:.5)+")%" },
 				onStart(testInput=false) {
 					if (testInput) {
 						resetBuyables("s");
@@ -2735,7 +2747,7 @@ addLayer("h", {
 				completionLimit: 1,
 				challengeDescription: "Prestige Upgrades, Achievement rewards, & the Primary Space Building are the only things that boost Point generation.",
 				unlocked() { return hasChallenge("h", 21) },
-				goal: new Decimal("1e3570"),
+				goal() { return new Decimal(player.ma.current=="h"?"e8.225e6":"1e3570") },
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription: "<b>Prestige Boost</b>'s hardcap is now a softcap.",
@@ -2746,9 +2758,14 @@ addLayer("h", {
 					let lim = 10
 					if (hasAchievement("a", 71)) lim += 10;
 					if (hasAchievement("a", 74)) lim += 10;
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false) lim = Infinity;
 					return lim
 				},
-				challengeDescription() {return "You can only buy 10 Enhancers & Extra Time Capsules (total), Enhancer/Extra Time Capsule automation is disabled, and Point generation is brought to the "+format(tmp.h.pointRoot31)+"th root<br>Completions: "+challengeCompletions("h", 31)+"/"+this.completionLimit()},
+				challengeDescription() {
+					let lim = this.completionLimit();
+					let infLim = !isFinite(lim);
+					return "You can only buy 10 Enhancers & Extra Time Capsules (total), Enhancer/Extra Time Capsule automation is disabled, and Point generation is brought to the "+format(tmp.h.pointRoot31)+"th root<br>Completions: "+challengeCompletions("h", 31)+(infLim?"":("/"+lim));
+				},
 				unlocked() { return hasChallenge("h", 22) },
 				goal() { 
 					let comps = challengeCompletions("h", 31);
@@ -2765,14 +2782,22 @@ addLayer("h", {
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
 				rewardDescription() { return "<b>Timeless</b> completions boost Super Generator Power gain based on your time "+(hasUpgrade("ss", 33)?"playing this game.":"in this Row 4 reset.") },
-				rewardEffect() { return Decimal.div(9, Decimal.add((hasUpgrade("ss", 33)?(player.timePlayed||0):player.q.time), 1).cbrt().pow(hasUpgrade("ss", 23)?(-1):1)).plus(1).pow(challengeCompletions("h", 31)).times(tmp.n.realDustEffs2?tmp.n.realDustEffs2.blueOrange:new Decimal(1)) },
+				rewardEffect() { return Decimal.div(9, Decimal.add((hasUpgrade("ss", 33)?(player.timePlayed||0):player.q.time), 1).cbrt().pow(hasUpgrade("ss", 23)?(-1):1)).plus(1).pow(challengeCompletions("h", 31)).times(tmp.n.realDustEffs2?tmp.n.realDustEffs2.blueOrange:new Decimal(1)).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?5:1) },
 				rewardDisplay() { return format(this.rewardEffect())+"x" },
 				formula() { return "(9"+(hasUpgrade("ss", 23)?"*":"/")+"cbrt(time+1)+1)^completions" },
 			},
 			32: {
 				name: "Option D",
-				completionLimit: 10,
-				challengeDescription() { return 'All previous challenges are applied at once ("Timeless" is applied at difficulty level '+(challengeCompletions("h", 32)*2+1)+')<br>Completions: '+challengeCompletions("h", 32)+'/'+this.completionLimit },
+				completionLimit() { 
+					let lim = 10;
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false) lim = Infinity;
+					return lim;
+				},
+				challengeDescription() { 
+					let lim = this.completionLimit();
+					let infLim = !isFinite(lim);
+					return 'All previous challenges are applied at once ("Timeless" is applied at difficulty level '+(challengeCompletions("h", 32)*2+1)+')<br>Completions: '+challengeCompletions("h", 32)+(infLim?"":('/'+lim))
+				},
 				goal() {
 					let comps = challengeCompletions("h", 32);
 					if (comps>=3) comps = comps-0.96;
@@ -2834,7 +2859,7 @@ addLayer("h", {
 				goal: new Decimal("1e19000"),
 				currencyDisplayName: "points",
 				currencyInternalName: "points",
-				rewardDescription: "The Quirk Layer cost base is decreased by 0.15, and unlock 2 new Subspace Upgrades.",
+				rewardDescription() { return "The Quirk Layer cost base is decreased by 0."+(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?"2":"15")+", and unlock 2 new Subspace Upgrades." },
 				unlocked() { return (tmp.ps.buyables[11].effects.hindr||0)>=3 },
 				countsAs: [22],
 				onStart(testInput=false) {
@@ -2973,7 +2998,7 @@ addLayer("q", {
 				costBase() {
 					let base = new Decimal(2);
 					if (hasUpgrade("q", 43)) base = base.sub(.25);
-					if (hasChallenge("h", 42)) base = base.sub(.15);
+					if (hasChallenge("h", 42)) base = base.sub(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?.2:.15);
 					if (hasAchievement("a", 101)) base = base.sub(.2);
 					if (hasUpgrade("q", 25) && player.i.buyables[12].gte(6)) base = base.root(upgradeEffect("q", 25));
 					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) base = base.pow(.75);
@@ -3472,7 +3497,7 @@ addLayer("o", {
 		roundUpCost: true,
         color: "rgb(255, 205, 0)",
 		nodeStyle() {return {
-			"background": (((player.o.unlocked||canReset("o"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<6&&!tmp.ma.canBeMastered.includes(this.layer))))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" ,
+			"background": (((player.o.unlocked||canReset("o"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(this.layer))))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" ,
         }},
 		componentStyles: {
 			"prestige-button"() {return { "background": (canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" }},
@@ -4900,7 +4925,7 @@ addLayer("hn", {
         }},
         color: "#ffbf00",
 		nodeStyle() {return {
-			"background-color": (((player.hn.unlocked||canReset("hn"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<6&&!tmp.ma.canBeMastered.includes(this.layer)))?"#ffbf00":"#bf8f8f"),
+			"background-color": (((player.hn.unlocked||canReset("hn"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(this.layer)))?"#ffbf00":"#bf8f8f"),
         }},
         resource: "honour", // Name of prestige currency
         type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
@@ -5514,7 +5539,7 @@ addLayer("n", {
         }},
         color: "#430082",
 		nodeStyle() { return {
-			"background-color": (((player.n.unlocked||canReset("n"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<6&&!tmp.ma.canBeMastered.includes(this.layer)))?"#430082":"#bf8f8f"),
+			"background-color": (((player.n.unlocked||canReset("n"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(this.layer)))?"#430082":"#bf8f8f"),
 			color: (player.oldStyle?"white":"rgba(255, 255, 255, 0.75)"),
 		}},
 		componentStyles() { return {
@@ -6389,6 +6414,7 @@ addLayer("ma", {
 			if (player.ma.mastered.includes("sb")) desc += "<h2>Super Boosters</h2><br><br><ul><li>Super Booster cost base is reduced (1.05 -> 1.025)</li><li>Base Super Booster cost exponent is reduced (1.25 -> 1.075)</li><li>The Super Booster cost is divided by 1.333</li><li>Super Boosters provide Spectral Boosters</li></ul><br><br>";
 			if (player.ma.mastered.includes("sg")) desc += "<h2>Super Generators</h2><br><br><ul><li>Super Generator cost base is reduced (1.05 -> 1.04)</li><li>Base Super Booster cost exponent is reduced (1.25 -> 1.225)</li><li>The Super Generator cost is divided by 1.1</li><li>The Super Generator Power effect is squared</li><li>Super Generators give Spectral Generators over time</li></ul><br><br>";
 			if (player.ma.mastered.includes("q")) desc += "<h2>Quirks</h2><br><br><ul><li>Quirk gain exponent is increased (7.5e-3 -> 8e-3)</li><li>The Quirk Energy effect softcap start is raised ^1.5</li><li>The Quirk Layer cost base is raised ^0.75</li><li><b>Millennial Abilities</b> is 50% stronger</li><li>Bought Decary Space Building Levels add free Quirk Improvements (equal to the Level/4)</li></ul><br><br>";
+			if (player.ma.mastered.includes("h")) desc += "<h2>Hindrances</h2><br><br><ul><li>Hindrance Spirit gain exponent is increased (0.125 -> 0.2)</li><li>The Hindrance Spirit effect softcap is much weaker (exponent to the 4th root -> exponent to the 2.5th root)</li><li>Unlock a Hindrance milestone</li><li><b>Speed Demon</b> has a secondary effect</li><li><b>Out of Room</b>'s effect is 40% stronger</li><li><b>Timeless</b> & <b>Option D</b> no longer have a completion limit</li><li><b>Timeless</b>'s effect is raised ^5</li><li><b>Productionless</b>'s reduction to the Quirk Layer cost base is stronger (0.15 -> 0.2)</li></ul><br><br>";
 			return desc;
 		},
 		milestones: {
@@ -6425,13 +6451,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 9,
+				cap: 10,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
 					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return [2,5,7,8,9,9,10,10,11,(1e300)][tmp.ma.amtMastered||0] },
+				req() { return [2,5,7,8,9,9,10,10,11,12,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6469,6 +6495,7 @@ addLayer("ma", {
 			player.ma.current = layer;
 			
 			if (player[layer].upgrades) player[layer].upgrades = [];
+			if (player[layer].challenges) for (let n in player[layer].challenges) player[layer].challenges[n] = null;
 			
 			doReset("ma", true);
 		},
@@ -6501,7 +6528,9 @@ addLayer("ma", {
 			sb: new Decimal(36),
 			sg: new Decimal(20),
 			q: new Decimal("e480000"),
+			h: new Decimal("e416000"),
 		},
+		rowLimit: 6,
 })
 
 addLayer("a", {

@@ -91,10 +91,10 @@ const SOFTCAPS = {
 		title: "Hindrance Spirit Effect",
 		type: "expRoot",
 		start: new Decimal(15e4),
-		mag: new Decimal(4),
+		mag() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?2.5:4) },
 		spec() { return 3*(hasChallenge("h", 11)?1.2:1)*hasUpgrade("ba", 21)?8:1 },
 		display() { return player.h.unlocked && tmp.h.effect.root(this.spec()).gte(this.start) },
-		info() { return "Starts at "+format(this.start.pow(this.spec()))+"x, exponent brought to the "+format(this.mag)+"th root" },
+		info() { return "Starts at "+format(this.start.pow(this.spec()))+"x, exponent brought to the "+format(this.mag())+"th root" },
 	},
 	option_d: {
 		title: '"Option D" Effect',

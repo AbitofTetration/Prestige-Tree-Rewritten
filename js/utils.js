@@ -526,7 +526,7 @@ function maxedChallenge(layer, id){
 }
 
 function challengeCompletions(layer, id){
-	return unl(layer)?(player[layer].challenges[id]):0
+	return unl(layer)?(player[layer].challenges[id]||0):0
 }
 
 function getBuyableAmount(layer, id){
