@@ -6496,6 +6496,7 @@ addLayer("ma", {
 			
 			if (player[layer].upgrades) player[layer].upgrades = [];
 			if (player[layer].challenges) for (let n in player[layer].challenges) player[layer].challenges[n] = null;
+			if (player.subtabs[layer]) player.subtabs[layer].mainTabs = "Main Tab";
 			
 			doReset("ma", true);
 		},
