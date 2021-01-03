@@ -186,7 +186,7 @@ function loadVue() {
 			v-bind:style="[tmp[layer].impr[data].style]">
 			<span v-if= "tmp[layer].impr[data].title"><h3 v-html="tmp[layer].impr[data].title"></h3><br></span>
 			<span v-html="tmp[layer].impr[data].description"></span>
-			Amount: <span v-html="formatWhole(getImprovements(layer, data))"></span> (next at <span v-html="format(getNextImpr(layer, data))"></span> <span v-html="tmp[layer].impr.resName"></span>)
+			Amount: <span v-html="formatWhole(getImprovements(layer, data))+(tmp[layer].impr.free?(tmp[layer].impr.free.gt(0)?(' + '+formatWhole(tmp[layer].impr.free)):''):'')"></span> (next at <span v-html="format(getNextImpr(layer, data))"></span> <span v-html="tmp[layer].impr.resName"></span>)
 			<br><span v-if="tmp[layer].impr[data].effect"><br>{{(tmp.nerdMode&&!tmp[layer].impr[data].noFormula)?'Formula: ':'Currently: '}}<span v-if="tmp.nerdMode&&!tmp[layer].impr[data].noFormula" v-html="tmp[layer].impr[data].formula?tmp[layer].impr[data].formula:'???'"></span><span v-if="(!tmp.nerdMode)||tmp[layer].impr[data].noFormula" v-html="(tmp[layer].impr[data].effectDisplay) ? (tmp[layer].impr[data].effectDisplay) : format(tmp[layer].impr[data].effect)"></span></span>
 		</button>
 		`

@@ -22,7 +22,7 @@ function getResetGain(layer, useType = null) {
 	} else if (type=="normal"){
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return new Decimal(0)
 		let gain = tmp[layer].baseAmount.div(tmp[layer].requires).pow(tmp[layer].exponent).times(tmp[layer].gainMult).pow(tmp[layer].gainExp)
-		gain = softcap("normal_layers", gain)
+		gain = softcap("normal_layers_2", softcap("normal_layers", gain));
 		if (layer=="e") gain = softcap("epGain", gain);
 		return gain.floor().max(0);
 	} else if (type=="custom"){
@@ -52,7 +52,7 @@ function getNextAt(layer, canMax=false, useType = null) {
 		return cost;
 	} else if (type=="normal"){
 		let next = tmp[layer].resetGain.add(1)
-		next = reverse_softcap("normal_layers", next)
+		next = reverse_softcap("normal_layers", reverse_softcap("normal_layers_2", next));
 		next = next.root(tmp[layer].gainExp).div(tmp[layer].gainMult).root(tmp[layer].exponent).times(tmp[layer].requires).max(tmp[layer].requires)
 		if (tmp[layer].roundUpCost) next = next.ceil()
 		return next;

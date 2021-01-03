@@ -7,6 +7,14 @@ const SOFTCAPS = {
 		display() { return player.p.points.gte("e1e6") },
 		info() { return "Starts at "+format(this.start)+", square rooted" },
 	},
+	normal_layers_2: {
+		title: "Non-Static Layer Gain",
+		type: "expRoot",
+		start: new Decimal("e5e11"),
+		mag: new Decimal(2),
+		display() { return player.p.points.gte("ee11") },
+		info() { return "Starts at "+format(this.start)+", exponent square rooted" },
+	},
 	p12: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "log",
@@ -102,6 +110,7 @@ const SOFTCAPS = {
 		start() { 
 			let start = new Decimal("e1800000") 
 			if (hasUpgrade("q", 15) && player.i.buyables[12].gte(6)) start = start.times(upgradeEffect("q", 15));
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("q"):false) start = start.pow(1.5);
 			return start;
 		},
 		mag: new Decimal(2),
