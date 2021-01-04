@@ -9,14 +9,14 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("eeee1000"),
-	specialEndgameText: "v1.2 Beta 6 Patch 1 Endgame: e1.545e12, 14 Mastery",
+	specialEndgameText: "v1.2 Beta 7 Endgame: e1.95e12 Points, 15 Mastery",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.2",
-	beta: 6,
-	patch: 1,
+	beta: 7,
+	// patch: 1,
 	name: "Mechanical Mastery",
 }
 
@@ -58,7 +58,7 @@ function getPointGen() {
 	if (player.q.unlocked) gain = gain.times(tmp.q.enEff);
 	
 	if (inChallenge("h", 31)) gain = gain.root(tmp.h.pointRoot31);
-	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt("e1e6")?1.1:1.01);
+	if (hasUpgrade("ss", 43)) gain = gain.pow(gain.lt(tmp.ss.upgrades[43].endpoint)?1.1:1.01);
 	if (hasUpgrade("hn", 31)) gain = gain.pow(1.05);
 	return gain
 }

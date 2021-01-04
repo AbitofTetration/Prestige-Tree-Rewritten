@@ -2764,7 +2764,7 @@ addLayer("h", {
 				challengeDescription() {
 					let lim = this.completionLimit();
 					let infLim = !isFinite(lim);
-					return "You can only buy 10 Enhancers & Extra Time Capsules (total), Enhancer/Extra Time Capsule automation is disabled, and Point generation is brought to the "+format(tmp.h.pointRoot31)+"th root<br>Completions: "+challengeCompletions("h", 31)+(infLim?"":("/"+lim));
+					return "You can only buy 10 Enhancers & Extra Time Capsules (total), Enhancer/Extra Time Capsule automation is disabled, and Point generation is brought to the "+format(tmp.h.pointRoot31)+"th root<br>Completions: "+formatWhole(challengeCompletions("h", 31))+(infLim?"":("/"+lim));
 				},
 				unlocked() { return hasChallenge("h", 22) },
 				goal() { 
@@ -2796,7 +2796,7 @@ addLayer("h", {
 				challengeDescription() { 
 					let lim = this.completionLimit();
 					let infLim = !isFinite(lim);
-					return 'All previous challenges are applied at once ("Timeless" is applied at difficulty level '+(challengeCompletions("h", 32)*2+1)+')<br>Completions: '+challengeCompletions("h", 32)+(infLim?"":('/'+lim))
+					return 'All previous challenges are applied at once ("Timeless" is applied at difficulty level '+formatWhole(challengeCompletions("h", 32)*2+1)+')<br>Completions: '+formatWhole(challengeCompletions("h", 32))+(infLim?"":('/'+lim))
 				},
 				goal() {
 					let comps = challengeCompletions("h", 32);
@@ -3516,6 +3516,7 @@ addLayer("o", {
 			if (hasUpgrade("p", 34)) exp = exp.times(upgradeEffect("p", 34));
 			if (hasUpgrade("hn", 25)) exp = exp.times(upgradeEffect("hn", 25));
 			if (player.n.buyables[11].gte(4)) exp = exp.times(buyableEffect("o", 32));
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) exp = exp.times(player.sb.points.times(0.5/100).plus(1))
 			return exp;
 		}, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
@@ -3541,10 +3542,13 @@ addLayer("o", {
 			if (!unl(this.layer)) return new Decimal(0);
 			let sol = player.o.points;
 			sol = softcap("sol_eff", sol);
-			let eff = sol.plus(1).log10().div(100).min(0.1);
-			return eff;
+			let eff = sol.plus(1).log10();
+			let cap = 0.1;
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) cap = 0.15;
+			if (eff.gt(10)) eff = eff.log10().times(3).plus(7)
+			return eff.div(100).min(cap);
 		},
-		effect2() { return player.o.points.div(1e20).plus(1).sqrt() },
+		effect2() { return player.o.points.div(1e20).plus(1).sqrt().pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1) },
 		solEnGain() { 
 			let gain = player.t.energy.max(1).pow(tmp.o.effect).times(tmp.o.effect2).sub(1);
 			if (player.m.unlocked) gain = gain.times(tmp.m.hexEff);
@@ -3556,11 +3560,11 @@ addLayer("o", {
 		effectDescription() { return "which are generating "+(tmp.nerdMode?("(timeEnergy^"+format(tmp.o.effect)+(tmp.o.effect.gt(1.01)?("*"+format(tmp.o.effect2)):"")+"-1)"):format(tmp.o.solEnGain))+" Solar Energy every second." },
 		update(diff) {
 			player.o.energy = player.o.energy.plus(tmp.o.solEnGain.times(diff));
-			if (hasMilestone("m", 0)) {
+			if (hasMilestone("m", 0) && player.ma.current!="o") {
 				for (let i in tmp.o.buyables) if (i!="rows" && i!="cols") if (tmp.o.buyables[i].unlocked) player.o.buyables[i] = player.o.buyables[i].plus(tmp.o.buyables[i].gain.times(diff));
 			}
 		},
-		passiveGeneration() { return hasMilestone("m", 0)?1:(hasMilestone("o", 0)?0.05:0) },
+		passiveGeneration() { return player.ma.current=="o"?0:(hasMilestone("m", 0)?1:(hasMilestone("o", 0)?0.05:0)) },
 		solPow() {
 			let pow = new Decimal(1);
 			if (hasUpgrade("ss", 33)) pow = pow.plus(upgradeEffect("ss", 33));
@@ -3569,6 +3573,7 @@ addLayer("o", {
 			if (hasUpgrade("hn", 55)) pow = pow.plus(upgradeEffect("hn", 55));
 			if (player.n.buyables[11].gte(5)) pow = pow.plus(buyableEffect("o", 33));
 			if (tmp.ps.impr[11].unlocked) pow = pow.times(tmp.ps.impr[11].effect);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) pow = pow.plus(player.o.points.plus(1).log10().div(5));
 			return softcap("solPow", pow);
 		},
 		tabFormat: ["main-display",
@@ -3591,16 +3596,21 @@ addLayer("o", {
 			let mult = tmp.n.dustEffs.orange;
 			return mult;
 		},
+		buyableGainExp() {
+			let exp = new Decimal(1);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) exp = exp.times(2.6);
+			return exp;
+		},
 		buyables: {
 			rows: 3,
 			cols: 3,
 			11: {
 				title: "Solar Cores",
-				gain() { return player.o.points.div(2).root(1.5).floor() },
+				gain() { return player.o.points.div(2).root(1.5).pow(tmp.o.buyableGainExp).floor() },
 				effect() { 
 					let amt = player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables)
 					amt = softcap("solCores2", softcap("solCores", amt));
-					return hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)) 
+					return Decimal.pow(hasUpgrade("ss", 22)?(amt.plus(1).pow(tmp.o.solPow).cbrt()):(amt.plus(1).pow(tmp.o.solPow).log10().plus(1)), ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1)
 				},
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
@@ -3625,8 +3635,8 @@ addLayer("o", {
 			},
 			12: {
 				title: "Tachoclinal Plasma",
-				gain() { return player.o.points.div(100).times(player.o.energy.div(2500)).root(3.5).floor() },
-				effect() { return hasUpgrade("p", 24)?Decimal.pow(10, player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).log10().cbrt()):(player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().times(10).plus(1)) },
+				gain() { return player.o.points.div(100).times(player.o.energy.div(2500)).root(3.5).pow(tmp.o.buyableGainExp).floor() },
+				effect() { return Decimal.pow(hasUpgrade("p", 24)?Decimal.pow(10, player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).log10().cbrt()):(player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().times(10).plus(1)), ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity & Solar Energy for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Tachoclinal Plasma\n"+
@@ -3650,8 +3660,8 @@ addLayer("o", {
 			},
 			13: {
 				title: "Convectional Energy",
-				gain() { return player.o.points.div(1e3).times(player.o.energy.div(2e5)).times(player.ss.subspace.div(10)).root(6.5).floor() },
-				effect() { return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).pow(2.5) },
+				gain() { return player.o.points.div(1e3).times(player.o.energy.div(2e5)).times(player.ss.subspace.div(10)).root(6.5).pow(tmp.o.buyableGainExp).floor() },
+				effect() { return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).pow(2.5).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?27.5:1) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
                     let display = ("Sacrifice all of your Solarity, Solar Energy, & Subspace for "+formatWhole(tmp[this.layer].buyables[this.id].gain)+" Convectional Energy\n"+
@@ -3676,11 +3686,12 @@ addLayer("o", {
 			},
 			21: {
 				title: "Coronal Waves",
-				gain() { return player.o.points.div(1e5).root(5).times(player.o.energy.div(1e30).root(30)).times(player.ss.subspace.div(1e8).root(8)).times(player.q.energy.div("1e675").root(675)).floor() },
+				gain() { return player.o.points.div(1e5).root(5).times(player.o.energy.div(1e30).root(30)).times(player.ss.subspace.div(1e8).root(8)).times(player.q.energy.div("1e675").root(675)).pow(tmp.o.buyableGainExp).floor() },
 				effect() { 
 					let eff = player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10();
 					eff = softcap("corona", eff);
 					if (hasUpgrade("hn", 24)) eff = eff.times(2);
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) eff = eff.times(1.4);
 					return eff;
 				},
 				display() { // Everything else displayed in the buyable button after the title
@@ -3708,9 +3719,9 @@ addLayer("o", {
 			},
 			22: {
 				title: "Noval Remnants",
-				gain() { return player.o.buyables[11].div(1e150).pow(3).floor() },
+				gain() { return player.o.buyables[11].div(1e150).pow(3).pow(tmp.o.buyableGainExp).floor() },
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().root(10).plus(1)
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().root(10).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.4:1).plus(1)
 				},
 				display() {
 					let data = tmp[this.layer].buyables[this.id]
@@ -3733,9 +3744,9 @@ addLayer("o", {
 			},
 			23: {
 				title: "Nuclear Forges",
-				gain() { return player.o.buyables[11].div(1e175).times(player.o.energy.div("1e2500").root(10)).floor() },
+				gain() { return player.o.buyables[11].div(1e175).times(player.o.energy.div("1e2500").root(10)).pow(tmp.o.buyableGainExp).floor() },
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(2.5)
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(2.5).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.4:1)
 				},
 				display() {
 					let data = tmp[this.layer].buyables[this.id]
@@ -3759,9 +3770,9 @@ addLayer("o", {
 			},
 			31: {
 				title: "Blueshifted Flares",
-				gain() { return player.o.points.div("1e400").pow(10).floor() },
+				gain() { return player.o.points.div("1e400").pow(10).pow(tmp.o.buyableGainExp).floor() },
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(5).div(10)
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(5).div(10).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.9:1)
 				},
 				display() {
 					let data = tmp[this.layer].buyables[this.id]
@@ -3784,9 +3795,9 @@ addLayer("o", {
 			},
 			32: {
 				title: "Combustion Gas",
-				gain() { return player.o.energy.div("1e200000").root(100).floor() },
+				gain() { return player.o.energy.div("1e200000").root(100).pow(tmp.o.buyableGainExp).floor() },
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().plus(1).log10().div(1.6).plus(1)
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().plus(1).log10().div(1.6).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.9:1).plus(1)
 				},
 				display() {
 					let data = tmp[this.layer].buyables[this.id]
@@ -3809,9 +3820,9 @@ addLayer("o", {
 			},
 			33: {
 				title: "Thermonuclear Reactants",
-				gain() { return player.o.points.div("1e500").pow(10).floor() },
+				gain() { return player.o.points.div("1e500").pow(10).pow(tmp.o.buyableGainExp).floor() },
 				effect() {
-					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().plus(1).log10().div(3);
+					return player[this.layer].buyables[this.id].times(tmp.o.multiplyBuyables).plus(1).pow(tmp.o.solPow).log10().plus(1).log10().plus(1).log10().div(3).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.9:1);
 				},
 				display() {
 					let data = tmp[this.layer].buyables[this.id]
@@ -3861,8 +3872,8 @@ addLayer("ss", {
         baseResource: "space energy", // Name of resource prestige is based on
         baseAmount() {return player.s.points}, // Get the current amount of baseResource
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-        exponent: new Decimal(1.1), // Prestige currency exponent
-		base: new Decimal(1.15),
+        exponent() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.07:1.1) }, // Prestige currency exponent
+		base() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1.15) },
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
             return mult
@@ -3880,6 +3891,7 @@ addLayer("ss", {
 			if (player.ba.unlocked) base = base.times(tmp.ba.posBuff);
 			if (tmp.q.impr[42].unlocked) base = base.times(improvementEffect("q", 42));
 			if (hasUpgrade("hn", 35)) base = base.times(upgradeEffect("hn", 35));
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) base = base.times(Decimal.pow(1e10, player.ss.points));
 			
 			if (hasUpgrade("t", 41) && player.i.buyables[12].gte(4)) base = base.pow(1.5);
 			return base;
@@ -3892,7 +3904,7 @@ addLayer("ss", {
 			if (player.m.unlocked) gain = gain.times(tmp.m.hexEff);
 			return gain;
 		},
-		autoPrestige() { return player.ss.auto && hasMilestone("ba", 2) },
+		autoPrestige() { return player.ss.auto && hasMilestone("ba", 2) && player.ma.current!="ss" },
 		effectDescription() {
 			return "which are generating "+format(tmp.ss.effect)+" Subspace/sec"+(tmp.nerdMode?("\n\("+format(tmp.ss.effBase)+"x each)"):"")
 		},
@@ -3912,7 +3924,7 @@ addLayer("ss", {
 		},
 		eff1() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).log10().pow(3).times(100).floor() },
 		eff2() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).log10().plus(1).log10().div(6) },
-		eff3() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).pow(1e3) },
+		eff3() { return player.ss.subspace.plus(1).pow(tmp.ss.effPow).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?3e3:1e3) },
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
@@ -3937,7 +3949,7 @@ addLayer("ss", {
 			11: {
 				title: "Spatial Awakening",
 				description: "The Space Energy cost base is reduced (1e15 -> 1e10).",
-				cost: new Decimal(180),
+				cost() { return new Decimal((player.ma.current=="ss")?"1e14326":180) },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -3946,28 +3958,32 @@ addLayer("ss", {
 			12: {
 				title: "Subspatial Awakening",
 				description: "Subspace Energy boosts all Subspace effects.",
-				cost: new Decimal(2),
+				cost() { return new Decimal((player.ma.current=="ss")?20:2) },
 				unlocked() { return hasUpgrade("ss", 11) },
-				effect() { return player.ss.points.div(2.5).plus(1).sqrt() },
+				effect() { 
+					let eff = player.ss.points.div(2.5).plus(1).sqrt();
+					if (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) && eff.gte(2)) eff = eff.sub(1).times(100).pow(3).div(1e6).plus(1);
+					return eff;
+				},
 				effectDisplay() { return format(tmp.ss.upgrades[12].effect.sub(1).times(100))+"% stronger" },
 				formula: "sqrt(x/2.5)*100",
 			},
 			13: {
 				title: "Emissary of Smash",
 				description: "Quirks boost Subspace gain.",
-				cost: new Decimal(1e3),
+				cost() { return new Decimal((player.ma.current=="ss")?"2e14382":1e3) },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
 				unlocked() { return hasUpgrade("ss", 11) },
-				effect() { return player.q.points.plus(1).log10().div(10).plus(1) },
+				effect() { return player.q.points.plus(1).log10().div(10).plus(1).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?400:1) },
 				effectDisplay() { return format(tmp.ss.upgrades[13].effect)+"x" },
 				formula: "log(x+1)/10+1",
 			},
 			21: {
 				title: "Illegal Upgrade",
 				description: "Super Boosters & Super Generators are 20% cheaper.",
-				cost: new Decimal(1e4),
+				cost() { return new Decimal((player.ma.current=="ss")?"1e16708":1e4) },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -3976,7 +3992,7 @@ addLayer("ss", {
 			22: {
 				title: "Underneath The Sun",
 				description: "<b>Solar Cores</b> use a better effect formula.",
-				cost: new Decimal(4e5),
+				cost() { return new Decimal((player.ma.current=="ss")?"1e17768":4e5) },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -3985,7 +4001,7 @@ addLayer("ss", {
 			23: {
 				title: "Anti-Timeless",
 				description: "<b>Timeless</b>'s effect increases over time instead of decreasing.",
-				cost: new Decimal(1e6),
+				cost() { return new Decimal((player.ma.current=="ss")?"5e17768":1e6) },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -3994,19 +4010,19 @@ addLayer("ss", {
 			31: {
 				title: "No More Progress",
 				description: "Unspent Space provides free Space Buildings.",
-				cost: new Decimal(42),
+				cost() { return new Decimal((player.ma.current=="ss")?1626:42) },
 				currencyDisplayName: "space energy",
 				currencyInternalName: "points",
 				currencyLayer: "s",
 				unlocked() { return hasUpgrade("ss", 22)||hasUpgrade("ss", 23) },
-				effect() { return tmp.s.space.plus(1).cbrt().sub(1).floor() },
+				effect() { return tmp.s.space.plus(1).cbrt().sub(1).times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2:1).floor() },
 				effectDisplay() { return "+"+formatWhole(tmp.ss.upgrades[31].effect) },
 				formula: "cbrt(x+1)-1",
 			},
 			32: {
 				title: "Beyond Infinity",
 				description: "Add to the Subspace Energy & Super-Generator bases based on your Quirk Layers.",
-				cost: new Decimal(43),
+				cost() { return new Decimal((player.ma.current=="ss")?1628:43) },
 				currencyDisplayName: "space energy",
 				currencyInternalName: "points",
 				currencyLayer: "s",
@@ -4018,7 +4034,7 @@ addLayer("ss", {
 			33: {
 				title: "Timeless Solarity",
 				description: "<b>Timeless</b>'s effect is now based on your total time playing this game, and Solar Cores boost Solar Power.",
-				cost: new Decimal(2.5e7),
+				cost() { return new Decimal((player.ma.current=="ss")?"1e17796":2.5e7) },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -4031,7 +4047,7 @@ addLayer("ss", {
 			41: {
 				title: "More Sun",
 				description: "Unlock Coronal Waves.",
-				cost: new Decimal(46),
+				cost() { return new Decimal((player.ma.current=="ss")?1628:46) },
 				currencyDisplayName: "space energy",
 				currencyInternalName: "points",
 				currencyLayer: "s",
@@ -4040,7 +4056,7 @@ addLayer("ss", {
 			42: {
 				title: "Sub-Subspace",
 				description: "Space Buildings are 100% stronger (additive).",
-				cost: new Decimal("1e936"),
+				cost() { return new Decimal((player.ma.current=="ss")?"1e17799":"1e936") },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -4048,8 +4064,9 @@ addLayer("ss", {
 			},
 			43: {
 				title: "Challenging Speedup",
-				description: "When below e1,000,000, Point gain is raised to the power of 1.1. Otherwise, it is raised to the power of 1.01.",
-				cost: new Decimal("1e990"),
+				endpoint() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?"e1e11":"e1e6") },
+				description() { return "When below "+format(tmp.ss.upgrades[43].endpoint)+", Point gain is raised to the power of 1.1. Otherwise, it is raised to the power of 1.01." },
+				cost() { return new Decimal((player.ma.current=="ss")?"1e17800":"1e990") },
 				currencyDisplayName: "subspace",
 				currencyInternalName: "subspace",
 				currencyLayer: "ss",
@@ -6415,6 +6432,8 @@ addLayer("ma", {
 			if (player.ma.mastered.includes("sg")) desc += "<h2>Super Generators</h2><br><br><ul><li>Super Generator cost base is reduced (1.05 -> 1.04)</li><li>Base Super Booster cost exponent is reduced (1.25 -> 1.225)</li><li>The Super Generator cost is divided by 1.1</li><li>The Super Generator Power effect is squared</li><li>Super Generators give Spectral Generators over time</li></ul><br><br>";
 			if (player.ma.mastered.includes("q")) desc += "<h2>Quirks</h2><br><br><ul><li>Quirk gain exponent is increased (7.5e-3 -> 8e-3)</li><li>The Quirk Energy effect softcap start is raised ^1.5</li><li>The Quirk Layer cost base is raised ^0.75</li><li><b>Millennial Abilities</b> is 50% stronger</li><li>Bought Decary Space Building Levels add free Quirk Improvements (equal to the Level/4)</li></ul><br><br>";
 			if (player.ma.mastered.includes("h")) desc += "<h2>Hindrances</h2><br><br><ul><li>Hindrance Spirit gain exponent is increased (0.125 -> 0.2)</li><li>The Hindrance Spirit effect softcap is much weaker (exponent to the 4th root -> exponent to the 2.5th root)</li><li>Unlock a Hindrance milestone</li><li><b>Speed Demon</b> has a secondary effect</li><li><b>Out of Room</b>'s effect is 40% stronger</li><li><b>Timeless</b> & <b>Option D</b> no longer have a completion limit</li><li><b>Timeless</b>'s effect is raised ^5</li><li><b>Productionless</b>'s reduction to the Quirk Layer cost base is stronger (0.15 -> 0.2)</li></ul><br><br>";
+			if (player.ma.mastered.includes("o")) desc += "<h2>Solarity</h2><br><br><ul><li>The Solarity gain exponent is increased by 0.5% for every Super Booster you have (additive)</li><li>The Solar Energy gain exponent limit is increased to 0.15, but beyond 0.1 it grows much slower</li><li>Solar Energy's second effect is 10% stronger</li><li>Solar Power is increased by 20% for every OoM of Solarity you have</li><li>Solarity buyable gain is raised ^2.6</li><li>All effects of the first row of Solarity buyables are raised ^1.1</li><li><b>Convectional Energy</b>'s effect is raised ^25</li><li>All effects of the second row of Solarity buyables are multiplied by 1.4</li><li>All effects of the third row of Solarity buyables are multiplied by 1.9</li></ul><br><br>";
+			if (player.ma.mastered.includes("ss")) desc += "<h2>Subspace</h2><br><br><ul><li>The Subspace cost base is reduced (1.15 -> 1.1)</li><li>The base Subspace cost exponent is reduced (1.1 -> 1.07)</li><li>The Subspace base is multiplied by 1e10 for each Subspace Energy you have</li><li>The third Subspace effect is raised ^3</li><li>If <b>Subspatial Awakening</b>'s effect is above 100%, it is cubed but divided by 10,000</li><li><b>Emissary of Smash</b>'s effect is raised ^400</li><li><b>No More Progress</b>'s effect is doubled</li><li><b>Challenging Speedup</b>'s endpoint is much higher (e1,000,000 -> e1e11)</li></ul><br><br>";
 			return desc;
 		},
 		milestones: {
@@ -6451,13 +6470,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 10,
+				cap: 12,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
 					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return [2,5,7,8,9,9,10,10,11,12,(1e300)][tmp.ma.amtMastered||0] },
+				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6530,6 +6549,8 @@ addLayer("ma", {
 			sg: new Decimal(20),
 			q: new Decimal("e480000"),
 			h: new Decimal("e416000"),
+			o: new Decimal(1e34),
+			ss: new Decimal(21),
 		},
 		rowLimit: 6,
 })
