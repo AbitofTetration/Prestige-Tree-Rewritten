@@ -983,11 +983,11 @@ addLayer("t", {
 			let exp = 5/9
 			if (hasUpgrade("t", 35) && player.i.buyables[12].gte(4)) exp = .565;
 			let eff = player.t.energy.max(0).plus(1).log10().pow(exp);
-			return eff.floor();
+			return softcap("timeEnEff2", eff).floor();
 		},
 		nextEnEff2() {
 			if (!hasUpgrade("t", 24)) return new Decimal(1/0);
-			let next = Decimal.pow(10, tmp.t.enEff2.plus(1).pow(1.8)).sub(1);
+			let next = Decimal.pow(10, reverse_softcap("timeEnEff2", tmp.t.enEff2.plus(1)).pow(1.8)).sub(1);
 			return next;
 		},
 		autoPrestige() { return (player.t.auto && hasMilestone("q", 3))&&player.ma.current!="t" },
@@ -2614,7 +2614,7 @@ addLayer("h", {
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
 			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).h);
-			if (player.m.unlocked) mult = mult.times(tmp.m.hexEff);
+			if (player.m.unlocked) mult = mult.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("m"):false)?tmp.m.mainHexEff:tmp.m.hexEff);
 			if (hasUpgrade("ba", 22)) mult = mult.times(tmp.ba.negBuff);
             return mult
         },
@@ -2901,7 +2901,7 @@ addLayer("q", {
             mult = new Decimal(1)
 			if (hasUpgrade("q", 14)) mult = mult.times(upgradeEffect("q", 14).q);
 			mult = mult.times(improvementEffect("q", 33));
-			if (player.m.unlocked) mult = mult.times(tmp.m.hexEff);
+			if (player.m.unlocked) mult = mult.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("m"):false)?tmp.m.mainHexEff:tmp.m.hexEff);
 			if (hasUpgrade("ba", 22)) mult = mult.times(tmp.ba.negBuff);
 			if (hasUpgrade("hn", 43)) mult = mult.times(upgradeEffect("hn", 43));
             return mult
@@ -3551,7 +3551,7 @@ addLayer("o", {
 		effect2() { return player.o.points.div(1e20).plus(1).sqrt().pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1) },
 		solEnGain() { 
 			let gain = player.t.energy.max(1).pow(tmp.o.effect).times(tmp.o.effect2).sub(1);
-			if (player.m.unlocked) gain = gain.times(tmp.m.hexEff);
+			if (player.m.unlocked) gain = gain.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("m"):false)?tmp.m.mainHexEff:tmp.m.hexEff);
 			if (tmp.q.impr[41].unlocked) gain = gain.times(improvementEffect("q", 41));
 			return gain;
 		},
@@ -4107,7 +4107,7 @@ addLayer("m", {
         baseResource: "hindrance spirit", // Name of resource prestige is based on
         baseAmount() {return player.h.points}, // Get the current amount of baseResource
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-        exponent: new Decimal(0.007), // Prestige currency exponent
+        exponent() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?0.0085:0.007) }, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
 			if (hasAchievement("a", 74)) mult = mult.times(challengeEffect("h", 32));
@@ -4125,7 +4125,7 @@ addLayer("m", {
 			if (hasMilestone("hn", 0)) keep.push("milestones")
 			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
-		passiveGeneration() { return hasMilestone("hn", 1)?1:0 },
+		passiveGeneration() { return (hasMilestone("hn", 1)&&player.ma.current!="m")?1:0 },
         layerShown(){return player.h.unlocked&&player.o.unlocked },
         branches: ["o","h","q"],
 		spellTime() { 
@@ -4138,6 +4138,7 @@ addLayer("m", {
 			let power = new Decimal(1);
 			if (tmp.ps.impr[21].unlocked) power = power.plus(tmp.ps.impr[21].effect.sub(1));
 			if (player.n.buyables[11].gte(3)) power = power.plus(buyableEffect("o", 31));
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) power = power.plus(.5);
 			return power;
 		},
 		hexGain() { 
@@ -4145,14 +4146,15 @@ addLayer("m", {
 			if (tmp.ps.impr[12].unlocked) gain = gain.times(tmp.ps.impr[12].effect);
 			return gain;
 		},
-		hexEff() { return softcap("hex", player.m.hexes.times(2).plus(1).pow(10)) },
+		mainHexEff() { return player.m.hexes.times(2).plus(1).pow(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?5:10) },
+		hexEff() { return softcap("hex", tmp.m.mainHexEff) },
 		update(diff) {
 			if (!player.m.unlocked) return;
-			if (player.m.auto && hasMilestone("hn", 2) && player.m.distrAll) layers.m.castAllSpells(true, diff);
+			if (player.m.auto && hasMilestone("hn", 2) && player.m.distrAll && player.ma.current!="m") layers.m.castAllSpells(true, diff);
 			for (let i=11;i<=13;i++) {
-				if (player.m.auto && hasMilestone("hn", 2) && !player.m.distrAll) {
+				if (player.m.auto && hasMilestone("hn", 2) && !player.m.distrAll && player.ma.current!="m") {
 					player.m.spellInputs[i] = (player.m.spellTimes[i].gt(0)?player.m.spellInputs[i].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(player.m.spellInputs[i]).times(diff));
+                    player.m.hexes = player.m.hexes.plus(softcap("hexGain", tmp.m.hexGain.times(player.m.spellInputs[i]).times(diff)));
 					player.m.spellTimes[i] = tmp.m.spellTime;
 				} else if (player.m.spellTimes[i].gt(0)) player.m.spellTimes[i] = player.m.spellTimes[i].sub(diff).max(0);
 			}
@@ -4163,6 +4165,11 @@ addLayer("m", {
 				return player.m.points.times(factor.max(0.01)).floor().max(1);
 			} else return new Decimal(1);
 		},
+		hexEffDesc() {
+			let nerd = (tmp.nerdMode?" (2*x+1)^5":"")
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) return "which are multiplying Hindrance Spirit, Quirk, & Solar Energy gain by "+format(tmp.m.mainHexEff)+", and are multiplying Subspace gain by "+format(tmp.m.hexEff)+nerd
+			else return "which are multiplying Hindrance Spirit, Quirk, Solar Energy, & Subspace gain by "+format(tmp.m.hexEff)+nerd
+		},
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
@@ -4172,7 +4179,7 @@ addLayer("m", {
 			["display-text", function() { return tmp.m.spellPower.eq(1)?"":("Spell Power: "+format(tmp.m.spellPower.times(100))+"%") }], "blank",
 			"buyables",
 			["display-text",
-				function() {return "You have "+formatWhole(player.m.hexes)+" Hexes, which are multiplying Hindrance Spirit, Quirk, Solar Energy, & Subspace gain by "+format(tmp.m.hexEff)+(tmp.nerdMode?" (2*x+1)^5":"") },
+				function() {return "You have "+formatWhole(player.m.hexes)+" Hexes, "+tmp.m.hexEffDesc },
 					{}],
 		],
 		spellsUnlocked() { return 3 },
@@ -4184,7 +4191,7 @@ addLayer("m", {
 				player.m.spellTimes[i] = tmp.m.spellTime;
 			}
 			if (!noSpend) player.m.points = player.m.points.sub(cost)
-            player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost).times(diff))
+            player.m.hexes = player.m.hexes.plus(softcap("hexGain", tmp.m.hexGain.times(cost).times(diff)))
 		},
 		buyables: {
 			rows: 1,
@@ -4221,7 +4228,7 @@ addLayer("m", {
                     cost = tmp[this.layer].buyables[this.id].cost
 					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
+                    player.m.hexes = player.m.hexes.plus(softcap("hexGain", tmp.m.hexGain.times(cost)))
 					player.m.spellTimes[this.id] = tmp.m.spellTime;
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -4259,7 +4266,7 @@ addLayer("m", {
                     cost = tmp[this.layer].buyables[this.id].cost
 					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
+                    player.m.hexes = player.m.hexes.plus(softcap("hexGain", tmp.m.hexGain.times(cost)))
 					player.m.spellTimes[this.id] = tmp.m.spellTime;
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -4296,7 +4303,7 @@ addLayer("m", {
                     cost = tmp[this.layer].buyables[this.id].cost
 					player.m.spellInputs[this.id] = (player.m.spellTimes[this.id].gt(0)?player.m.spellInputs[this.id].max(tmp.m.spellInputAmt):tmp.m.spellInputAmt);
                     player.m.points = player.m.points.sub(cost)
-                    player.m.hexes = player.m.hexes.plus(tmp.m.hexGain.times(cost))
+                    player.m.hexes = player.m.hexes.plus(softcap("hexGain", tmp.m.hexGain.times(cost)))
 					player.m.spellTimes[this.id] = tmp.m.spellTime;
                 },
                 buyMax() {}, // You'll have to handle this yourself if you want
@@ -4360,7 +4367,7 @@ addLayer("ba", {
         baseResource: "quirks", // Name of resource prestige is based on
         baseAmount() {return player.q.points}, // Get the current amount of baseResource
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-        exponent: new Decimal(0.005), // Prestige currency exponent
+        exponent() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?0.0125:0.005) }, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
 			if (hasAchievement("a", 74)) mult = mult.times(challengeEffect("h", 32));
@@ -4390,32 +4397,35 @@ addLayer("ba", {
 			player.ba.pos = player.ba.pos.plus(tmp.ba.posGain.times(diff));
 			player.ba.neg = player.ba.neg.plus(tmp.ba.negGain.times(diff));
 		},
-		passiveGeneration() { return hasMilestone("hn", 1)?1:0 },
+		passiveGeneration() { return (hasMilestone("hn", 1)&&player.ma.current!="ba")?1:0 },
 		dirBase() { return player.ba.points.times(10) },
 		posGainMult() {
 			let mult = new Decimal(1);
 			if (hasUpgrade("ba", 24)) mult = mult.times(upgradeEffect("ba", 24).pos);
 			return mult;
 		},
-		posGain() { return Decimal.pow(tmp.ba.dirBase, hasMilestone("hn", 2)?1:player.ba.allotted).times(hasMilestone("hn", 2)?1:(player.ba.allotted)).times(tmp.ba.posGainMult) },
+		posGain() { return Decimal.pow(tmp.ba.dirBase, (hasMilestone("hn", 2)&&player.ma.current!="ba")?1:player.ba.allotted).times((hasMilestone("hn", 2)&&player.ma.current!="ba")?1:(player.ba.allotted)).times(tmp.ba.posGainMult) },
 		posBuff() { 
 			let eff = player.ba.pos.plus(1).log10().plus(1).div(tmp.ba.negNerf); 
 			eff = softcap("posBuff", eff);
 			return eff;
 		},
-		posNerf() { return player.ba.pos.plus(1).sqrt().pow(inChallenge("h", 41)?100:1) },
+		noNerfs() {
+			return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)
+		},
+		posNerf() { return tmp.ba.noNerfs?new Decimal(1):(player.ba.pos.plus(1).sqrt().pow(inChallenge("h", 41)?100:1)) },
 		negGainMult() {
 			let mult = new Decimal(1);
 			if (hasUpgrade("ba", 24)) mult = mult.times(upgradeEffect("ba", 24).neg);
 			return mult;
 		},
-		negGain() { return Decimal.pow(tmp.ba.dirBase, hasMilestone("hn", 2)?1:(1-player.ba.allotted)).times(hasMilestone("hn", 2)?1:(1-player.ba.allotted)).times(tmp.ba.negGainMult) },
+		negGain() { return Decimal.pow(tmp.ba.dirBase, (hasMilestone("hn", 2)&&player.ma.current!="ba")?1:(1-player.ba.allotted)).times((hasMilestone("hn", 2)&&player.ma.current!="ba")?1:(1-player.ba.allotted)).times(tmp.ba.negGainMult) },
 		negBuff() { 
 			let eff = player.ba.neg.plus(1).pow((hasUpgrade("ba", 13))?10:1).div(tmp.ba.posNerf);
 			eff = softcap("negBuff", eff);
 			return eff;
 		},
-		negNerf() { return player.ba.neg.plus(1).log10().plus(1).sqrt().pow(inChallenge("h", 41)?100:1).div(hasUpgrade("ba", 14)?2:1).max(1) },
+		negNerf() { return tmp.ba.noNerfs?new Decimal(1):(player.ba.neg.plus(1).log10().plus(1).sqrt().pow(inChallenge("h", 41)?100:1).div(hasUpgrade("ba", 14)?2:1).max(1)) },
 		tabFormat: ["main-display",
 			"prestige-button",
 			"resource-display",
@@ -4425,10 +4435,10 @@ addLayer("ba", {
 			["clickable", 31],
 			["row", [["clickable", 21], ["clickable", 11], "blank", ["bar", "balanceBar"], "blank", ["clickable", 12], ["clickable", 22]]],
 			["row", [
-				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"+(tmp.ba.negGainMult.eq(1)?"":("*"+format(tmp.ba.negGainMult)))):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)"+(inChallenge("h", 41)?"^100":"")+"/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
+				["column", [["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(1-barPercent/100)*(1-barBercent/100)"+(tmp.ba.negGainMult.eq(1)?"":("*"+format(tmp.ba.negGainMult)))):("+"+format(tmp.ba.negGain)+"/sec")}, {}], ["display-text", function() {return "Negativity: "+format(player.ba.neg)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: "+((hasUpgrade("ba", 13))?"(x+1)^10":"x+1")):("Buff: Multiply each Quirk Layer by "+format(tmp.ba.negBuff)))}, {}], ["display-text", function() {return tmp.ba.noNerfs?"":(tmp.nerdMode?("Nerf Formula: "+(hasUpgrade("ba", 14)?"sqrt(log(x+1)+1)"+(inChallenge("h", 41)?"^100":"")+"/2":"sqrt(log(x+1)+1)")):("Nerf: Divide the Positivity buff by "+format(tmp.ba.negNerf)))}, {}], "blank", ["row", [["upgrade", 11], ["upgrade", 13]]]], {"max-width": "240px"}], 
 				"blank", "blank", "blank", 
 				["column", 
-				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"+(tmp.ba.posGainMult.eq(1)?"":("*"+format(tmp.ba.posGainMult)))):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return (tmp.nerdMode?("Nerf Formula: sqrt(x+1)"+(inChallenge("h", 41)?"^100":"")):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
+				[["display-text", function() {return tmp.nerdMode?("Gain Formula: "+format(tmp.ba.dirBase)+"^(barPercent/100)*(barBercent/100)"+(tmp.ba.posGainMult.eq(1)?"":("*"+format(tmp.ba.posGainMult)))):("+"+format(tmp.ba.posGain)+"/sec")}, {}], ["display-text", function() {return "Positivity: "+format(player.ba.pos)}, {}], ["display-text", function() {return (tmp.nerdMode?("Buff Formula: log(x+1)+1"):("Buff: Multiply the Subspace & Time base by "+format(tmp.ba.posBuff)))}, {}], ["display-text", function() {return tmp.ba.noNerfs?"":(tmp.nerdMode?("Nerf Formula: sqrt(x+1)"+(inChallenge("h", 41)?"^100":"")):("Nerf: Divide the Negativity buff by "+format(tmp.ba.posNerf)))}, {}], "blank", ["row", [["upgrade", 14], ["upgrade", 12]]]], {"max-width": "240px"}]], {"visibility": function() { return player.ba.unlocked?"visible":"hidden" }}],
 			["row", [["upgrade", 22], ["upgrade", 21], ["upgrade", 23]]],
 			["row", [["upgrade", 31], ["upgrade", 24], ["upgrade", 32]]],
 			["upgrade", 33],
@@ -4495,7 +4505,7 @@ addLayer("ba", {
 			11: {
 				title: "Negative Ion",
 				description: "Negativity boosts Solar Power.",
-				cost: new Decimal(5e7),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e166666":5e7) },
 				currencyDisplayName: "negativity",
 				currencyInternalName: "neg",
 				currencyLayer: "ba",
@@ -4511,7 +4521,7 @@ addLayer("ba", {
 			12: {
 				title: "Positive Ion",
 				description: "Positivity boosts Space Building Power & all Subspace effects.",
-				cost: new Decimal(5e7),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e166666":5e7) },
 				currencyDisplayName: "positivity",
 				currencyInternalName: "pos",
 				currencyLayer: "ba",
@@ -4523,7 +4533,7 @@ addLayer("ba", {
 			13: {
 				title: "Negative Energy",
 				description: "Raise the Negativity buff to the power of 10.",
-				cost: new Decimal(25e7),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e189500":25e7) },
 				currencyDisplayName: "negativity",
 				currencyInternalName: "neg",
 				currencyLayer: "ba",
@@ -4532,7 +4542,7 @@ addLayer("ba", {
 			14: {
 				title: "Positive Vibe",
 				description: "Halve the Negativity nerf.",
-				cost: new Decimal(25e7),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e189500":25e7) },
 				currencyDisplayName: "positivity",
 				currencyInternalName: "pos",
 				currencyLayer: "ba",
@@ -4541,13 +4551,13 @@ addLayer("ba", {
 			21: {
 				title: "Neutral Atom",
 				description: "The Hindrance Spirit effect is raised to the power of 8.",
-				cost: new Decimal(2.5e8),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e189500":25e7) },
 				unlocked() { return hasUpgrade("ba", 13)&&hasUpgrade("ba", 14) },
 			},
 			22: {
 				title: "Negative Mass",
 				description: "The Negativity buff also multiplies Hindrance Spirit & Quirk gain.",
-				cost: new Decimal(2.5e11),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e203000":2.5e11) },
 				currencyDisplayName: "negativity",
 				currencyInternalName: "neg",
 				currencyLayer: "ba",
@@ -4556,7 +4566,7 @@ addLayer("ba", {
 			23: {
 				title: "Complete Plus",
 				description: "The Positivity buff also divides the Solarity requirement.",
-				cost: new Decimal(2.5e11),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e203000":2.5e11) },
 				currencyDisplayName: "positivity",
 				currencyInternalName: "pos",
 				currencyLayer: "ba",
@@ -4565,12 +4575,19 @@ addLayer("ba", {
 			24: {
 				title: "Net Neutrality",
 				description: "Positivity and Negativity boost each other's generation.",
-				cost: new Decimal(2.5e12),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e205000":2.5e12) },
 				unlocked() { return hasUpgrade("ba", 22) && hasUpgrade("ba", 23) },
-				effect() { return {
-					pos: player.ba.neg.div(1e12).plus(1).log10().plus(1).pow(hasUpgrade("ba", 33)?15:5),
-					neg: player.ba.pos.div(1e12).plus(1).log10().plus(1).pow(hasUpgrade("ba", 33)?15:5),
-				} },
+				effect() { 
+					let ret = {
+						pos: player.ba.neg.div(1e12).plus(1).log10().plus(1).pow(hasUpgrade("ba", 33)?15:5),
+						neg: player.ba.pos.div(1e12).plus(1).log10().plus(1).pow(hasUpgrade("ba", 33)?15:5),
+					} 
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) {
+						ret.pos = Decimal.pow(10, ret.pos.log10().pow(1.5));
+						ret.neg = Decimal.pow(10, ret.neg.log10().pow(1.5));
+					}
+					return ret;
+				},
 				effectDisplay() { return "Pos: "+format(tmp.ba.upgrades[24].effect.pos)+"x, Neg: "+format(tmp.ba.upgrades[24].effect.neg)+"x" },
 				formula() { return "Pos: (log(neg/1e12+1)+1)^"+(hasUpgrade("ba", 33)?15:5)+", Neg: (log(pos/1e12+1)+1)^"+(hasUpgrade("ba", 33)?15:5) },
 				style: {"font-size": "9px"},
@@ -4578,7 +4595,7 @@ addLayer("ba", {
 			31: {
 				title: "Tangible Degeneration",
 				description: "The first two Spells use better formulas.",
-				cost: new Decimal(1e52),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e205500":1e52) },
 				currencyDisplayName: "negativity",
 				currencyInternalName: "neg",
 				currencyLayer: "ba",
@@ -4587,7 +4604,7 @@ addLayer("ba", {
 			32: {
 				title: "Visible Regeneration",
 				description: "Positivity multiplies the Super-Generator base.",
-				cost: new Decimal(1e52),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e205500":1e52) },
 				currencyDisplayName: "positivity",
 				currencyInternalName: "pos",
 				currencyLayer: "ba",
@@ -4595,6 +4612,7 @@ addLayer("ba", {
 				effect() { 
 					let eff = softcap("ba32", player.ba.pos.plus(1).log10().div(50).plus(1).pow(10));
 					if (hasUpgrade("hn", 44)) eff = eff.times(upgradeEffect("p", 44));
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) eff = eff.pow(10);
 					return eff;
 				},
 				effectDisplay() { return format(tmp.ba.upgrades[32].effect)+"x" },
@@ -4604,7 +4622,7 @@ addLayer("ba", {
 			33: {
 				title: "True Equality",
 				description: "Both <b>Net Neutrality</b> effects are cubed.",
-				cost: new Decimal(2.5e51),
+				cost() { return new Decimal(player.ma.current=="ba"?"1e207500":2.5e51) },
 				unlocked() { return hasChallenge("h", 41) },
 			},
 		},
@@ -6434,6 +6452,8 @@ addLayer("ma", {
 			if (player.ma.mastered.includes("h")) desc += "<h2>Hindrances</h2><br><br><ul><li>Hindrance Spirit gain exponent is increased (0.125 -> 0.2)</li><li>The Hindrance Spirit effect softcap is much weaker (exponent to the 4th root -> exponent to the 2.5th root)</li><li>Unlock a Hindrance milestone</li><li><b>Speed Demon</b> has a secondary effect</li><li><b>Out of Room</b>'s effect is 40% stronger</li><li><b>Timeless</b> & <b>Option D</b> no longer have a completion limit</li><li><b>Timeless</b>'s effect is raised ^5</li><li><b>Productionless</b>'s reduction to the Quirk Layer cost base is stronger (0.15 -> 0.2)</li></ul><br><br>";
 			if (player.ma.mastered.includes("o")) desc += "<h2>Solarity</h2><br><br><ul><li>The Solarity gain exponent is increased by 0.5% for every Super Booster you have (additive)</li><li>The Solar Energy gain exponent limit is increased to 0.15, but beyond 0.1 it grows much slower</li><li>Solar Energy's second effect is 10% stronger</li><li>Solar Power is increased by 20% for every OoM of Solarity you have</li><li>Solarity buyable gain is raised ^2.6</li><li>All effects of the first row of Solarity buyables are raised ^1.1</li><li><b>Convectional Energy</b>'s effect is raised ^25</li><li>All effects of the second row of Solarity buyables are multiplied by 1.4</li><li>All effects of the third row of Solarity buyables are multiplied by 1.9</li></ul><br><br>";
 			if (player.ma.mastered.includes("ss")) desc += "<h2>Subspace</h2><br><br><ul><li>The Subspace cost base is reduced (1.15 -> 1.1)</li><li>The base Subspace cost exponent is reduced (1.1 -> 1.07)</li><li>The Subspace base is multiplied by 1e10 for each Subspace Energy you have</li><li>The third Subspace effect is raised ^3</li><li>If <b>Subspatial Awakening</b>'s effect is above 100%, it is cubed but divided by 10,000</li><li><b>Emissary of Smash</b>'s effect is raised ^400</li><li><b>No More Progress</b>'s effect is doubled</li><li><b>Challenging Speedup</b>'s endpoint is much higher (e1,000,000 -> e1e11)</li></ul><br><br>";
+			if (player.ma.mastered.includes("m")) desc += "<h2>Magic</h2><br><br><ul><li>The Magic gain exponent is increased (7e-3 -> 8.5e-3)</li><li>Add 50% to Spell Power</li><li>The Hex effect softcap does not apply to the boost to Hindrance Spirit, Quirk, and Solar Energy gain, but this effect is square rooted</li><li>The Hex effect softcap starts 1e-3% later for every OoM of Magic you have</li><li>The Hex effect softcap exponent is increased (10 -> 2e3)</li></ul><br><br>";
+			if (player.ma.mastered.includes("ba")) desc += "<h2>Balance</h2><br><br><ul><li>The Balance Energy gain exponent is increased (5e-3 -> 0.0125)</li><li>There are no Positivity/Negativity nerfs</li><li>Both <b>Net Neutrality</b> effects have their exponents raised ^2.5</li><li><b>Visible Regeneration</b> is raised ^10</li></ul><br><br>";
 			return desc;
 		},
 		milestones: {
@@ -6470,13 +6490,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 12,
+				cap: 14,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
 					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,(1e300)][tmp.ma.amtMastered||0] },
+				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,15,16,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6551,6 +6571,8 @@ addLayer("ma", {
 			h: new Decimal("e416000"),
 			o: new Decimal(1e34),
 			ss: new Decimal(21),
+			m: new Decimal("1e107350"),
+			ba: new Decimal("1e207500"),
 		},
 		rowLimit: 6,
 })
