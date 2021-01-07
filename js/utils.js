@@ -34,7 +34,7 @@ function sumValues(x) {
 	return x.reduce((a, b) => Decimal.add(a, b))
 }
 
-function format(decimal, precision=2) {
+function format(decimal, precision=2, whole=false) {
 	decimal = new Decimal(decimal)
 	if (isNaN(decimal.sign)||isNaN(decimal.layer)||isNaN(decimal.mag)) {
 		player.hasNaN = true;
@@ -53,16 +53,16 @@ function format(decimal, precision=2) {
 	else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
-	else if (decimal.gte(Decimal.pow(0.1, precision))) return regularFormat(decimal, precision)
+	else if (decimal.gte(Decimal.pow(0.1, precision)) || whole) return regularFormat(decimal, precision)
 	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte(1e-9)?precision:0)
 	else return "1/("+format(decimal.pow(-1), precision)+")"
 }
 
-function formatWhole(decimal) {
+function formatWhole(decimal, reallyWhole=false) {
 	decimal = new Decimal(decimal)
 	if (decimal.gte(1e9)) return format(decimal, 2)
-	if (decimal.lte(0.95) && !decimal.eq(0)) return format(decimal, 2)
-	return format(decimal, 0)
+	if (decimal.lte(0.95) && !decimal.eq(0) && !reallyWhole) return format(decimal, 2)
+	else return format(decimal, 0, true)
 }
 
 function formatTime(s) {

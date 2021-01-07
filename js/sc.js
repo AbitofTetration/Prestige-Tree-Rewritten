@@ -281,10 +281,10 @@ const SOFTCAPS = {
 	hsBuilds: {
 		title: "Hyper Buildings",
 		type: "root",
-		start: new Decimal(3),
+		start() { return Decimal.add(3, hasAchievement("a", 121)?player.hs.buyables[11].root(5).times(.1):0) },
 		mag: new Decimal(5),
-		display() { return player.hs.unlocked && tmp.hs.buildLimit.gt(this.start) },
-		info() { return "Starts at Level "+format(this.start.plus(1))+", brought to the fifth root" },
+		display() { return player.hs.unlocked && tmp.hs.buildLimit.gt(this.start()) },
+		info() { return "Starts at Level "+format(this.start().plus(1))+", brought to the fifth root" },
 	},
 }
 

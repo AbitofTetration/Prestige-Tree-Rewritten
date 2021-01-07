@@ -3211,8 +3211,8 @@ addLayer("q", {
 			25: {
 				title: "Advanced Onion",
 				description: "Nebulaic Bricks reduce the Quirk Layer cost base.",
-				cost() { return Decimal.pow("e3e6", player.q.time.times(10).plus(1).log10().pow(2)).times("e2e7") },
-				costFormula: "(e3,000,000^(log(time*10+1)^2))*e20,000,000",
+				cost() { return Decimal.pow("e3e6", player.q.time.times(4).plus(1).log10().pow(2)).times("e2e7") },
+				costFormula: "(e3,000,000^(log(time*4+1)^2))*e20,000,000",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -3273,8 +3273,8 @@ addLayer("q", {
 			35: {
 				title: "Millennial Abilities",
 				description: "Hyperspatial Bricks make Quirk Improvements scale slower.",
-				cost() { return Decimal.pow("e2e6", player.q.time.times(10).plus(1).log10().pow(3)).times("e3.5e7") },
-				costFormula: "(e2,000,000^(log(time*10+1)^3))*e35,000,000",
+				cost() { return Decimal.pow("e2e6", player.q.time.times(4).plus(1).log10().pow(3)).times("e3.5e7") },
+				costFormula: "(e2,000,000^(log(time*4+1)^3))*e35,000,000",
 				currencyDisplayName: "quirk energy",
 				currencyInternalName: "energy",
 				currencyLayer: "q",
@@ -5597,6 +5597,7 @@ addLayer("n", {
 			if (hasUpgrade("g", 35) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 35));
 			if (hasUpgrade("s", 33) && player.i.buyables[12].gte(5)) mult = mult.times(upgradeEffect("s", 33));
 			if (hasUpgrade("q", 45) && player.i.buyables[12].gte(6)) mult = mult.times(200);
+			if (player.ge.unlocked) mult = mult.times(tmp.ge.rotEff);
             return mult
         },
 		passiveGeneration() { return hasMilestone("ma", 3)?1:0 },
@@ -5632,6 +5633,10 @@ addLayer("n", {
 				[(second?["clickable", 14]:[]),
 				
 				"blank",
+				
+				["display-text", (player.ma.unlocked?("Product of all Dusts: "+format(tmp.n.dustProduct)):"") ],
+				
+				"blank",
 			
 				["row", [["display-text", ("<span style='color: #bd6afc; font-size: 24px'>"+format(player.n.purpleDust)+"</span> Purple Dust"+(tmp.nerdMode?" (Gain Formula: (x^0.333)*"+format(tmp.n.dustGainMult.div(20))+")":((tmp.n.effect.purple||new Decimal(1)).lt("1e1000")?(" (+"+format(tmp.n.effect.purple||new Decimal(1))+"/sec)"):""))+"<br><br>Multiply Damned Soul and Phantom Power gain by <span style='color: #bd6afc; font-size: 24px'>"+format(tmp.n.dustEffs.purple)+"</span>"+(tmp.nerdMode?" (Effect Formula: 10^sqrt(log(x+1)))":""))]], {"background-color": "rgba(189, 106, 252, 0.25)", width: "50vw", padding: "10px", margin: "0 auto"}],
 				
@@ -5652,6 +5657,7 @@ addLayer("n", {
 			if (player.n.buyables[11].gte(1)) mult = mult.times(buyableEffect("o", 22));
 			if (hasUpgrade("hn", 25)) mult = mult.times(upgradeEffect("hn", 25));
 			if (hasUpgrade("g", 33) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 33));
+			if (player.ge.unlocked) mult = mult.times(tmp.ge.rotEff);
 			return mult;
 		},
 		effect() {
@@ -5662,6 +5668,7 @@ addLayer("n", {
 				orange: amt.root(5).div(5).times(tmp.n.dustGainMult),
 			};
 		},
+		dustProduct() { return player.n.purpleDust.times(player.n.blueDust).times(player.n.orangeDust) },
 		dustEffs() {
 			let mod = player.n.unlocked?1:0
 			return {
@@ -5787,6 +5794,7 @@ addLayer("hs", {
 			spentHS: new Decimal(0),
 			buildLim: new Decimal(1),
 			first: 0,
+			auto: false,
         }},
 		roundUpCost: true,
         color: "#dfdfff",
@@ -5846,6 +5854,7 @@ addLayer("hs", {
 		],
 		update(diff) {
 			player.hs.buildLim = player.hs.buildLim.max(tmp.hs.buildLimit);
+			if (hasMilestone("ma", 5) && player.hs.auto) tmp.hs.buyables[11].buyMax();
 		},
 		hyperspace() {
 			let total = player.hs.buyables[11];
@@ -5909,10 +5918,13 @@ addLayer("hs", {
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {
-					// later :)
+					let y = player.hs.points.max(1).log10().root(.9);
+					if (y.gte(10)) y = y.times(1e4).root(5);
+					let target = y.min(player.ba.points.max(1).log10().sub(360).div(40).sqrt().times(1.5)).div(tmp[this.layer].buyables[this.id].scaleRate).plus(1).floor();
+					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
 				},
                 style() { return {'height':'200px', 'width':'200px'}},
-				autoed() { return false },
+				autoed() { return hasMilestone("ma", 5) && player.hs.auto },
 			},
 			21: {
 				title: "Primary Hyper Building",
@@ -6486,6 +6498,13 @@ addLayer("ma", {
 				effectDescription: "Unlock Auto-Imperium Bricks.",
 				toggles: [["i", "auto"]],
 			},
+			5: {
+				unlocked() { return hasMilestone("ma", 4) },
+				requirementDescription: "16 Mastery",
+				done() { return player.ma.best.gte(16) },
+				effectDescription: "Unlock Auto-Hyperspace.",
+				toggles: [["hs", "auto"]],
+			},
 		},
 		clickables: {
 			rows: 1,
@@ -6579,6 +6598,176 @@ addLayer("ma", {
 		rowLimit: 6,
 })
 
+addLayer("ge", {
+		name: "gears", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "GE", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        startData() { return {
+            unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			total: new Decimal(0),
+			first: 0,
+			rotations: new Decimal(0),
+			energy: new Decimal(0),
+			toothPower: new Decimal(0),
+			shrinkPower: new Decimal(0),
+			boosted: new Decimal(0),
+        }},
+        color: "rgba(191,191,191,1)",
+		nodeStyle() { return {
+			background: (player.o.unlocked||canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)",
+		}},
+		componentStyles: {
+			background() { return (player.o.unlocked||canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)" },
+		},
+        requires: new Decimal(1e256), // Can be a function that takes requirement increases into account
+        resource: "gears", // Name of prestige currency 
+        baseResource: "dust product", // Name of resource prestige is based on
+        baseAmount() {return tmp.n.dustProduct}, // Get the current amount of baseResource
+        type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+        exponent: new Decimal(0.01), // Prestige currency exponent
+        gainMult() { // Calculate the multiplier for main currency from bonuses
+            mult = new Decimal(1);
+            return mult
+        },
+        gainExp() { // Calculate the exponent on main currency from bonuses
+            return new Decimal(1)
+        },
+        row: 6, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "E", description: "Press Shift+E to Gear Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+		passiveGeneration() { return false },
+        doReset(resettingLayer){ 
+			let keep = [];
+			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+			if (layers[resettingLayer].row >= this.row) {
+				player.ge.energy = new Decimal(0);
+				player.ge.toothPower = new Decimal(0);
+				player.ge.shrinkPower = new Decimal(0);
+				player.ge.rotations = new Decimal(0);
+			}
+        },
+        layerShown(){return player.ma.unlocked },
+        branches: ["n"],
+		tabFormat: ["main-display",
+			"prestige-button",
+			"resource-display",
+			"blank", "blank", 
+			["display-text", function() { return "<h3>Gear Speed: "+format(tmp.ge.gearSpeed)+"x</h3>"+(tmp.nerdMode?" (cbrt(gears))":"") }],
+			"blank",
+			["row", [["display-text", function() { return "<h3>Rotations: "+formatWhole(player.ge.rotations, true)+" ("+tmp.ge.rotDesc+")</h3><br>Rotation Effect: Multiply Nebula Energy & Dust gain by "+format(tmp.ge.rotEff)+(tmp.nerdMode?" ((x+1)^5)":"") }]]],
+			"blank", "blank",
+			["clickable", 21],
+			"blank", "blank",
+			["row", [["column", [["raw-html", function() { return "<h3>Teeth: "+formatWhole(tmp.ge.teeth, true)+"</h3>" }], "blank", ["clickable", 11]], {"background-color": "#b0babf", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}], ["column", [["raw-html", function() { return "<h3>Kinetic Energy: "+format(player.ge.energy)+" J</h3><br><br>Velocity: "+format(tmp.ge.speed)+"m/s"+(tmp.nerdMode?" (sqrt(x))":"") }], "blank", ["clickable", 12]], {"background-color": "#dec895", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}], ["column", [["raw-html", function() { return "<h3>Tooth Size: "+format(tmp.ge.toothSize)+"m</h3><br><br>" }], "blank", ["clickable", 13]], {"background-color": "#bfa1b8", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}]]],
+		],
+		update(diff) {
+			if (!player.ge.unlocked) return;
+			let factor = tmp.ge.gearSpeed
+			player.ge.energy = player.ge.energy.plus(factor.times(diff).times(tmp.ge.clickables[12].effect));
+			player.ge.toothPower = player.ge.toothPower.plus(factor.times(diff));
+			player.ge.shrinkPower = player.ge.shrinkPower.plus(factor.times(diff));
+			player.ge.rotations = player.ge.rotations.plus(tmp.ge.rps.times(diff));
+		},
+		rotEff() {
+			return player.ge.rotations.round().plus(1).pow(5);
+		},
+		gearSpeed() {
+			return player.ge.points.cbrt();
+		},
+		rps() {
+			return tmp.ge.speed.div(tmp.ge.teeth.times(tmp.ge.toothSize)).times(tmp.ge.gearSpeed)
+		},
+		rotDesc() {
+			let rps = tmp.ge.rps;
+			let desc = "";
+			if (rps.lt(1)) desc = format(rps.times(60))+" RPM";
+			else desc = format(rps)+" RPS";
+			
+			if (tmp.nerdMode) desc += " </h3>((velocity*gearSpeed)/(teeth*toothSize))<h3>"
+			return desc;
+		},
+		speed() {
+			return player.ge.energy.sqrt();
+		},
+		teeth() {
+			return player.ge.toothPower.pow(1.5).plus(100).div(tmp.ge.clickables[11].effect).floor().max(1);
+		},
+		toothSize() {
+			return player.ge.shrinkPower.plus(1).pow(-0.5).div(tmp.ge.clickables[13].effect);
+		},
+		boostReq() { return Decimal.pow(1e10, player.ge.boosted.pow(1.2)).times(1e280) },
+		clickables: {
+			rows: 2,
+			cols: 3,
+			11: {
+				title() { return "Divide Teeth by "+format(this.effectPer) },
+				display() { 
+					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+				},
+				effectPer: new Decimal(2),
+				effect() { return Decimal.pow(this.effectPer, player.ge.clickables[this.id]) },
+				unlocked() { return player.ge.unlocked },
+				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
+				onClick() { 
+					player.ge.boosted = player.ge.boosted.plus(1);
+					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+				},
+				style: {"height": "150px", "width": "150px"},
+			},
+			12: {
+				title() { return "Multiply Kinetic Energy gain by "+format(this.effectPer) },
+				display() { 
+					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
+				},
+				effectPer: new Decimal(6),
+				effect() { return Decimal.pow(this.effectPer, player.ge.clickables[this.id]) },
+				unlocked() { return player.ge.unlocked },
+				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
+				onClick() { 
+					player.ge.boosted = player.ge.boosted.plus(1);
+					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+				},
+				style: {"height": "150px", "width": "150px"},
+			},
+			13: {
+				title() { return "Divide Tooth Size by "+format(this.effectPer) },
+				display() { 
+					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+				},
+				effectPer: new Decimal(2),
+				effect() { return Decimal.pow(this.effectPer, player.ge.clickables[this.id]) },
+				unlocked() { return player.ge.unlocked },
+				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
+				onClick() { 
+					player.ge.boosted = player.ge.boosted.plus(1);
+					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+				},
+				style: {"height": "150px", "width": "150px"},
+			},
+			21: {
+				title: "Reset Gear Upgrades",
+				unlocked() { return player.ge.unlocked },
+				canClick() { return player.ge.unlocked && player.ge.boosted.gt(0) },
+				onClick() { 
+					if (!confirm("Are you sure you want to reset your Gear Upgrades? This will force a Gear reset!")) return;
+					player.ge.boosted = new Decimal(0);
+					for (let i=11;i<=13;i++) player.ge.clickables[i] = "";
+					doReset("ge", true);
+				},
+				style: {"height": "75px", "width": "100px"},
+			},
+		},
+})
+
+addLayer("ghost", {
+	row: 6,
+	position: 2,
+	layerShown() { return player.ma.unlocked?"ghost":false },
+})
+
 addLayer("a", {
         startData() { return {
             unlocked: true,
@@ -6590,7 +6779,7 @@ addLayer("a", {
             return ("Achievements")
         },
         achievements: {
-            rows: 11,
+            rows: 12,
             cols: 4,
             11: {
                 name: "All that progress is gone!",
@@ -6807,6 +6996,16 @@ addLayer("a", {
 				done() { return player.points.gte("ee12") },
 				tooltip: "Reach e1e12 Points. Reward: Add 10% to Hyper Building Power.",
 			},
+			114: {
+				name: "Option E?",
+				done() { return player.h.challenges[32]>=900 },
+				tooltip: "Complete Option D at least 900 times.",
+			},
+			121: {
+				name: "Geared for More",
+				done() { return player.ge.unlocked },
+				tooltip() { return "Unlock Gears. Reward: Total Hyperspace makes the Hyper Building softcap start later"+(tmp.nerdMode?" (Formula: (x^0.2)/100)":" (Currently: +"+format(player.hs.buyables[11].root(5).times(.1))+")") },
+			},
         },
 		tabFormat: [
 			"blank", 
@@ -6841,4 +7040,4 @@ addLayer("sc", {
 			return html;
 		}],
 	],
-})
+}) 
