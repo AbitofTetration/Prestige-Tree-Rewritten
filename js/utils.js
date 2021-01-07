@@ -54,7 +54,7 @@ function format(decimal, precision=2, whole=false) {
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
 	else if (decimal.gte(Decimal.pow(0.1, precision)) || whole) return regularFormat(decimal, precision)
-	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte(1e-9)?precision:0)
+	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte("1e-1000")?precision:0)
 	else return "1/("+format(decimal.pow(-1), precision)+")"
 }
 

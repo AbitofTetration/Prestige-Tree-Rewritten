@@ -6661,7 +6661,8 @@ addLayer("ge", {
 			"blank", "blank",
 			["clickable", 21],
 			"blank", "blank",
-			["row", [["column", [["raw-html", function() { return "<h3>Teeth: "+formatWhole(tmp.ge.teeth, true)+"</h3>" }], "blank", ["clickable", 11]], {"background-color": "#b0babf", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}], ["column", [["raw-html", function() { return "<h3>Kinetic Energy: "+format(player.ge.energy)+" J</h3><br><br>Velocity: "+format(tmp.ge.speed)+"m/s"+(tmp.nerdMode?" (sqrt(x))":"") }], "blank", ["clickable", 12]], {"background-color": "#dec895", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}], ["column", [["raw-html", function() { return "<h3>Tooth Size: "+format(tmp.ge.toothSize)+"m</h3><br><br>" }], "blank", ["clickable", 13]], {"background-color": "#bfa1b8", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}]]],
+			["row", [["column", [["raw-html", function() { return "<h3>Teeth: "+formatWhole(tmp.ge.teeth, true)+"</h3>" }], "blank", ["clickable", 11]], {"background-color": "#b0babf", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}], ["column", [["raw-html", function() { return "<h3>Kinetic Energy: "+format(player.ge.energy)+" J</h3><br><br>Velocity: "+format(tmp.ge.speed)+"m/s"+(tmp.nerdMode?" (sqrt(x))":"") }], "blank", ["clickable", 12]], {"background-color": "#dec895", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}], ["column", [["raw-html", function() { return "<h3>Tooth Size: "+format(tmp.ge.toothSize)+"m</h3><br><br>" }], "blank", ["clickable", 13]], {"background-color": "#bfa1b8", color: "black", width: "12vw", padding: "10px", margin: "0 auto", "height": "250px"}]]], "blank",
+			["buyable", 11], "blank",
 		],
 		update(diff) {
 			if (!player.ge.unlocked) return;
@@ -6698,17 +6699,53 @@ addLayer("ge", {
 		toothSize() {
 			return player.ge.shrinkPower.plus(1).pow(-0.5).div(tmp.ge.clickables[13].effect);
 		},
-		boostReq() { return Decimal.pow(1e10, player.ge.boosted.pow(1.2)).times(1e280) },
+		boostReducedPurch() { return tmp.ge.buyables[11].effect.times(4) },
+		boostReq() { return Decimal.pow(1e10, player.ge.boosted.sub(tmp.ge.boostReducedPurch).pow(1.2).times(tmp.ge.boostReducedPurch.gt(player.ge.boosted)?(-1):1)).times(1e280) },
+		buyables: {
+			rows: 1,
+			cols: 1,
+			11: {
+				title: "Gear Evolution",
+				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+                    return Decimal.pow(125, x.pow(1.425)).times(1e3)
+                },
+				effectPer: new Decimal(.5),
+				effect() { return Decimal.mul(tmp[this.layer].buyables[this.id].effectPer, player[this.layer].buyables[this.id]) },
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id];
+					let cost = data.cost;
+					let amt = player[this.layer].buyables[this.id];
+                    let display = "Reset all Gear Upgrades and force a Row 7 reset to add "+format(data.effectPer)+" to each of their effect bases and reduce their costs by "+format(data.effectPer.times(4))+" purchases.<br><br>Req: "+formatWhole(cost)+" Rotations"+(tmp.nerdMode?" (Cost Formula: 125^(x^1.425)*1e3)":"")+".<br>Currently: +"+format(data.effect)+" to bases, costs reduced by "+format(data.effect.times(4))+" purchases";
+					return display;
+                },
+                unlocked() { return unl(this.layer) }, 
+                canAfford() {
+					let cost = tmp[this.layer].buyables[this.id].cost
+                    return player[this.layer].unlocked && player.ge.rotations.gte(cost);
+				},
+                buy() { 
+                    player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+					player.ge.boosted = new Decimal(0);
+					for (let i=11;i<=13;i++) player.ge.clickables[i] = "";
+					doReset("ge", true);
+                },
+                buyMax() {
+					// later :)
+				},
+                style: {'height':'200px', 'width':'200px'},
+				autoed() { return false },
+			},
+		},
 		clickables: {
 			rows: 2,
 			cols: 3,
 			11: {
-				title() { return "Divide Teeth by "+format(this.effectPer) },
+				title() { return "Divide Teeth by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
 					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
 				},
-				effectPer: new Decimal(2),
-				effect() { return Decimal.pow(this.effectPer, player.ge.clickables[this.id]) },
+				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
+				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
 				onClick() { 
@@ -6718,12 +6755,12 @@ addLayer("ge", {
 				style: {"height": "150px", "width": "150px"},
 			},
 			12: {
-				title() { return "Multiply Kinetic Energy gain by "+format(this.effectPer) },
+				title() { return "Multiply Kinetic Energy gain by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
 					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
 				},
-				effectPer: new Decimal(6),
-				effect() { return Decimal.pow(this.effectPer, player.ge.clickables[this.id]) },
+				effectPer() { return Decimal.add(6, tmp.ge.buyables[11].effect) },
+				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
 				onClick() { 
@@ -6733,15 +6770,15 @@ addLayer("ge", {
 				style: {"height": "150px", "width": "150px"},
 			},
 			13: {
-				title() { return "Divide Tooth Size by "+format(this.effectPer) },
+				title() { return "Divide Tooth Size by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
 					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
 				},
-				effectPer: new Decimal(2),
-				effect() { return Decimal.pow(this.effectPer, player.ge.clickables[this.id]) },
+				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
+				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
-				onClick() { 
+				onClick() {
 					player.ge.boosted = player.ge.boosted.plus(1);
 					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
 				},
