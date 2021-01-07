@@ -6700,7 +6700,12 @@ addLayer("ge", {
 			return player.ge.shrinkPower.plus(1).pow(-0.5).div(tmp.ge.clickables[13].effect);
 		},
 		boostReducedPurch() { return tmp.ge.buyables[11].effect.times(4) },
-		boostReq() { return Decimal.pow(1e10, player.ge.boosted.sub(tmp.ge.boostReducedPurch).pow(1.2).times(tmp.ge.boostReducedPurch.gt(player.ge.boosted)?(-1):1)).times(1e280) },
+		boostReq() { 
+			let x = player.ge.boosted.sub(tmp.ge.boostReducedPurch);
+			if (x.gte(20)) x = x.pow(2).div(20);
+			return Decimal.pow(1e10, x.pow(1.2).times(x.lt(0)?(-1):1)).times(1e280) 
+		},
+		boostReqFormula() { return player.ge.boosted.sub(tmp.ge.boostReducedPurch).gte(20)?"1e10^(((totalBought^2)/20)^1.2) * 1e280":"1e10^(totalBought^1.2) * 1e280" },
 		buyables: {
 			rows: 1,
 			cols: 1,
@@ -6742,7 +6747,7 @@ addLayer("ge", {
 			11: {
 				title() { return "Divide Teeth by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
-					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
 				},
 				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
@@ -6757,7 +6762,7 @@ addLayer("ge", {
 			12: {
 				title() { return "Multiply Kinetic Energy gain by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
-					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
+					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
 				},
 				effectPer() { return Decimal.add(6, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
@@ -6772,7 +6777,7 @@ addLayer("ge", {
 			13: {
 				title() { return "Divide Tooth Size by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
-					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" (1e10^(totalBought^1.2) * 1e280)":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
 				},
 				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
