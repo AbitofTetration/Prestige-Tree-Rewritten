@@ -573,7 +573,7 @@ ul {
 
 [tooltip] {
 	position: relative;
-	z-index: 999999 !important
+	z-index: 999999 !important;
 }
 
 [tooltip]:before,
@@ -603,7 +603,6 @@ ul {
 	text-align: center;
 	font-size: 14px;
 	line-height: 1.2;
-	transition-duration: 0.5s;
 	white-space: pre-wrap;
 }
 
@@ -619,17 +618,29 @@ ul {
 	content: " ";
 	font-size: 0;
 	line-height: 0;
-	transition-duration: 0.5s;
 	white-space: pre-wrap;
 }
 
 [tooltip]:hover:before,
 [tooltip]:hover:after {
-	visibility: visible;
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
-	filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
-	opacity: 1;
+	animation: tooltip 0.25s linear 1;
+	animation-fill-mode: forwards;  
 	white-space: pre-wrap;
+}
+
+@keyframes tooltip {
+	0% {
+		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+		filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
+		opacity: 0;
+		visibility: hidden;
+	}
+	100% {
+		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+		filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+		opacity: 1;
+		visibility: visible;
+	}
 }
 
 #loadingSection {

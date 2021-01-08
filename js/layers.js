@@ -4685,7 +4685,7 @@ addLayer("ps", {
         baseAmount() {return player.q.energy}, // Get the current amount of baseResource
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent: new Decimal(1.5), // Prestige currency exponent
-		base: new Decimal("1e8000"),
+		base() { return new Decimal("1e8000").root(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?2:1) },
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
 			if (player.i.buyables[11].gte(2)) mult = mult.div(buyableEffect("s", 17));
@@ -4721,7 +4721,7 @@ addLayer("ps", {
 		autoPrestige() { return hasMilestone("hn", 4) && player.ps.auto },
         layerShown(){return player.m.unlocked && player.ba.unlocked},
         branches: ["q", ["h", 2]],
-		soulGainExp() { return 1.5 },
+		soulGainExp() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.2:1.5 },
 		soulGainMult() {
 			let mult = new Decimal(1);
 			if (tmp.ps.buyables[11].effects.damned) mult = mult.times(tmp.ps.buyables[11].effects.damned||1);
@@ -4729,7 +4729,7 @@ addLayer("ps", {
 			return mult.times(tmp.n.dustEffs.purple);
 		},
 		soulGain() {
-			let gain = Decimal.pow(player.ps.points, layers.ps.soulGainExp()).div(9.4).times(layers.ps.soulGainMult());
+			let gain = (((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?Decimal.pow(tmp.ps.soulGainExp, player.ps.points):Decimal.pow(player.ps.points, tmp.ps.soulGainExp)).div(9.4).times(layers.ps.soulGainMult());
 			return gain;
 		},
 		gainDisplay() {
@@ -4743,6 +4743,7 @@ addLayer("ps", {
 		soulEffExp() {
 			let exp = new Decimal(1.5e3);
 			if (tmp.ps.buyables[11].effects.damned) exp = exp.times(tmp.ps.buyables[11].effects.damned||1);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) exp = exp.times(100);
 			return exp;
 		},
 		soulEff() {
@@ -4757,7 +4758,7 @@ addLayer("ps", {
 					"prestige-button",
 					"resource-display",
 					"blank",
-					["display-text", function() { return "You have "+formatWhole(player.ps.souls)+" Damned Souls "+(tmp.nerdMode?("(Formula: (PS^"+format(tmp.ps.soulGainExp)+")*"+format(tmp.ps.soulGainMult.div(10))+")"):("(Gain: "+tmp.ps.gainDisplay+")"))+": Divide Quirk Improvement requirements by "+format(tmp.ps.soulEff)+(tmp.nerdMode?(" (x+1)^("+formatWhole(tmp.ps.soulEffExp)+")"):"") }],
+					["display-text", function() { return "You have "+formatWhole(player.ps.souls)+" Damned Souls "+(tmp.nerdMode?("(Formula: ("+(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("ps"):false)?(format(tmp.ps.soulGainExp)+"^PS"):("PS^"+format(tmp.ps.soulGainExp)))+")*"+format(tmp.ps.soulGainMult.div(10))+")"):("(Gain: "+tmp.ps.gainDisplay+")"))+": Divide Quirk Improvement requirements by "+format(tmp.ps.soulEff)+(tmp.nerdMode?(" (x+1)^("+formatWhole(tmp.ps.soulEffExp)+")"):"") }],
 					"blank",
 					["buyable", 11],
 				],
@@ -4782,9 +4783,14 @@ addLayer("ps", {
 			cols: 1,
 			11: {
 				title: "Wraiths",
+				scaleSlow() {
+					let speed = new Decimal(1);
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) speed = speed.times(2);
+					return speed;
+				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    let cost1 = x.times(2).plus(1).floor();
-					let cost2 = x.plus(1).pow(4).times(174).plus(200).floor();
+                    let cost1 = x.div(tmp.ps.buyables[this.id].scaleSlow).times(2).plus(1).floor();
+					let cost2 = x.div(tmp.ps.buyables[this.id].scaleSlow).plus(1).pow(4).times(174).plus(200).floor();
                     return { phantom: cost1, damned: cost2 };
                 },
 				effects(adj=0) {
@@ -4833,7 +4839,7 @@ addLayer("ps", {
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                 },
                 buyMax() {
-					let target = player.ps.points.sub(1).div(2).min(player.ps.souls.sub(200).div(174).root(4).sub(1)).plus(1).floor().max(0)
+					let target = player.ps.points.sub(1).div(2).min(player.ps.souls.sub(200).div(174).root(4).sub(1)).times(tmp.ps.buyables[this.id].scaleSlow).plus(1).floor().max(0)
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target)
 				},
                 style: {'height':'200px', 'width':'200px'},
@@ -4844,6 +4850,7 @@ addLayer("ps", {
 				scaleSlow() {
 					let slow = new Decimal(1);
 					if (hasUpgrade("hn", 51)) slow = slow.times(2);
+					if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) slow = slow.times(1.2);
 					return slow;
 				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
@@ -4900,7 +4907,7 @@ addLayer("ps", {
 				//if (impr.gte(270)) impr = Decimal.pow(10, impr.div(270/Math.log10(270)));
 				return Decimal.pow(10, impr.pow(1.5).times(4)).sub(1).times(this.baseReq());
 			},
-			power() { return tmp.ps.buyables[21].effect2 },
+			power() { return tmp.ps.buyables[21].effect2.times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.1:1) },
 			resName: "phantom power",
 			rows: 2,
 			cols: 2,
@@ -6468,6 +6475,7 @@ addLayer("ma", {
 			if (player.ma.mastered.includes("ss")) desc += "<h2>Subspace</h2><br><br><ul><li>The Subspace cost base is reduced (1.15 -> 1.1)</li><li>The base Subspace cost exponent is reduced (1.1 -> 1.07)</li><li>The Subspace base is multiplied by 1e10 for each Subspace Energy you have</li><li>The third Subspace effect is raised ^3</li><li>If <b>Subspatial Awakening</b>'s effect is above 100%, it is cubed but divided by 10,000</li><li><b>Emissary of Smash</b>'s effect is raised ^400</li><li><b>No More Progress</b>'s effect is doubled</li><li><b>Challenging Speedup</b>'s endpoint is much higher (e1,000,000 -> e1e11)</li></ul><br><br>";
 			if (player.ma.mastered.includes("m")) desc += "<h2>Magic</h2><br><br><ul><li>The Magic gain exponent is increased (7e-3 -> 8.5e-3)</li><li>Add 50% to Spell Power</li><li>The Hex effect softcap does not apply to the boost to Hindrance Spirit, Quirk, and Solar Energy gain, but this effect is square rooted</li><li>The Hex effect softcap starts 1e-3% later for every OoM of Magic you have</li><li>The Hex effect softcap exponent is increased (10 -> 2e3)</li></ul><br><br>";
 			if (player.ma.mastered.includes("ba")) desc += "<h2>Balance</h2><br><br><ul><li>The Balance Energy gain exponent is increased (5e-3 -> 0.0125)</li><li>There are no Positivity/Negativity nerfs</li><li>Both <b>Net Neutrality</b> effects have their exponents raised ^2.5</li><li><b>Visible Regeneration</b> is raised ^10</li></ul><br><br>";
+			if (player.ma.mastered.includes("ps")) desc += "<h2>Phantom Souls</h2><br><br><ul><li>The Phantom Soul cost base is square rooted</li><li>The base Damned Soul gain formula is improved (PS^1.5 -> 1.2^PS)</li><li>The Damned Soul effect is raised ^100</li><li>Wraiths cost scale 50% slower</li><li>Ghost Spirit cost scales 20% slower</li><li>Phantom Boosters are 10% stronger</li></ul><br><br>";
 			return desc;
 		},
 		milestones: {
@@ -6511,13 +6519,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 14,
+				cap: 15,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
 					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,15,16,(1e300)][tmp.ma.amtMastered||0] },
+				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,15,16,18,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6613,6 +6621,7 @@ addLayer("ge", {
 			toothPower: new Decimal(0),
 			shrinkPower: new Decimal(0),
 			boosted: new Decimal(0),
+			maxToggle: false,
         }},
         color: "rgba(191,191,191,1)",
 		nodeStyle() { return {
@@ -6653,7 +6662,8 @@ addLayer("ge", {
         branches: ["n"],
 		tabFormat: ["main-display",
 			"prestige-button",
-			"resource-display",
+			"resource-display", "blank",
+			"milestones",
 			"blank", "blank", 
 			["display-text", function() { return "<h3>Gear Speed: "+format(tmp.ge.gearSpeed)+"x</h3>"+(tmp.nerdMode?" (cbrt(gears))":"") }],
 			"blank",
@@ -6754,8 +6764,18 @@ addLayer("ge", {
 				unlocked() { return player.ge.unlocked },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
 				onClick() { 
-					player.ge.boosted = player.ge.boosted.plus(1);
-					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
+						let x = tmp.n.dustProduct.div(1e280).max(1).log(1e10).root(1.2);
+						if (x.gte(20)) x = x.times(20).sqrt();
+						x = x.plus(tmp.ge.boostReducedPurch).plus(1).floor();
+						let totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
+						let target = x.sub(totalOther).max(0);
+						player.ge.boosted = player.ge.boosted.max(x);
+						player.ge.clickables[this.id] = Decimal.max(player.ge.clickables[this.id], target);
+					} else {
+						player.ge.boosted = player.ge.boosted.plus(1);
+						player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+					}
 				},
 				style: {"height": "150px", "width": "150px"},
 			},
@@ -6764,13 +6784,23 @@ addLayer("ge", {
 				display() { 
 					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
 				},
-				effectPer() { return Decimal.add(6, tmp.ge.buyables[11].effect) },
+				effectPer() { return Decimal.add(6, tmp.ge.buyables[11].effect).times(hasAchievement("a", 123)?4:1) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
 				onClick() { 
-					player.ge.boosted = player.ge.boosted.plus(1);
-					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
+						let x = tmp.n.dustProduct.div(1e280).max(1).log(1e10).root(1.2);
+						if (x.gte(20)) x = x.times(20).sqrt();
+						x = x.plus(tmp.ge.boostReducedPurch).plus(1).floor();
+						let totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
+						let target = x.sub(totalOther).max(0);
+						player.ge.boosted = player.ge.boosted.max(x);
+						player.ge.clickables[this.id] = Decimal.max(player.ge.clickables[this.id], target);
+					} else {
+						player.ge.boosted = player.ge.boosted.plus(1);
+						player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+					}
 				},
 				style: {"height": "150px", "width": "150px"},
 			},
@@ -6783,9 +6813,19 @@ addLayer("ge", {
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
-				onClick() {
-					player.ge.boosted = player.ge.boosted.plus(1);
-					player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+				onClick() { 
+					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
+						let x = tmp.n.dustProduct.div(1e280).max(1).log(1e10).root(1.2);
+						if (x.gte(20)) x = x.times(20).sqrt();
+						x = x.plus(tmp.ge.boostReducedPurch).plus(1).floor();
+						let totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
+						let target = x.sub(totalOther).max(0);
+						player.ge.boosted = player.ge.boosted.max(x);
+						player.ge.clickables[this.id] = Decimal.max(player.ge.clickables[this.id], target);
+					} else {
+						player.ge.boosted = player.ge.boosted.plus(1);
+						player.ge.clickables[this.id] = Decimal.add(player.ge.clickables[this.id], 1)
+					}
 				},
 				style: {"height": "150px", "width": "150px"},
 			},
@@ -6800,6 +6840,14 @@ addLayer("ge", {
 					doReset("ge", true);
 				},
 				style: {"height": "75px", "width": "100px"},
+			},
+		},
+		milestones: {
+			0: {
+				requirementDescription: "1,000,000 Gears",
+				done() { return player.ge.best.gte(1e6) },
+				effectDescription: "You can buy max Gear Upgrades.",
+				toggles: [["ge", "maxToggle"]],
 			},
 		},
 })
@@ -7047,6 +7095,16 @@ addLayer("a", {
 				name: "Geared for More",
 				done() { return player.ge.unlocked },
 				tooltip() { return "Unlock Gears. Reward: Total Hyperspace makes the Hyper Building softcap start later"+(tmp.nerdMode?" (Formula: (x^0.2)/100)":" (Currently: +"+format(player.hs.buyables[11].root(5).times(.1))+")") },
+			},
+			122: {
+				name: "The Cursed Gear",
+				done() { return tmp.ge.teeth.lte(1) },
+				tooltip: "Make your Gears have only 1 Tooth.",
+			},
+			123: {
+				name: "Yearly Solar Output",
+				done() { return player.ge.energy.gte(1.2e34) },
+				tooltip: "Reach 1.2e34 J of Kinetic Energy. Reward: The Kinetic Energy Gear Upgrade's base is quadrupled.",
 			},
         },
 		tabFormat: [
