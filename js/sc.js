@@ -286,6 +286,14 @@ const SOFTCAPS = {
 		display() { return player.hs.unlocked && tmp.hs.buildLimit.gt(this.start()) },
 		info() { return "Starts at Level "+format(this.start().plus(1))+", brought to the fifth root" },
 	},
+	rotEff: {
+		title: "Rotation Effect",
+		type: "expRoot",
+		start: new Decimal(1e230),
+		mag: new Decimal(1.7),
+		display() { return tmp.ge.rotEff.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the 1.7th root" },
+	},
 }
 
 const STATIC_SCALE_DATA = [

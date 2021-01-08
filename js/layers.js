@@ -6626,10 +6626,10 @@ addLayer("ge", {
         }},
         color: "rgba(191,191,191,1)",
 		nodeStyle() { return {
-			background: (player.o.unlocked||canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)",
+			background: (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)",
 		}},
 		componentStyles: {
-			background() { return (player.o.unlocked||canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)" },
+			background() { return (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)" },
 		},
         requires: new Decimal(1e256), // Can be a function that takes requirement increases into account
         resource: "gears", // Name of prestige currency 
@@ -6684,7 +6684,7 @@ addLayer("ge", {
 			player.ge.rotations = player.ge.rotations.plus(tmp.ge.rps.times(diff));
 		},
 		rotEff() {
-			return player.ge.rotations.round().plus(1).pow(5);
+			return softcap("rotEff", player.ge.rotations.round().plus(1).pow(5));
 		},
 		gearSpeed() {
 			return player.ge.points.cbrt();
@@ -6722,10 +6722,20 @@ addLayer("ge", {
 			cols: 1,
 			11: {
 				title: "Gear Evolution",
+				costDiv() {
+					let div = new Decimal(1);
+					if (hasAchievement("a", 124)) div = div.times(3);
+					return div;
+				},
+				power() {
+					let pow = new Decimal(1);
+					if (hasAchievement("a", 124)) pow = pow.times(1.2);
+					return pow;
+				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    return Decimal.pow(125, x.pow(1.425)).times(1e3)
+                    return Decimal.pow(125, x.pow(1.425)).times(1e3).div(tmp.ge.buyables[this.id].costDiv)
                 },
-				effectPer: new Decimal(.5),
+				effectPer() { return Decimal.div(tmp.ge.buyables[this.id].power, 2) },
 				effect() { return Decimal.mul(tmp[this.layer].buyables[this.id].effectPer, player[this.layer].buyables[this.id]) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id];
@@ -7107,7 +7117,12 @@ addLayer("a", {
 				done() { return player.ge.energy.gte(1.2e34) },
 				tooltip: "Reach 1.2e34 J of Kinetic Energy. Reward: The Kinetic Energy Gear Upgrade's base is quadrupled.",
 			},
-        },
+			124: {
+				name: "The Perfect Being",
+				done() { return player.hn.points.gte("ee6") },
+				tooltip: "Reach e1,000,000 Honour. Reward: Gear Evolution requires 3x less Rotations, and is 20% stronger.",
+			},
+		},
 		tabFormat: [
 			"blank", 
 			["display-text", function() { return "Achievements: "+player.a.achievements.length+"/"+(Object.keys(tmp.a.achievements).length-2) }], 

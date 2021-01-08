@@ -245,7 +245,7 @@ function loadVue() {
 	Vue.component('main-display', {
 		props: ['layer'],
 		template: `
-		<div v-if="!!player[layer].points"><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': '0px 0px 10px' + tmp[layer].color}">{{formatWhole(player[layer].points)}}</h2><span v-if="tmp[layer].extraAmtDisplay"><span v-html="tmp[layer].extraAmtDisplay"></span></span> <h3 v-if="tmp.ma.mastered.includes(layer)" v-bind:style="{'color': tmp.ma.color, 'text-shadow': '0px 0px 10px', 'font-weight': 'bold'}">mastered</h3> {{tmp[layer].resource}}<span v-if="tmp[layer].effectDescription">, {{tmp[layer].effectDescription}}</span><br><br></span>
+		<div v-if="!!player[layer].points"><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': ('0px 0px 10px' + tmp[layer].color)}">{{formatWhole(player[layer].points)}}</h2><span v-if="tmp[layer].extraAmtDisplay"><span v-html="tmp[layer].extraAmtDisplay"></span></span> <h3 v-if="tmp.ma.mastered.includes(layer)" v-bind:style="{'color': tmp.ma.color, 'text-shadow': '0px 0px 10px', 'font-weight': 'bold'}">mastered</h3> {{tmp[layer].resource}}<span v-if="tmp[layer].effectDescription">, {{tmp[layer].effectDescription}}</span><br><br></div>
 		`
 	})
 
