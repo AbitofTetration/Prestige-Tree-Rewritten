@@ -4716,9 +4716,9 @@ addLayer("ps", {
 			player.ps.prevH = new Decimal(player.h.points);
 			if (hasMilestone("hn", 7)) player.ps.power = player.ps.power.root(tmp.ps.powerExp).plus(tmp.ps.powerGain.times(diff)).pow(tmp.ps.powerExp);
 			else player.ps.power = new Decimal(0);
-			if (player.ps.autoGhost && hasMilestone("ma", 0)) layers.ps.buyables[21].buyMax();
+			if (player.ps.autoGhost && hasMilestone("ma", 0) && player.ma.current!="ps") layers.ps.buyables[21].buyMax();
 		},
-		autoPrestige() { return hasMilestone("hn", 4) && player.ps.auto },
+		autoPrestige() { return hasMilestone("hn", 4) && player.ps.auto && player.ma.current!="ps" },
         layerShown(){return player.m.unlocked && player.ba.unlocked},
         branches: ["q", ["h", 2]],
 		soulGainExp() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.2:1.5 },
@@ -4884,7 +4884,7 @@ addLayer("ps", {
 					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
 				},
                 style: {'height':'200px', 'width':'200px'},
-				autoed() { return player.ps.autoGhost && hasMilestone("ma", 0) },
+				autoed() { return player.ps.autoGhost && hasMilestone("ma", 0) && player.ma.current!="ps" },
 			},
 		},
 		impr: {
@@ -6602,6 +6602,7 @@ addLayer("ma", {
 			ss: new Decimal(21),
 			m: new Decimal("1e107350"),
 			ba: new Decimal("1e207500"),
+			ps: new Decimal(115),
 		},
 		rowLimit: 6,
 })
