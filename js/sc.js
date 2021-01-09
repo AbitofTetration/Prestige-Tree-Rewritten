@@ -273,10 +273,10 @@ const SOFTCAPS = {
 	hn12: {
 		title: "Second Honour Upgrade (Honour Boost)",
 		type: "expRoot",
-		start: new Decimal(1e10),
+		start() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("hn"):false)?Infinity:1e10) },
 		mag: new Decimal(2),
-		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
 	},
 	hsBuilds: {
 		title: "Hyper Buildings",
