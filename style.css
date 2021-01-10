@@ -432,6 +432,16 @@ a {
               -3px 0px 12px #02f2f2;
 }
 
+.link.pat {
+	color: #f2d13d;
+	-webkit-text-stroke-color: #f2b202;
+}
+
+.link.pat:hover {
+	text-shadow: 5px 0px 10px #f2b202,
+              -3px 0px 12px #f2b202;
+}
+
 .opt {
 	height: 100px;
 	width: 100px;

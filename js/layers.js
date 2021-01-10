@@ -2547,6 +2547,7 @@ addLayer("sg", {
 			if (hasUpgrade("g", 31) && player.i.buyables[12].gte(2)) base = base.times(upgradeEffect("g", 31));
 			if (hasUpgrade("ba", 32)) base = base.times(upgradeEffect("ba", 32));
 			if (hasUpgrade("hn", 52)) base = base.times(buyableEffect("o", 12));
+			if (player.mc.unlocked) base = base.times(clickableEffect("mc", 21));
 			return base;
 		},
 		effect() {
@@ -3497,12 +3498,12 @@ addLayer("o", {
         }},
 		increaseUnlockOrder: ["ss"],
 		roundUpCost: true,
-        color: "rgb(255, 205, 0)",
+        color: "#ffcd00",
 		nodeStyle() {return {
-			"background": (((player.o.unlocked||canReset("o"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(this.layer))))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" ,
+			"background": (((player.o.unlocked||canReset("o"))&&!(Array.isArray(tmp.ma.canBeMastered)&&player.ma.selectionActive&&tmp[this.layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(this.layer))))?((player.grad&&!player.oldStyle)?"radial-gradient(#ffcd00, #ff4300)":"#ff8200"):"#bf8f8f" ,
         }},
 		componentStyles: {
-			"prestige-button"() {return { "background": (canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(rgb(255, 205, 0), rgb(255, 67, 0))":"rgb(255, 130, 0)"):"#bf8f8f" }},
+			"prestige-button"() {return { "background": (canReset("o"))?((player.grad&&!player.oldStyle)?"radial-gradient(#ffcd00, #ff4300)":"#ff8200"):"#bf8f8f" }},
 		},
         requires() { 
 			let req = new Decimal((player[this.layer].unlockOrder>0&&!hasAchievement("a", 62))?16:14).sub(tmp.o.solEnEff);
@@ -4373,6 +4374,7 @@ addLayer("ba", {
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
 			if (hasAchievement("a", 74)) mult = mult.times(challengeEffect("h", 32));
+			if (player.mc.unlocked) mult = mult.times(clickableEffect("mc", 22));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6426,6 +6428,7 @@ addLayer("ma", {
 		},
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
+			if (hasAchievement("a", 131)) mult = mult.div(1.1);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6626,12 +6629,12 @@ addLayer("ge", {
 			boosted: new Decimal(0),
 			maxToggle: false,
         }},
-        color: "rgba(191,191,191,1)",
+        color: "#bfbfbf",
 		nodeStyle() { return {
-			background: (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)",
+			background: (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #bfbfbf 0%, #838586 100%)":"#838586"):"#bfbfbf",
 		}},
 		componentStyles: {
-			background() { return (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, rgba(191,191,191,1) 0%, rgba(131,133,134,1) 100%)":"rgba(191,191,191,1)"):"rgba(191,191,191,1)" },
+			background() { return (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #bfbfbf 0%, #838586 100%)":"#bfbfbf"):"#bfbfbf" },
 		},
         requires: new Decimal(1e256), // Can be a function that takes requirement increases into account
         resource: "gears", // Name of prestige currency 
@@ -6641,6 +6644,7 @@ addLayer("ge", {
         exponent: new Decimal(0.01), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
+			if (player.mc.unlocked) mult = mult.times(clickableEffect("mc", 12));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6670,6 +6674,7 @@ addLayer("ge", {
 			"blank", "blank", 
 			["display-text", function() { return "<h3>Gear Speed: "+format(tmp.ge.gearSpeed)+"x</h3>"+(tmp.nerdMode?" (cbrt(gears))":"") }],
 			"blank",
+			["display-text", function() { return "<b>Gear Radius: "+format(tmp.ge.radius)+"m</b>"+(tmp.nerdMode?" (teeth*toothSize/6.28)":"") }], "blank",
 			["row", [["display-text", function() { return "<h3>Rotations: "+formatWhole(player.ge.rotations, true)+" ("+tmp.ge.rotDesc+")</h3><br>Rotation Effect: Multiply Nebula Energy & Dust gain by "+format(tmp.ge.rotEff)+(tmp.nerdMode?" ((x+1)^5)":"") }]]],
 			"blank", "blank",
 			["clickable", 21],
@@ -6689,7 +6694,7 @@ addLayer("ge", {
 			return softcap("rotEff", player.ge.rotations.round().plus(1).pow(5));
 		},
 		gearSpeed() {
-			return player.ge.points.cbrt();
+			return player.ge.points.cbrt().times(player.mc.unlocked?tmp.mc.mechEff:1);
 		},
 		rps() {
 			return tmp.ge.speed.div(tmp.ge.teeth.times(tmp.ge.toothSize)).times(tmp.ge.gearSpeed)
@@ -6700,18 +6705,19 @@ addLayer("ge", {
 			if (rps.lt(1)) desc = format(rps.times(60))+" RPM";
 			else desc = format(rps)+" RPS";
 			
-			if (tmp.nerdMode) desc += " </h3>((velocity*gearSpeed)/(teeth*toothSize))<h3>"
+			if (tmp.nerdMode) desc += " </h3>((velocity*gearSpeed)/(radius*6.28))<h3>"
 			return desc;
 		},
 		speed() {
 			return player.ge.energy.sqrt();
 		},
 		teeth() {
-			return player.ge.toothPower.pow(1.5).plus(100).div(tmp.ge.clickables[11].effect).floor().max(1);
+			return player.ge.toothPower.pow(1.5).plus(100).div(tmp.ge.clickables[11].unlocked?tmp.ge.clickables[11].effect:1).floor().max(1);
 		},
 		toothSize() {
-			return player.ge.shrinkPower.plus(1).pow(-0.5).div(tmp.ge.clickables[13].effect);
+			return player.ge.shrinkPower.plus(1).pow(-0.5).div(tmp.ge.clickables[13].effect).times(player.mc.unlocked?tmp.mc.buyables[11].effect:1);
 		},
+		radius() { return tmp.ge.teeth.times(tmp.ge.toothSize).div(2*Math.PI) },
 		boostReducedPurch() { return tmp.ge.buyables[11].effect.times(4) },
 		boostReq() { 
 			let x = player.ge.boosted.sub(tmp.ge.boostReducedPurch);
@@ -6774,7 +6780,7 @@ addLayer("ge", {
 				},
 				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
-				unlocked() { return player.ge.unlocked },
+				unlocked() { return player.ge.unlocked && false },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
 				onClick() { 
 					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
@@ -6865,10 +6871,191 @@ addLayer("ge", {
 		},
 })
 
-addLayer("ghost", {
-	row: 6,
-	position: 2,
-	layerShown() { return player.ma.unlocked?"ghost":false },
+addLayer("mc", {
+		name: "machines", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "MC", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 2, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        startData() { return {
+            unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			total: new Decimal(0),
+			first: 0,
+			mechEn: new Decimal(0),
+        }},
+        color: "#c99a6b",
+		nodeStyle() { return {
+			background: (player.mc.unlocked||canReset("mc"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #c99a6b 0%, #706d6d 100%)":"#c99a6b"):"#c99a6b",
+		}},
+		componentStyles: {
+			"prestige-button": {
+				background() { return (canReset("mc"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #c99a6b 0%, #706d6d 100%)":"#c99a6b"):"#bf8f8f" },
+			},
+		},
+        requires: new Decimal(128000), // Can be a function that takes requirement increases into account
+        resource: "machine parts", // Name of prestige currency 
+        baseResource: "hyperspatial bricks", // Name of resource prestige is based on
+        baseAmount() {return player.i.hb}, // Get the current amount of baseResource
+        type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+        exponent: new Decimal(4), // Prestige currency exponent
+        gainMult() { // Calculate the multiplier for main currency from bonuses
+            mult = new Decimal(1);
+            return mult
+        },
+        gainExp() { // Calculate the exponent on main currency from bonuses
+            return new Decimal(1)
+        },
+        row: 6, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "c", description: "Press C to Machine Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+		passiveGeneration() { return false },
+        doReset(resettingLayer){ 
+			let keep = [];
+			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+        layerShown(){return player.ma.unlocked },
+        branches: ["hs", "i"],
+		update(diff) {
+			if (!player[this.layer].unlocked) return;
+			player.mc.mechEn = player.mc.mechEn.plus(player.ge.rotations.times(tmp.mc.mechPer).times(diff)).times(tmp.mc.decayPower.pow(diff));
+		},
+		mechPer() { return tmp.mc.buyables[11].effect.pow(5).times(clickableEffect("mc", 11)) },
+		decayPower() { return player.mc.mechEn.plus(1).log10().plus(1).pow(-2) },
+		mechEff() { return Decimal.pow(10, player.mc.mechEn.plus(1).log10().root(4).div(2)) },
+		tabFormat: {
+			"The Shell": {
+				buttonStyle() { return {'background-color': '#706d6d'} },
+				content: ["main-display",
+				"prestige-button",
+				"resource-display", "blank",
+				["display-text", function() { return "Imperium Bricks: "+formatWhole(player.i.points) }],
+				"blank", 
+				"buyables",
+			]},
+			"The Motherboard": {
+				buttonStyle() { return {'background-color': '#c99a6b', color: "black"} },
+				content: ["blank", ["display-text", function() { return "Each Gear Rotation provides "+format(tmp.mc.mechPer)+" Mech-Energy, which adds to <h3>"+format(player.mc.mechEn)+" Mech-Energy</h3>" }],
+				"blank", ["display-text", function() { return tmp.mc.decayPower.eq(1)?"":("Due to inadequate storage, Mech-Energy is being lost by "+format(tmp.mc.decayPower.pow(-1).log10())+" OoMs per second.") }],
+				"blank", ["display-text", function() { return "Your Mech-Energy is multiplying Gear Speed by "+format(tmp.mc.mechEff)+(tmp.nerdMode?" (Formula: 10^((log(x+1)^0.25)/2))":"") }],
+				"blank", "blank",
+				"clickables",
+			]},
+		},
+		clickables: {
+			rows: 2,
+			cols: 2,
+			11: {
+				title: "CPU",
+				display() { 
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Kinetic Energy multiplies Mech-Energy gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (kineticEnergy+1)^(1-1/sqrt(log(activeMechEnergy+1)+1)))":"");
+				},
+				effect() { return Decimal.pow(player.ge.energy.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).sqrt()))) },
+				unlocked() { return player.mc.unlocked },
+				canClick() { return player.mc.unlocked },
+				onClick() {
+					if (player.mc.clickables[this.id].eq(0)) {
+						player.mc.clickables = getStartClickables("mc");
+						doReset("mc", true);
+					}
+					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
+					player.mc.mechEn = new Decimal(0);
+				},
+				style: {id: "11", "height": "200px", "width": "200px", "background-color": function() { return new Decimal(player.mc.clickables[this.id]).eq(0)?"#c99a6b":"#6ccc81" }},
+			},
+			12: {
+				title: "The Port",
+				display() { 
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Phantom Souls multiply Gear gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (kineticEnergy+1)^(1-1/sqrt(log(activeMechEnergy+1)+1)))":"");
+				},
+				effect() { return Decimal.pow(player.ps.points.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).sqrt()))) },
+				unlocked() { return player.mc.unlocked },
+				canClick() { return player.mc.unlocked },
+				onClick() {
+					if (player.mc.clickables[this.id].eq(0)) {
+						player.mc.clickables = getStartClickables("mc");
+						doReset("mc", true);
+					}
+					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
+					player.mc.mechEn = new Decimal(0);
+				},
+				style: {id: "12", "height": "200px", "width": "200px", "background-color": function() { return new Decimal(player.mc.clickables[this.id]).eq(0)?"#c99a6b":"#6ccc81" }},
+			},
+			21: {
+				title: "Northbridge",
+				display() { 
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Solarity multiplies the Super Generator base by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (solarity+1)^(1-1/((log(activeMechEnergy+1)+1)^0.125)))":"");
+				},
+				effect() { return Decimal.pow(player.o.points.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).root(8)))) },
+				unlocked() { return player.mc.unlocked },
+				canClick() { return player.mc.unlocked },
+				onClick() {
+					if (player.mc.clickables[this.id].eq(0)) {
+						player.mc.clickables = getStartClickables("mc");
+						doReset("mc", true);
+					}
+					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
+					player.mc.mechEn = new Decimal(0);
+				},
+				style: {id: "21", "height": "200px", "width": "200px", "background-color": function() { return new Decimal(player.mc.clickables[this.id]).eq(0)?"#c99a6b":"#6ccc81" }},
+			},
+			22: {
+				title: "Southbridge",
+				display() { 
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Hyperspace Energy multiplies Balance Energy gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (honour+1)^(1-1/cbrt(log(activeMechEnergy+1)+1)))":"");
+				},
+				effect() { return Decimal.pow(player.hs.points.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).cbrt()))) },
+				unlocked() { return player.mc.unlocked },
+				canClick() { return player.mc.unlocked },
+				onClick() {
+					if (player.mc.clickables[this.id].eq(0)) {
+						player.mc.clickables = getStartClickables("mc");
+						doReset("mc", true);
+					}
+					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
+					player.mc.mechEn = new Decimal(0);
+				},
+				style: {id: "22", "height": "200px", "width": "200px", "background-color": function() { return new Decimal(player.mc.clickables[this.id]).eq(0)?"#c99a6b":"#6ccc81" }},
+			},
+		},
+		buyables: {
+			showRespec() { return player.mc.unlocked },
+            respec() { // Optional, reset things and give back your currency. Having this function makes a respec button appear
+                resetBuyables(this.layer)
+                doReset(this.layer, true) // Force a reset
+            },
+			rows: 1,
+			cols: 1,
+			11: {
+				title: "Shell Expansion",
+				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+                    return x.div(10).plus(0.5).ceil();
+                },
+				effect() { return player[this.layer].buyables[this.id].plus(1).sqrt() },
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id];
+					let cost = data.cost;
+					let amt = player[this.layer].buyables[this.id];
+                    let display = "Req: "+formatWhole(cost)+" Machine Parts"+(tmp.nerdMode?" (Cost Formula: floor((x/10+0.5)^1.1)":"")+".<br><br><h3>Current Shell Size: "+formatWhole(amt)+"m</h3>, which multiplies Mech-Energy gain by "+format(data.effect.pow(5))+(tmp.nerdMode?" (Formula: (x+1)^2.5)":"")+" but also multiplies Tooth Size of Gears by "+format(data.effect)+(tmp.nerdMode?" (Formula: sqrt(x+1))":"");
+					return display;
+                },
+                unlocked() { return unl(this.layer) }, 
+                canAfford() {
+					let cost = tmp[this.layer].buyables[this.id].cost
+                    return player[this.layer].unlocked && player.mc.points.gte(cost);
+				},
+                buy() { 
+					let b = player[this.layer].buyables[this.id];
+					let c = player.mc.points;
+					let n = b.pow(2).times(4).plus(b.times(36)).plus(c.times(80)).plus(81).sqrt().sub(11).div(2).plus(1).floor();
+                    player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(n)
+					if (n.sub(b).eq(1)) player.mc.points = player.mc.points.sub(tmp[this.layer].buyables[this.id].cost);
+					else player.mc.points = player.mc.points.sub(b.sub(n).sub(1).times(b.plus(n).plus(10)).times(-0.05).floor()).max(0);
+                },
+                style: {'height':'200px', 'width':'200px'},
+				autoed() { return false },
+			},
+		},
 })
 
 addLayer("a", {
@@ -6882,7 +7069,7 @@ addLayer("a", {
             return ("Achievements")
         },
         achievements: {
-            rows: 12,
+            rows: 13,
             cols: 5,
             11: {
                 name: "All that progress is gone!",
@@ -7158,9 +7345,9 @@ addLayer("a", {
 				tooltip() { return "Unlock Gears. Reward: Total Hyperspace makes the Hyper Building softcap start later"+(tmp.nerdMode?" (Formula: (x^0.2)/100)":" (Currently: +"+format(player.hs.buyables[11].root(5).times(.1))+")") },
 			},
 			122: {
-				name: "The Cursed Gear",
-				done() { return tmp.ge.teeth.lte(1) },
-				tooltip: "Make your Gears have only 1 Tooth.",
+				name: "So Many Teeth!",
+				done() { return tmp.ge.teeth.gte(1e4) },
+				tooltip: "Make your Gears have at least 10,000 Teeth.",
 			},
 			123: {
 				name: "Yearly Solar Output",
@@ -7171,6 +7358,11 @@ addLayer("a", {
 				name: "The Perfect Being",
 				done() { return player.hn.points.gte("ee6") },
 				tooltip: "Reach e1,000,000 Honour. Reward: Gear Evolution requires 3x less Rotations, and is 20% stronger.",
+			},
+			131: {
+				name: "Artificially Mindless",
+				done() { return player.mc.unlocked },
+				tooltip: "Unlock Machines. Reward: Mastery is 10% cheaper.",
 			},
 		},
 		tabFormat: [

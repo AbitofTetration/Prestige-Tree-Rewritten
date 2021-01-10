@@ -180,7 +180,7 @@ function getStartClickables(layer){
 	if (layers[layer].clickables) {
 		for (id in layers[layer].clickables)
 			if (!isNaN(id))
-				data[id] = ""
+				data[id] = new Decimal(0)
 	}
 	return data
 }
