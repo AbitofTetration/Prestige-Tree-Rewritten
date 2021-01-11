@@ -95,6 +95,14 @@ const SOFTCAPS = {
 		display() { return player.s.buyables[14].gt(0) && buyableEffect("s", 14).gte(this.start) },
 		info() { return "Starts at ^"+format(this.start)+", logarithmic" },
 	},
+	spaceBuilding9: {
+		title: "Nonary Space Building",
+		type: "expRoot",
+		start: new Decimal(7.5e5),
+		mag: new Decimal(6),
+		display() { return player.s.buyables[19].gt(0) && buyableEffect("s", 19).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the sixth root" },
+	},
 	hindr_base: {
 		title: "Hindrance Spirit Effect",
 		type: "expRoot",
@@ -281,7 +289,7 @@ const SOFTCAPS = {
 	hsBuilds: {
 		title: "Hyper Buildings",
 		type: "root",
-		start() { return Decimal.add(3, hasAchievement("a", 121)?player.hs.buyables[11].root(5).times(.1):0) },
+		start() { return Decimal.add(3, hasAchievement("a", 121)?player.hs.buyables[11].root(5).times(.1):0).plus(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("hs"):false)?.1:0) },
 		mag: new Decimal(5),
 		display() { return player.hs.unlocked && tmp.hs.buildLimit.gt(this.start()) },
 		info() { return "Starts at Level "+format(this.start().plus(1))+", brought to the fifth root" },

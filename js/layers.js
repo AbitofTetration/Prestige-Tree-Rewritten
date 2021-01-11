@@ -2320,7 +2320,7 @@ addLayer("s", {
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let ret = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).div(1e3).plus(1)
 					if (player.hs.unlocked) ret = ret.pow(buyableEffect("hs", 29));
-					return ret;
+					return softcap("spaceBuilding9", ret);
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
@@ -5599,7 +5599,7 @@ addLayer("n", {
         baseResource: "solarity", // Name of resource prestige is based on
         baseAmount() {return player.o.points}, // Get the current amount of baseResource
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
-        exponent: new Decimal(0.03), // Prestige currency exponent
+        exponent() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?0.05:0.03) }, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
 			if (hasUpgrade("hn", 45)) mult = mult.times(upgradeEffect("hn", 45));
@@ -5609,7 +5609,7 @@ addLayer("n", {
 			if (player.ge.unlocked) mult = mult.times(tmp.ge.rotEff);
             return mult
         },
-		passiveGeneration() { return hasMilestone("ma", 3)?1:0 },
+		passiveGeneration() { return (hasMilestone("ma", 3)&&player.ma.current!="n")?1:0 },
         gainExp() { // Calculate the exponent on main currency from bonuses
             return new Decimal(1)
         },
@@ -5667,6 +5667,7 @@ addLayer("n", {
 			if (hasUpgrade("hn", 25)) mult = mult.times(upgradeEffect("hn", 25));
 			if (hasUpgrade("g", 33) && player.i.buyables[12].gte(2)) mult = mult.times(upgradeEffect("g", 33));
 			if (player.ge.unlocked) mult = mult.times(tmp.ge.rotEff);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) mult = mult.times(1e30);
 			return mult;
 		},
 		effect() {
@@ -5680,18 +5681,20 @@ addLayer("n", {
 		dustProduct() { return player.n.purpleDust.times(player.n.blueDust).times(player.n.orangeDust) },
 		dustEffs() {
 			let mod = player.n.unlocked?1:0
+			let exp = ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.6:1
 			return {
-				purple: Decimal.pow(10, player.n.purpleDust.times(mod).plus(1).log10().sqrt()),
-				blue: player.n.blueDust.times(mod).plus(1).pow(50),
-				orange: player.n.orangeDust.times(mod).plus(1).pow(75),
+				purple: Decimal.pow(10, player.n.purpleDust.times(mod).plus(1).log10().sqrt()).pow(exp),
+				blue: player.n.blueDust.times(mod).plus(1).pow(50).pow(exp),
+				orange: player.n.orangeDust.times(mod).plus(1).pow(75).pow(exp),
 			}
 		},
 		dustEffs2() {
 			let mod = hasUpgrade("hn", 53)?1:0
+			let exp = ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?1.4:1
 			return {
-				purpleBlue: player.n.purpleDust.times(player.n.blueDust).plus(1).pow(10),
-				blueOrange: player.n.blueDust.times(player.n.orangeDust).plus(1).pow(5),
-				orangePurple: player.n.orangeDust.times(player.n.purpleDust).plus(1).pow(0.6),
+				purpleBlue: player.n.purpleDust.times(player.n.blueDust).plus(1).pow(10).pow(exp),
+				blueOrange: player.n.blueDust.times(player.n.orangeDust).plus(1).pow(5).pow(exp),
+				orangePurple: player.n.orangeDust.times(player.n.purpleDust).plus(1).pow(0.6).pow(exp),
 			}
 		},
 		realDustEffs2() {
@@ -5717,7 +5720,8 @@ addLayer("n", {
 				title: "Stellar Clusters",
 				cap() { return new Decimal(5) },
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    let cost = { purple: Decimal.pow(1e3, x.pow(2)).cbrt().times(50), blue: Decimal.pow(200, x.pow(2)).sqrt(), orange: Decimal.pow(1e3, x.pow(2)).root(5).times(150) }
+					let exp = (player.ma.current=="n")?26.5:1
+					let cost = { purple: Decimal.pow(1e3, x.pow(2)).cbrt().times(50).pow(Math.pow(exp, 0.966)), blue: Decimal.pow(200, x.pow(2)).sqrt().pow(exp), orange: Decimal.pow(1e3, x.pow(2)).root(5).times(150).pow(exp) }
 					return cost;
                 },
 				display() { // Everything else displayed in the buyable button after the title
@@ -5745,7 +5749,7 @@ addLayer("n", {
 				autoed() { return false },
 			},
 		},
-		secondariesAvailable() { return hasUpgrade("hn", 53)?(hasMilestone("hn", 8)?3:(hasUpgrade("hn", 15)?2:1)):0 },
+		secondariesAvailable() { return hasUpgrade("hn", 53)?((hasMilestone("hn", 8)&&player.ma.current!="n")?3:(hasUpgrade("hn", 15)?2:1)):0 },
 		secondariesActive() { 
 			let n = 0;
 			Object.values(player.n.activeSecondaries).forEach(x => function() { n += x?1:0 }());
@@ -5834,7 +5838,7 @@ addLayer("hs", {
         hotkeys: [
             {key: "ctrl+s", description: "Press Ctrl+S to Hyperspace Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
         ],
-		passiveGeneration() { return hasMilestone("ma", 2)?1:0 },
+		passiveGeneration() { return (hasMilestone("ma", 2)&&player.ma.current!="hs")?1:0 },
         doReset(resettingLayer){ 
 			let keep = [];
 			let hs = player.hs.buyables[11];
@@ -5863,15 +5867,16 @@ addLayer("hs", {
 		],
 		update(diff) {
 			player.hs.buildLim = player.hs.buildLim.max(tmp.hs.buildLimit);
-			if (hasMilestone("ma", 5) && player.hs.auto) tmp.hs.buyables[11].buyMax();
+			if (hasMilestone("ma", 5) && player.hs.auto && player.ma.current!="hs") tmp.hs.buyables[11].buyMax();
 		},
 		hyperspace() {
 			let total = player.hs.buyables[11];
 			let amt = total.sub(player.hs.spentHS);
 			return amt;
 		},
-		nextBuildLimit() { return player.hs.buildLim.plus(1).pow(2).plus(20) },
-		buildLimit() { return player.sg.points.sub(21).max(0).plus(1).sqrt().floor() },
+		buildLimScaling() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false)?0.8:1 },
+		nextBuildLimit() { return player.hs.buildLim.plus(1).times(tmp.hs.buildLimScaling).pow(2).plus(20) },
+		buildLimit() { return player.sg.points.sub(21).max(0).plus(1).sqrt().div(tmp.hs.buildLimScaling).floor() },
 		buildingPower() {
 			if (!unl(this.layer)) return new Decimal(0);
 			let pow = new Decimal(1)
@@ -5880,6 +5885,7 @@ addLayer("hs", {
 			if (player.i.buyables[11].gte(5)) pow = pow.plus(buyableEffect("s", 20));
 			if (player.ma.unlocked) pow = pow.plus(tmp.ma.effect.max(1).log10().div(40));
 			if (hasAchievement("a", 113)) pow = pow.plus(.1);
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) pow = pow.plus(player.hs.buyables[11].div(1000))
 			return pow;
 		},
 		buyables: {
@@ -5899,6 +5905,7 @@ addLayer("hs", {
 				scaleRate() {
 					let rate = new Decimal(1);
 					if (hasUpgrade("t", 32) && player.i.buyables[12].gte(4)) rate = new Decimal(2/3);
+					if (player.ma.current=="hs") rate = rate.times(4)
 					return rate;
 				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
@@ -5933,7 +5940,7 @@ addLayer("hs", {
 					player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(target);
 				},
                 style() { return {'height':'200px', 'width':'200px'}},
-				autoed() { return hasMilestone("ma", 5) && player.hs.auto },
+				autoed() { return hasMilestone("ma", 5) && player.hs.auto && player.ma.current!="hs" },
 			},
 			21: {
 				title: "Primary Hyper Building",
@@ -6429,6 +6436,7 @@ addLayer("ma", {
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1)
 			if (hasAchievement("a", 131)) mult = mult.div(1.1);
+			if (hasAchievement("a", 95)) mult = mult.div(1.15);
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6480,6 +6488,8 @@ addLayer("ma", {
 			if (player.ma.mastered.includes("ba")) desc += "<h2>Balance</h2><br><br><ul><li>The Balance Energy gain exponent is increased (5e-3 -> 0.0125)</li><li>There are no Positivity/Negativity nerfs</li><li>Both <b>Net Neutrality</b> effects have their exponents raised ^2.5</li><li><b>Visible Regeneration</b> is raised ^10</li></ul><br><br>";
 			if (player.ma.mastered.includes("ps")) desc += "<h2>Phantom Souls</h2><br><br><ul><li>The Phantom Soul cost base is square rooted</li><li>The base Damned Soul gain formula is improved (PS^1.5 -> 1.2^PS)</li><li>The Damned Soul effect is raised ^100</li><li>Wraiths cost scale 50% slower</li><li>Ghost Spirit cost scales 20% slower</li><li>Phantom Boosters are 10% stronger</li></ul><br><br>";
 			if (player.ma.mastered.includes("hn")) desc += "<h2>Honour</h2><br><br><ul><li>The Honour gain exponent for its Balance Energy requirement is improved (0.02 -> 0.05)</li><li>Remove the softcap to the second Honour Upgrade</li><li><b>Self-Self-Synergy</b>'s effect is multiplied by 5</li><li><b>Point Efficiency</b> is maxed at 92% instead of 90%</li><li><b>Superpowered Upgrades</b>'s effect is tripled</li><li><b>Reversal Sensational</b> is 10% stronger</li><li><b>Column Leader Leader</b> is 10% stronger</li><li><b>Again and Again</b>'s effect is doubled</li><li><b>Quir-cursion</b>'s effect is raised ^50</li></ul><br><br>";
+			if (player.ma.mastered.includes("n")) desc += "<h2>Nebula</h2><br><br><ul><li>The Nebula gain exponent is improved (0.03 -> 0.05)</li><li>All primary dust effects are raised ^1.6</li><li>All secondary dust effects are raised ^1.4</li><li>Gain 1e30x more Dust</li></ul><br><br>";
+			if (player.ma.mastered.includes("hs")) desc += "<h2>Hyperspace</h2><br><br><ul><li>The Hyper Building Limit requirement scales 20% slower</li><li>Add 0.1% to Hyper Building Power for every Hyperspace bought</li><li>The Hyper Building softcap starts 0.1 Levels later</li></ul><br><br>";
 			return desc;
 		},
 		milestones: {
@@ -6523,13 +6533,13 @@ addLayer("ma", {
 			cols: 1,
 			11: {
 				title: "Mastery",
-				cap: 16,
+				cap: 18,
 				display() {
 					if (player.ma.current!==null) return "Currently Mastering: "+tmp[player.ma.current].name+". Click to exit the run.";
-					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED (for now)":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
+					else return player.ma.selectionActive?"You are in a Mastery Search. Click the node of the layer you wish to attempt to Master. Click to exit this search.":("Begin a Mastery Search.<br><br>"+((tmp.ma.amtMastered>=this.cap)?"MAXED":("Req: "+formatWhole(tmp[this.layer].clickables[this.id].req)+" Mastery.")));
 				},
 				unlocked() { return player.ma.unlocked },
-				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,15,16,18,20,(1e300)][tmp.ma.amtMastered||0] },
+				req() { return [2,5,7,8,9,9,10,10,11,12,14,14,15,16,18,20,21,22,(1e300)][tmp.ma.amtMastered||0] },
 				canClick() { return player.ma.unlocked && (player.ma.selectionActive?true:(tmp.ma.amtMastered<this.cap&&player.ma.points.gte(tmp[this.layer].clickables[this.id].req))) },
 				onClick() { 
 					if (player.ma.current !== null) {
@@ -6569,6 +6579,14 @@ addLayer("ma", {
 			if (player[layer].upgrades) player[layer].upgrades = [];
 			if (player[layer].challenges) for (let n in player[layer].challenges) player[layer].challenges[n] = null;
 			if (player.subtabs[layer]) player.subtabs[layer].mainTabs = "Main Tab";
+			if (layer=="n") {
+				resetBuyables("n");
+				player.n.activeSecondaries = {purpleBlue: false, blueOrange: false, orangePurple: false};
+			}
+			if (layer=="hs") {
+				resetBuyables("hs")
+				player.hs.spentHS = new Decimal(0);
+			}
 			
 			doReset("ma", true);
 		},
@@ -6608,6 +6626,8 @@ addLayer("ma", {
 			ba: new Decimal("1e207500"),
 			ps: new Decimal(115),
 			hn: new Decimal("1e31100"),
+			n: new Decimal("1e397"),
+			hs: new Decimal("1e512"),
 		},
 		rowLimit: 6,
 })
@@ -7298,6 +7318,12 @@ addLayer("a", {
 				name: "Finally Done Being Hindered",
 				done() { return player.h.challenges[31]>=30 && player.h.challenges[32]>=10 },
 				tooltip: 'Complete "Timeless" 30 times and "Option D" 10 times.',
+			},
+			95: {
+				name: "I Hate This Mechanic",
+				unlocked() { return hasAchievement("a", 111) },
+				done() { return player.ma.mastered.includes("n")||player.ma.mastered.includes("hs") },
+				tooltip: "Master either Nebula or Hyperspace. Mastery is 15% cheaper.",
 			},
 			101: {
 				name: "Realm of The Impossible",
