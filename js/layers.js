@@ -6755,16 +6755,22 @@ addLayer("ge", {
 					if (hasAchievement("a", 124)) div = div.times(3);
 					return div;
 				},
+				free() {
+					let free = new Decimal(0);
+					if (hasAchievement("a", 132)) free = free.plus(2);
+					return free;
+				},
 				power() {
 					let pow = new Decimal(1);
 					if (hasAchievement("a", 124)) pow = pow.times(1.2);
 					return pow;
 				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    return Decimal.pow(125, x.pow(1.425)).times(1e3).div(tmp.ge.buyables[this.id].costDiv)
+                    if (x.gte(15)) x = x.times(1.8);
+					return Decimal.pow(125, x.pow(1.425)).times(1e3).div(tmp.ge.buyables[this.id].costDiv)
                 },
 				effectPer() { return Decimal.div(tmp.ge.buyables[this.id].power, 2) },
-				effect() { return Decimal.mul(tmp[this.layer].buyables[this.id].effectPer, player[this.layer].buyables[this.id]) },
+				effect() { return Decimal.mul(tmp[this.layer].buyables[this.id].effectPer, player[this.layer].buyables[this.id].plus(tmp.ge.buyables[this.id].free)) },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id];
 					let cost = data.cost;
@@ -6796,18 +6802,27 @@ addLayer("ge", {
 			11: {
 				title() { return "Divide Teeth by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
-					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+					return "Req: "+format(tmp.ge.clickables[this.id].req)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+				},
+				req() {
+					if (hasMilestone("ge", 1)) {
+						let x = new Decimal(player.ge.clickables[this.id]||0).sub(tmp.ge.boostReducedPurch);
+						if (x.gte(20)) x = x.pow(2).div(20);
+						return Decimal.pow(1e10, x.pow(1.2).times(x.lt(0)?(-1):1)).times(1e280) 
+					} else return tmp.ge.boostReq;
 				},
 				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked && false },
-				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
+				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(tmp.ge.clickables[this.id].req) },
 				onClick() { 
 					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
 						let x = tmp.n.dustProduct.div(1e280).max(1).log(1e10).root(1.2);
 						if (x.gte(20)) x = x.times(20).sqrt();
 						x = x.plus(tmp.ge.boostReducedPurch).plus(1).floor();
-						let totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
+						let totalOther;
+						if (hasMilestone("ge", 1)) totalOther = 0;
+						else totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
 						let target = x.sub(totalOther).max(0);
 						player.ge.boosted = player.ge.boosted.max(x);
 						player.ge.clickables[this.id] = Decimal.max(player.ge.clickables[this.id], target);
@@ -6821,18 +6836,27 @@ addLayer("ge", {
 			12: {
 				title() { return "Multiply Kinetic Energy gain by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
-					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
+					return "Req: "+format(tmp.ge.clickables[this.id].req)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: "+format(tmp.ge.clickables[this.id].effect)+"x";
+				},
+				req() {
+					if (hasMilestone("ge", 1)) {
+						let x = new Decimal(player.ge.clickables[this.id]||0).sub(tmp.ge.boostReducedPurch);
+						if (x.gte(20)) x = x.pow(2).div(20);
+						return Decimal.pow(1e10, x.pow(1.2).times(x.lt(0)?(-1):1)).times(1e280) 
+					} else return tmp.ge.boostReq;
 				},
 				effectPer() { return Decimal.add(6, tmp.ge.buyables[11].effect).times(hasAchievement("a", 123)?4:1) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
-				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
+				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(tmp.ge.clickables[this.id].req) },
 				onClick() { 
 					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
 						let x = tmp.n.dustProduct.div(1e280).max(1).log(1e10).root(1.2);
 						if (x.gte(20)) x = x.times(20).sqrt();
 						x = x.plus(tmp.ge.boostReducedPurch).plus(1).floor();
-						let totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
+						let totalOther;
+						if (hasMilestone("ge", 1)) totalOther = 0;
+						else totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
 						let target = x.sub(totalOther).max(0);
 						player.ge.boosted = player.ge.boosted.max(x);
 						player.ge.clickables[this.id] = Decimal.max(player.ge.clickables[this.id], target);
@@ -6846,18 +6870,27 @@ addLayer("ge", {
 			13: {
 				title() { return "Divide Tooth Size by "+format(tmp.ge.clickables[this.id].effectPer) },
 				display() { 
-					return "Req: "+format(tmp.ge.boostReq)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+					return "Req: "+format(tmp.ge.clickables[this.id].req)+" dust product"+(tmp.nerdMode?" ("+tmp.ge.boostReqFormula+")":"")+"<br><br>Currently: /"+format(tmp.ge.clickables[this.id].effect);
+				},
+				req() {
+					if (hasMilestone("ge", 1)) {
+						let x = new Decimal(player.ge.clickables[this.id]||0).sub(tmp.ge.boostReducedPurch);
+						if (x.gte(20)) x = x.pow(2).div(20);
+						return Decimal.pow(1e10, x.pow(1.2).times(x.lt(0)?(-1):1)).times(1e280) 
+					} else return tmp.ge.boostReq;
 				},
 				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
 				unlocked() { return player.ge.unlocked },
-				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(layers.ge.boostReq()) },
+				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(tmp.ge.clickables[this.id].req) },
 				onClick() { 
 					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
 						let x = tmp.n.dustProduct.div(1e280).max(1).log(1e10).root(1.2);
 						if (x.gte(20)) x = x.times(20).sqrt();
 						x = x.plus(tmp.ge.boostReducedPurch).plus(1).floor();
-						let totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
+						let totalOther;
+						if (hasMilestone("ge", 1)) totalOther = 0;
+						else totalOther = Object.keys(player.ge.clickables).filter(x => (x!=this.id && x<20)).map(x => player.ge.clickables[x]).reduce((a,c) => Decimal.add(a, c));
 						let target = x.sub(totalOther).max(0);
 						player.ge.boosted = player.ge.boosted.max(x);
 						player.ge.clickables[this.id] = Decimal.max(player.ge.clickables[this.id], target);
@@ -6887,6 +6920,12 @@ addLayer("ge", {
 				done() { return player.ge.best.gte(1e6) },
 				effectDescription: "You can buy max Gear Upgrades.",
 				toggles: [["ge", "maxToggle"]],
+			},
+			1: {
+				requirementDescription: "2e22 Gears",
+				unlocked() { return player.ge.best.gte(1e6) },
+				done() { return player.ge.best.gte(2e22) },
+				effectDescription: "Gear Upgrade costs increase independently.",
 			},
 		},
 })
@@ -6940,7 +6979,7 @@ addLayer("mc", {
 			if (!player[this.layer].unlocked) return;
 			player.mc.mechEn = player.mc.mechEn.plus(player.ge.rotations.times(tmp.mc.mechPer).times(diff)).times(tmp.mc.decayPower.pow(diff));
 		},
-		mechPer() { return tmp.mc.buyables[11].effect.pow(5).times(clickableEffect("mc", 11)) },
+		mechPer() { return tmp.mc.buyables[11].effect.pow(tmp.mc.buyables[11].buffExp).times(clickableEffect("mc", 11)) },
 		decayPower() { return player.mc.mechEn.plus(1).log10().plus(1).pow(-2) },
 		mechEff() { return Decimal.pow(10, player.mc.mechEn.plus(1).log10().root(4).div(2)) },
 		tabFormat: {
@@ -7048,15 +7087,17 @@ addLayer("mc", {
 			cols: 1,
 			11: {
 				title: "Shell Expansion",
+				costDiv() { return new Decimal(hasAchievement("a", 132)?7:1) },
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    return x.div(10).plus(0.5).ceil();
+                    return x.div(10).plus(0.5).div(tmp[this.layer].buyables[this.id].costDiv).ceil();
                 },
+				buffExp() { return hasAchievement("a", 132)?25:5 },
 				effect() { return player[this.layer].buyables[this.id].plus(1).sqrt() },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id];
 					let cost = data.cost;
 					let amt = player[this.layer].buyables[this.id];
-                    let display = "Req: "+formatWhole(cost)+" Machine Parts"+(tmp.nerdMode?" (Cost Formula: floor((x/10+0.5)^1.1)":"")+".<br><br><h3>Current Shell Size: "+formatWhole(amt)+"m</h3>, which multiplies Mech-Energy gain by "+format(data.effect.pow(5))+(tmp.nerdMode?" (Formula: (x+1)^2.5)":"")+" but also multiplies Tooth Size of Gears by "+format(data.effect)+(tmp.nerdMode?" (Formula: sqrt(x+1))":"");
+                    let display = "Req: "+formatWhole(cost)+" Machine Parts"+(tmp.nerdMode?" (Cost Formula: floor((x/10+0.5)^1.1)":"")+".<br><br><h3>Current Shell Size: "+formatWhole(amt)+"m</h3>, which multiplies Mech-Energy gain by "+format(data.effect.pow(data.buffExp))+(tmp.nerdMode?" (Formula: (x+1)^2.5)":"")+" but also multiplies Tooth Size of Gears by "+format(data.effect)+(tmp.nerdMode?" (Formula: sqrt(x+1))":"");
 					return display;
                 },
                 unlocked() { return unl(this.layer) }, 
@@ -7066,7 +7107,7 @@ addLayer("mc", {
 				},
                 buy() { 
 					let b = player[this.layer].buyables[this.id];
-					let c = player.mc.points;
+					let c = player.mc.points.times(tmp[this.layer].buyables[this.id].costDiv);
 					let n = b.pow(2).times(4).plus(b.times(36)).plus(c.times(80)).plus(81).sqrt().sub(11).div(2).plus(1).floor();
                     player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(n)
 					if (n.sub(b).eq(1)) player.mc.points = player.mc.points.sub(tmp[this.layer].buyables[this.id].cost);
@@ -7095,11 +7136,13 @@ addLayer("a", {
                 name: "All that progress is gone!",
                 done() { return player.p.points.gt(0) },
                 tooltip: "Perform a Prestige reset.",
+				image: "images/achs/11.png",
             },
 			12: {
 				name: "Point Hog",
 				done() { return player.points.gte(25) },
 				tooltip: "Reach 25 Points.",
+				image: "images/achs/12.png",
 			},
 			13: {
 				name: "Prestige all the Way",
@@ -7152,6 +7195,7 @@ addLayer("a", {
 				name: "Why no meta-layer?",
 				done() { return player.points.gte(Number.MAX_VALUE) },
 				tooltip: "Reach 1.8e308 Points. Reward: Double Prestige Point gain.",
+				image: "images/achs/32.png",
 			},
 			33: {
 				name: "That Was Quick",
@@ -7162,6 +7206,7 @@ addLayer("a", {
 				name: "Who Needs Row 2 Anyway?",
 				done() { return player.b.best.eq(0) && player.g.best.eq(0) && player.points.gte("1e525") },
 				tooltip: "Reach 1e525 Points without any Boosters or Generators.",
+				image: "images/achs/34.png",
 			},
 			35: {
 				name: "Tool Enhanced Speedrun",
@@ -7240,17 +7285,20 @@ addLayer("a", {
 				name: "Timeless^2",
 				done() { return player.h.challenges[31]>=10 },
 				tooltip: 'Complete "Timeless" 10 times. Reward: Always keep Row 2 & 3 Upgrades.',
+				image: "images/achs/64.png",
 			},
 			65: {
 				name: "The Blood Moon",
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("o")&&player.ma.mastered.includes("s") },
 				tooltip: "Master Solarity & Subspace.",
+				image: "images/achs/65.png",
 			},
 			71: {
 				name: "Another One Bites the Rust",
 				done() { return player.m.unlocked || player.ba.unlocked },
 				tooltip: 'Perform a Row 5 reset. Reward: Always have all milestones of Row 2, 3, and 4, and you can complete "Timeless" 10 more times.',
+				image: "images/achs/71.png",
 			},
 			72: {
 				name: "Generator Slowdown",
@@ -7261,11 +7309,13 @@ addLayer("a", {
 				name: "Seems Familiar?",
 				done() { return player.ps.unlocked },
 				tooltip: "Unlock Phantom Souls.",
+				image: "images/achs/73.png",
 			},
 			74: {
 				name: "Super Balanced",
 				done() { return player.ba.points.gte(1e100) },
 				tooltip: 'Reach 1e100 Balance Energy. Reward: You can complete "Timeless" 10 more times, and the "Option D" effect also affects Magic & Balance Energy gain.',
+				image: "images/achs/74.png",
 			},
 			75: {
 				name: "Practices in Perfection",
@@ -7277,6 +7327,7 @@ addLayer("a", {
 				name: "Yes I Am",
 				done() { return player.hn.unlocked },
 				tooltip: 'Perform a Row 6 reset. Reward: Hindrances do not reset your Prestige/Booster Upgrades.',
+				image: "images/achs/81.png",
 			},
 			82: {
 				name: "Not So Hindered Now",
@@ -7303,6 +7354,7 @@ addLayer("a", {
 				name: "SPAAACE!!!!",
 				done() { return player.n.unlocked || player.hs.unlocked },
 				tooltip: "Unlock Nebula or Hyperspace. Reward: Gain 10% more Honour.",
+				image: "images/achs/91.png",
 			},
 			92: {
 				name: "Galactic Strats",
@@ -7339,6 +7391,7 @@ addLayer("a", {
 				name: "One Billion Zeros",
 				done() { return player.points.gte("e1e9") },
 				tooltip: "Reach e1e9 Points. Reward: Add 10% to Space Building Power.",
+				image: "images/achs/103.png",
 			},
 			104: {
 				name: "Clustered Systems",
@@ -7349,6 +7402,7 @@ addLayer("a", {
 				name: "Realm of Creation",
 				done() { return player.ma.unlocked },
 				tooltip: 'Perform a Row 7 reset. Reward: Keep Imperium Building II on all resets, you can complete "Timeless" and "Option D" in bulk,  those challenges do not get more lethal with more completions, and there is a new column of achievements.',
+				image: "images/achs/111.png",
 			},
 			112: {
 				name: "True Mastery",
@@ -7364,6 +7418,7 @@ addLayer("a", {
 				name: "Option E?",
 				done() { return player.h.challenges[32]>=900 },
 				tooltip: "Complete Option D at least 900 times.",
+				image: "images/achs/114.png",
 			},
 			121: {
 				name: "Geared for More",
@@ -7389,6 +7444,11 @@ addLayer("a", {
 				name: "Artificially Mindless",
 				done() { return player.mc.unlocked },
 				tooltip: "Unlock Machines. Reward: Mastery is 10% cheaper.",
+			},
+			132: {
+				name: "God is a Turtle",
+				done() { return player.mc.buyables[11].gte(200) },
+				tooltip: "Reach a Shell size of at least 200m. Reward: Shell Expansion's buff is raised ^5, its cost is divided by 7, & you get 2 free Gear Evolutions.",
 			},
 		},
 		tabFormat: [
