@@ -34,8 +34,7 @@ var systemComponents = {
 				anim: (player.anim&&!player.oldStyle),
 				grad: (player.grad&&!player.oldStyle)
 			}"
-			v-bind:style="[tmp[layer].canClick ? {'background-color': tmp[layer].color} : {}, tmp[layer].nodeStyle]">
-			{{abb}}
+			v-bind:style="[tmp[layer].canClick ? {'background-color': tmp[layer].color} : {}, tmp[layer].nodeStyle]" v-bind:html="abb">
 		</button>
 		`
 	},
@@ -69,7 +68,7 @@ var systemComponents = {
 			v-bind:style="[layerunlocked(layer) ? {
 				'background-color': tmp[layer].color,
 			} : {}, tmp[layer].nodeStyle]">
-			<stars :layer='layer'></stars>{{abb}}
+			<stars :layer='layer'></stars><span class="noChange" v-html="abb"></span>
 		</button>
 		`
 	},

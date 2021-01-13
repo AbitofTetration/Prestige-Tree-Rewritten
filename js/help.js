@@ -40,7 +40,7 @@ let help_data = {
 	hn: {
 		id: "hn",
 		title: "Honour",
-		text: "WIP",
+		text: "Once you reach your first Honour reset, begin to go for the Honour milestones, and get as many Honour milestones/upgrades as possible. Once you get the first Honour Upgrade, be sure to visit the Prestige tab often to check if you are able to discover any of the new Prestige Upgrades. Keep pushing to get more milestones, and eventually, you will get fully automated Honour runs. In this phase of the game, there isn't really a wrong way to progress, just keep pushing until you unlock Phantom Boosters.<br><br>Phantom Boosters are almost automated, but you do need to purchase Ghost Spirit. If you feel stuck, you're probably missing a possibly discoverable Prestige Upgrade, so be sure to check all of them. Keep on pushing until you can unlock Nebula or Hyperspace.",
 		unlocked() { return player.hn.unlocked },
 	},
 	nhs: {

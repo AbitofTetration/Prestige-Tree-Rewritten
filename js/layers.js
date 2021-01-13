@@ -6766,7 +6766,7 @@ addLayer("ge", {
 					return pow;
 				},
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                    if (x.gte(15)) x = x.times(1.8);
+                    if (x.gte(15)) x = x.times(1.63);
 					return Decimal.pow(125, x.pow(1.425)).times(1e3).div(tmp.ge.buyables[this.id].costDiv)
                 },
 				effectPer() { return Decimal.div(tmp.ge.buyables[this.id].power, 2) },
@@ -6813,7 +6813,7 @@ addLayer("ge", {
 				},
 				effectPer() { return Decimal.add(2, tmp.ge.buyables[11].effect) },
 				effect() { return Decimal.pow(tmp.ge.clickables[this.id].effectPer, player.ge.clickables[this.id]) },
-				unlocked() { return player.ge.unlocked && false },
+				unlocked() { return player.ge.unlocked && hasAchievement("a", 133) },
 				canClick() { return player.ge.unlocked && tmp.n.dustProduct.gte(tmp.ge.clickables[this.id].req) },
 				onClick() { 
 					if (player.ge.maxToggle && hasMilestone("ge", 0)) {
@@ -7004,6 +7004,7 @@ addLayer("mc", {
 		clickables: {
 			rows: 2,
 			cols: 2,
+			activeLimit() { return hasAchievement("a", 133)?2:1 },
 			11: {
 				title: "CPU",
 				display() { 
@@ -7014,8 +7015,11 @@ addLayer("mc", {
 				canClick() { return player.mc.unlocked },
 				onClick() {
 					if (player.mc.clickables[this.id].eq(0)) {
-						player.mc.clickables = getStartClickables("mc");
-						doReset("mc", true);
+						let activeClickables = Object.values(player.mc.clickables).filter(x => Decimal.gt(x, 0)).length;
+						if (activeClickables>=tmp.mc.clickables.activeLimit) {
+							player.mc.clickables = getStartClickables("mc");
+							doReset("mc", true);
+						}
 					}
 					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
 					player.mc.mechEn = new Decimal(0);
@@ -7025,15 +7029,18 @@ addLayer("mc", {
 			12: {
 				title: "The Port",
 				display() { 
-					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Phantom Souls multiply Gear gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (kineticEnergy+1)^(1-1/sqrt(log(activeMechEnergy+1)+1)))":"");
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Phantom Souls multiply Gear gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (phantomSouls+1)^(1-1/sqrt(log(activeMechEnergy+1)+1)))":"");
 				},
 				effect() { return Decimal.pow(player.ps.points.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).sqrt()))) },
 				unlocked() { return player.mc.unlocked },
 				canClick() { return player.mc.unlocked },
 				onClick() {
 					if (player.mc.clickables[this.id].eq(0)) {
-						player.mc.clickables = getStartClickables("mc");
-						doReset("mc", true);
+						let activeClickables = Object.values(player.mc.clickables).filter(x => Decimal.gt(x, 0)).length;
+						if (activeClickables>=tmp.mc.clickables.activeLimit) {
+							player.mc.clickables = getStartClickables("mc");
+							doReset("mc", true);
+						}
 					}
 					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
 					player.mc.mechEn = new Decimal(0);
@@ -7043,15 +7050,19 @@ addLayer("mc", {
 			21: {
 				title: "Northbridge",
 				display() { 
-					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Solarity multiplies the Super Generator base by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (solarity+1)^(1-1/((log(activeMechEnergy+1)+1)^0.125)))":"");
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Solarity multiplies the Super Generator base by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (solarity+1)^("+formatWhole(tmp.mc.clickables[this.id].effExp)+"-"+formatWhole(tmp.mc.clickables[this.id].effExp)+"/((log(activeMechEnergy+1)+1)^0.125)))":"");
 				},
-				effect() { return Decimal.pow(player.o.points.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).root(8)))) },
+				effExp() { return hasAchievement("a", 133)?3:1 },
+				effect() { return Decimal.pow(player.o.points.plus(1), Decimal.sub(tmp.mc.clickables[this.id].effExp, Decimal.div(tmp.mc.clickables[this.id].effExp, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).root(8)))) },
 				unlocked() { return player.mc.unlocked },
 				canClick() { return player.mc.unlocked },
 				onClick() {
 					if (player.mc.clickables[this.id].eq(0)) {
-						player.mc.clickables = getStartClickables("mc");
-						doReset("mc", true);
+						let activeClickables = Object.values(player.mc.clickables).filter(x => Decimal.gt(x, 0)).length;
+						if (activeClickables>=tmp.mc.clickables.activeLimit) {
+							player.mc.clickables = getStartClickables("mc");
+							doReset("mc", true);
+						}
 					}
 					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
 					player.mc.mechEn = new Decimal(0);
@@ -7061,15 +7072,18 @@ addLayer("mc", {
 			22: {
 				title: "Southbridge",
 				display() { 
-					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Hyperspace Energy multiplies Balance Energy gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (honour+1)^(1-1/cbrt(log(activeMechEnergy+1)+1)))":"");
+					return "Active Mech-Energy: "+format(player.mc.clickables[this.id])+"<br><br>Currently: Hyperspace Energy multiplies Balance Energy gain by "+format(tmp.mc.clickables[this.id].effect)+(tmp.nerdMode?" (Formula: (hyperspaceEnergy+1)^(1-1/cbrt(log(activeMechEnergy+1)+1)))":"");
 				},
 				effect() { return Decimal.pow(player.hs.points.plus(1), Decimal.sub(1, Decimal.div(1, Decimal.add(player.mc.clickables[this.id], 1).log10().plus(1).cbrt()))) },
 				unlocked() { return player.mc.unlocked },
 				canClick() { return player.mc.unlocked },
 				onClick() {
 					if (player.mc.clickables[this.id].eq(0)) {
-						player.mc.clickables = getStartClickables("mc");
-						doReset("mc", true);
+						let activeClickables = Object.values(player.mc.clickables).filter(x => Decimal.gt(x, 0)).length;
+						if (activeClickables>=tmp.mc.clickables.activeLimit) {
+							player.mc.clickables = getStartClickables("mc");
+							doReset("mc", true);
+						}
 					}
 					player.mc.clickables[this.id] = player.mc.clickables[this.id].max(player.mc.mechEn);
 					player.mc.mechEn = new Decimal(0);
@@ -7148,11 +7162,13 @@ addLayer("a", {
 				name: "Prestige all the Way",
 				done() { return player.p.upgrades.length>=3 },
 				tooltip: "Purchase 3 Prestige Upgrades. Reward: Gain 10% more Prestige Points.",
+				image: "images/achs/13.png",
 			},
 			14: {
 				name: "Prestige^2",
 				done() { return player.p.points.gte(25) },
 				tooltip: "Reach 25 Prestige Points.",
+				image: "images/achs/14.png",
 			},
 			15: {
 				name: "Primary Termination",
@@ -7164,6 +7180,7 @@ addLayer("a", {
 				name: "New Rows Await!",
 				done() { return player.b.unlocked||player.g.unlocked },
 				tooltip: "Perform a Row 2 reset. Reward: Generate Points 10% faster, and unlock 3 new Prestige Upgrades.",
+				image: "images/achs/21.png",
 			},
 			22: {
 				name: "I Will Have All of the Layers!",
@@ -7174,6 +7191,7 @@ addLayer("a", {
 				name: "Prestige^3",
 				done() { return player.p.points.gte(1e45) },
 				tooltip: "Reach 1e45 Prestige Points. Reward: Unlock 3 new Prestige Upgrades.",
+				image: "images/achs/23.png",
 			},
 			24: {
 				name: "Hey I don't own that company yet!",
@@ -7249,6 +7267,7 @@ addLayer("a", {
 				name: "Hinder is Coming",
 				done() { return inChallenge("h", 11) && player.points.gte("1e7250") },
 				tooltip: 'Reach e7,250 Points in "Upgrade Desert".',
+				image: "images/achs/52.png",
 			},
 			53: {
 				name: "Already????",
@@ -7333,6 +7352,7 @@ addLayer("a", {
 				name: "Not So Hindered Now",
 				done() { return player.points.gte("ee7") && player.h.activeChallenge>20 },
 				tooltip: "Reach e10,000,000 Points while in a Hindrance (cannot be one of the first two).",
+				image: "images/achs/82.png",
 			},
 			83: {
 				name: "The Impossible Task",
@@ -7424,6 +7444,7 @@ addLayer("a", {
 				name: "Geared for More",
 				done() { return player.ge.unlocked },
 				tooltip() { return "Unlock Gears. Reward: Total Hyperspace makes the Hyper Building softcap start later"+(tmp.nerdMode?" (Formula: (x^0.2)/100)":" (Currently: +"+format(player.hs.buyables[11].root(5).times(.1))+")") },
+				image: "images/achs/121.png",
 			},
 			122: {
 				name: "So Many Teeth!",
@@ -7449,6 +7470,11 @@ addLayer("a", {
 				name: "God is a Turtle",
 				done() { return player.mc.buyables[11].gte(200) },
 				tooltip: "Reach a Shell size of at least 200m. Reward: Shell Expansion's buff is raised ^5, its cost is divided by 7, & you get 2 free Gear Evolutions.",
+			},
+			133: {
+				name: "Breaching the Barriers",
+				done() { return player.mc.mechEn.gte("1e375") },
+				tooltip: "Reach 1e375 Mech-Energy. Reward: You can have 2 parts of The Motherboard active at once, Northbridge's effect is cubed, and there is a new Gear Upgrade.",
 			},
 		},
 		tabFormat: [
