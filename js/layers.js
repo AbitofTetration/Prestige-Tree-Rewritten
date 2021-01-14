@@ -626,6 +626,7 @@ addLayer("g", {
 			if (hasUpgrade("b", 22)) exp = exp.times(1.2);
 			if (hasUpgrade("q", 13)) exp = exp.times(1.25);
 			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes(this.layer):false) exp = exp.times(1.05);
+			if (player.mc.upgrades.includes(11)) exp = exp.times(buyableEffect("mc", 12));
 			return exp;
 		},
 		powerEff() {
@@ -6437,6 +6438,7 @@ addLayer("ma", {
             mult = new Decimal(1)
 			if (hasAchievement("a", 131)) mult = mult.div(1.1);
 			if (hasAchievement("a", 95)) mult = mult.div(1.15);
+			if (hasAchievement("a", 134)) mult = mult.times(Decimal.pow(.999925, player.ps.points));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6665,6 +6667,7 @@ addLayer("ge", {
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
 			if (player.mc.unlocked) mult = mult.times(clickableEffect("mc", 12));
+			if (player.mc.upgrades.includes(11)) mult = mult.times(buyableEffect("mc", 12));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6714,7 +6717,9 @@ addLayer("ge", {
 			return softcap("rotEff", player.ge.rotations.round().plus(1).pow(5));
 		},
 		gearSpeed() {
-			return player.ge.points.cbrt().times(player.mc.unlocked?tmp.mc.mechEff:1);
+			let speed = player.ge.points.cbrt().times(player.mc.unlocked?tmp.mc.mechEff:1);
+			if (player.mc.upgrades.includes(11)) speed = speed.times(buyableEffect("mc", 12));
+			return speed;
 		},
 		rps() {
 			return tmp.ge.speed.div(tmp.ge.teeth.times(tmp.ge.toothSize)).times(tmp.ge.gearSpeed)
@@ -6959,6 +6964,7 @@ addLayer("mc", {
         exponent: new Decimal(4), // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
             mult = new Decimal(1);
+			if (player.mc.upgrades.includes(11)) mult = mult.times(buyableEffect("mc", 12));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6990,16 +6996,21 @@ addLayer("mc", {
 				"resource-display", "blank",
 				["display-text", function() { return "Imperium Bricks: "+formatWhole(player.i.points) }],
 				"blank", 
-				"buyables",
+				"respec-button", "blank", ["buyable", 11],
 			]},
 			"The Motherboard": {
 				buttonStyle() { return {'background-color': '#c99a6b', color: "black"} },
 				content: ["blank", ["display-text", function() { return "Each Gear Rotation provides "+format(tmp.mc.mechPer)+" Mech-Energy, which adds to <h3>"+format(player.mc.mechEn)+" Mech-Energy</h3>" }],
 				"blank", ["display-text", function() { return tmp.mc.decayPower.eq(1)?"":("Due to inadequate storage, Mech-Energy is being lost by "+format(tmp.mc.decayPower.pow(-1).log10())+" OoMs per second.") }],
 				"blank", ["display-text", function() { return "Your Mech-Energy is multiplying Gear Speed by "+format(tmp.mc.mechEff)+(tmp.nerdMode?" (Formula: 10^((log(x+1)^0.25)/2))":"") }],
-				"blank", "blank",
+				"blank", ["upgrade", 11], "blank",
 				"clickables",
 			]},
+			"The Core": {
+				unlocked() { return player.mc.upgrades.includes(11) },
+				buttonStyle() { return {'background-color': '#c76e6b', "border-color": "#c76e6b", color: "black"} },
+				content: ["blank", ["buyable", 12]],
+			},
 		},
 		clickables: {
 			rows: 2,
@@ -7098,7 +7109,7 @@ addLayer("mc", {
                 doReset(this.layer, true) // Force a reset
             },
 			rows: 1,
-			cols: 1,
+			cols: 2,
 			11: {
 				title: "Shell Expansion",
 				costDiv() { return new Decimal(hasAchievement("a", 132)?7:1) },
@@ -7129,6 +7140,52 @@ addLayer("mc", {
                 },
                 style: {'height':'200px', 'width':'200px'},
 				autoed() { return false },
+			},
+			12: {
+				title: "The Core",
+				cost(x=player[this.layer].buyables[this.id]) {
+					if (x.gte(4)) x = x.pow(4).div(64);
+					return Decimal.pow(10, Decimal.pow(1.5, x.plus(1).cbrt()).times(3e14))
+				},
+				effect() { return player[this.layer].buyables[this.id].times(1e4).plus(1).pow(.56) },
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id];
+					let cost = data.cost;
+					let amt = player[this.layer].buyables[this.id];
+                    let display = "Cost: "+format(cost)+" Points"+(tmp.nerdMode?" (Cost Formula: 10^((1.5^cbrt("+(amt.gte(4)?"(x^4)/64":"x")+"+1))*3e14)":"")+".<br><br>Level: "+formatWhole(amt)+"<br><br>Effect: The Generator Power effect is raised ^"+format(data.effect)+" and Gear gain, Machine Part gain, & Gear Speed are multiplied by "+format(data.effect)+(tmp.nerdMode?" (Formula: (10,000*level+1)^0.56)":"");
+					return display;
+                },
+                unlocked() { return unl(this.layer) && player.mc.upgrades.includes(11) }, 
+                canAfford() {
+					if (!tmp[this.layer].buyables[this.id].unlocked) return false;
+					let cost = tmp[this.layer].buyables[this.id].cost
+                    return player[this.layer].unlocked && player.points.gte(cost);
+				},
+                buy() { 
+					player.points = player.points.sub(tmp[this.layer].buyables[this.id].cost)
+					player.mc.buyables[this.id] = player.mc.buyables[this.id].plus(1);
+                },
+                style: {'height':'250px', 'width':'250px', 'background-color'() { return tmp.mc.buyables[12].canAfford?'#c76e6b':'#bf8f8f' }, "border-color": "#c76e6b"},
+				autoed() { return false },
+			},
+		},
+		upgrades: {
+			rows: 1,
+			cols: 1,
+			11: {
+				title: "Unlock The Core",
+				unlocked() { return !player.mc.upgrades.includes(11) },
+				multiRes: [
+					{
+						cost: new Decimal(5e3),
+					},
+					{
+						currencyDisplayName: "mech-energy",
+						currencyInternalName: "mechEn",
+						currencyLayer: "mc",
+						cost: new Decimal("1e420"),
+					},
+				],
 			},
 		},
 })
@@ -7175,6 +7232,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("p") },
 				tooltip: "Master Prestige.",
+				image: "images/achs/15.png",
 			},
 			21: {
 				name: "New Rows Await!",
@@ -7417,6 +7475,7 @@ addLayer("a", {
 				name: "Clustered Systems",
 				done() { return player.n.buyables[11].gte(5) },
 				tooltip: "Purchase 5 Stellar Clusters.",
+				image: "images/achs/104.png",
 			},
 			111: {
 				name: "Realm of Creation",
@@ -7475,6 +7534,12 @@ addLayer("a", {
 				name: "Breaching the Barriers",
 				done() { return player.mc.mechEn.gte("1e375") },
 				tooltip: "Reach 1e375 Mech-Energy. Reward: You can have 2 parts of The Motherboard active at once, Northbridge's effect is cubed, and there is a new Gear Upgrade.",
+				image: "images/achs/133.png",
+			},
+			134: {
+				name: "Innermost Desire",
+				done() { return player.mc.upgrades.includes(11) },
+				tooltip() { return "Unlock The Core. Reward: Mastery is 0.0075% cheaper for every Phantom Soul you have (Currently: "+format(Decimal.sub(1, Decimal.pow(.999925, player.ps.points)).times(100))+"% cheaper)" },
 			},
 		},
 		tabFormat: [
