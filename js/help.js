@@ -46,7 +46,7 @@ let help_data = {
 	nhs: {
 		id: "nhs",
 		title: "Nebula & Hyperspace",
-		text: "WIP",
+		text: "Once you unlock Nebula & Hyperspace, you have to choose which one you want to unlock first (although eventually you will get both). Nebula is more passive/idle, whereas Hyperspace is more active/strategic.<br><br>For Nebula, begin grinding up Dust amounts, saving up for Stellar Clusters, and repeat. Once you unlock the secondary Dust effects, use the bottom one. Once you're able to have two active at once, use the top & bottom ones to get more points, but use the bottom two whenever you want to get more space energy (for hyperspace).<br><br>For Hyperspace, you'll need to employ a little strategy in choosing which buildings to boost. I would recommend the following priority order: Quinary -> Quaternary -> Secondary -> Primary -> Tertiary. Of course, if you're having trouble, mess around with the buildings and try different combinations, see what works for you. The rule of thumb is that the Tertiary Building is worse than the others, so as long as you keep that in mind, you should be alright.<br><br>Once you unlock both, continue pushing, adjusting your Secondary Dust effect & Hyper Building setups, and grinding all the Row 6 resources until you can unlock Imperium. If you are stuck, make sure you've finished all Hindrance completions if you haven't already, and check any tabs that might be missing something.",
 		unlocked() { return player.n.unlocked || player.hs.unlocked },
 	},
 	i: {
@@ -66,5 +66,11 @@ let help_data = {
 		title: "Gears",
 		text: "WIP",
 		unlocked() { return player.ge.unlocked },
+	},
+	mc: {
+		id: "mc",
+		title: "Machines",
+		text: "WIP",
+		unlocked() { return player.mc.unlocked },
 	},
 }
