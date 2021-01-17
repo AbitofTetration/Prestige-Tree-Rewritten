@@ -4,6 +4,8 @@
 - Ported the "MA", "GE", and "MC" layers
 - Added the next section of achievements
 - More minor bugfixes/QoL improvements were made
+- Added achievement images
+- Finished the "Help" tab
 
 ### v1.1: Hyperium Nebulae
 - Added the "N" layer (replaces "L"), and ported the "HS" & "I" layers

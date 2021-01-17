@@ -1,7 +1,7 @@
 let modInfo = {
 	name: "Prestige Tree Rewritten",
 	id: "ptr",
-	author: "Jacorb (Despacit helped port)",
+	author: "Jacorb",
 	pointsName: "points",
 	discordName: "PT Rewritten Server",
 	discordLink: "https://discord.gg/TFCHJJT",
@@ -9,13 +9,13 @@ let modInfo = {
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
 	endgame: new Decimal("10^^69"),
-	specialEndgameText: "v1.2 Beta 20 Endgame: e1e15 Points",
+	specialEndgameText: "v1.2 Beta 21 Endgame: e1e15 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.2",
-	beta: 20,
+	beta: 21,
 	// patch: 2,
 	name: "Mechanical Mastery",
 }

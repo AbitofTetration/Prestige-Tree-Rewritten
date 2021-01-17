@@ -2857,7 +2857,7 @@ addLayer("h", {
 				unlocked() { return (tmp.ps.buyables[11].effects.hindr||0)>=2 },
 				onStart(testInput=false) {
 					if (testInput) {
-						doReset("ps", true);
+						doReset("m", true);
 						player.h.activeChallenge = 41;
 						player.ba.pos = new Decimal(0);
 						player.ba.neg = new Decimal(0);
@@ -2879,7 +2879,7 @@ addLayer("h", {
 				countsAs: [22],
 				onStart(testInput=false) {
 					if (testInput) {
-						doReset("ps", true);
+						doReset("m", true);
 						player.h.activeChallenge = 42;
 						updateTemp();
 						updateTemp();
@@ -7599,11 +7599,13 @@ addLayer("a", {
 				name: "Gotta Get Em All",
 				done() { return player.ss.unlocked && player.o.unlocked },
 				tooltip: "Perform a Solarity & Subspace reset. Reward: Both Solarity & Subspace behave as if you chose them first.",
+				image: "images/achs/62.png",
 			},
 			63: {
 				name: "Spaceless",
 				done() { return inChallenge("h", 21) && player.g.best.eq(0) && player.points.gte("1e25000") },
 				tooltip: 'Reach 1e25,000 Points in "Out of Room" without any Generators.',
+				image: "images/achs/63.png",
 			},
 			64: {
 				name: "Timeless^2",
@@ -7628,6 +7630,7 @@ addLayer("a", {
 				name: "Generator Slowdown",
 				done() { return player.g.best.gte(1225) },
 				tooltip: "Reach 1,225 Generators.",
+				image: "images/achs/72.png",
 			},
 			73: {
 				name: "Seems Familiar?",
@@ -7674,6 +7677,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("hn") },
 				tooltip: "Master Honour.",
+				image: "images/achs/85.png",
 			},
 			91: {
 				name: "SPAAACE!!!!",
@@ -7754,8 +7758,8 @@ addLayer("a", {
 			},
 			115: {
 				name: "Baseless Property",
-				done() { return player.points.gte("e2.554e13") && player.ss.best.eq(0) && player.q.buyables[11].eq(0) && player.sb.best.eq(0) && player.sg.best.eq(0) && player.t.best.eq(0) && player.s.best.eq(0) && player.e.buyables[11].eq(0) && player.t.buyables[11].eq(0) && player.b.best.eq(0) && player.g.best.eq(0) && inChallenge("h", 42) },
-				tooltip: 'Reach e2.554e13 Points while in the "Productionless" Hindrance and without Subspace Energy, Quirk Layers, any Row 3 currencies or buyables (except Enhance Points & Space Buildings), Boosters, or Generators.',
+				done() { return player.points.gte("e2.5e13") && player.ss.best.eq(0) && player.q.buyables[11].eq(0) && player.sb.best.eq(0) && player.sg.best.eq(0) && player.t.best.eq(0) && player.s.best.eq(0) && player.e.buyables[11].eq(0) && player.t.buyables[11].eq(0) && player.b.best.eq(0) && player.g.best.eq(0) && inChallenge("h", 42) },
+				tooltip: 'Reach e2.5e13 Points while in the "Productionless" Hindrance and without Subspace Energy, Quirk Layers, any Row 3 currencies or buyables (except Enhance Points & Space Buildings), Boosters, or Generators.',
 			},
 			121: {
 				name: "Geared for More",
@@ -7782,6 +7786,7 @@ addLayer("a", {
 				name: "Haunted Forever",
 				done() { return player.ps.points.gte(1350) },
 				tooltip: "Reach 1,375 Phantom Souls. Reward: Shell Expansion's nerf to Gear size is now a buff.",
+				image: "images/achs/125.png",
 			},
 			131: {
 				name: "Artificially Mindless",

@@ -400,7 +400,7 @@ function loadVue() {
 				: (tmp[layer].achievements[data].goalTooltip ? tmp[layer].achievements[data].goalTooltip : (tmp[layer].achievements[data].tooltip ? tmp[layer].achievements[data].tooltip : 'LOCKED'))
 			"
 
-			v-bind:style="[(!tmp[layer].achievements[data].unlocked) ? {'visibility': 'hidden'} : {}, tmp[layer].achievements[data].style, (tmp[layer].achievements[data].image?{'background-image': ('url('+tmp[layer].achievements[data].image+')'), 'background-size': '110% 110%', 'background-repeat': 'no-repeat', 'background-position': 'center', 'text-shadow': '0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000'}:''), ]">
+			v-bind:style="[(!tmp[layer].achievements[data].unlocked) ? {'visibility': 'hidden'} : {}, tmp[layer].achievements[data].style, (tmp[layer].achievements[data].image?{'background-image': (hasAchievement(layer, data)?('url('+tmp[layer].achievements[data].image+')'):''), 'background-size': '110% 110%', 'background-repeat': 'no-repeat', 'background-position': 'center', 'text-shadow': '0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000'}:''), ]">
 			<span v-if= "tmp[layer].achievements[data].name"><br><h3 v-html="tmp[layer].achievements[data].name"></h3><br></span>
 		</div>
 		`

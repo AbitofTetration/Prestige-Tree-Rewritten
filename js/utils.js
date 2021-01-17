@@ -112,7 +112,7 @@ function startPlayerBase() {
 		redGlowActive: true,
 		spaceGlow: "normal",
 		solGlow: "normal",
-		majGlow: "normal",
+		majGlow: "uncasted",
 		scShown: true,
 		oldStyle: false,
 		hideStars: false,
