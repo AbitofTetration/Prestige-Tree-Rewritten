@@ -58,7 +58,7 @@ let help_data = {
 	ma: {
 		id: "ma",
 		title: "Mastery",
-		text: "WIP",
+		text: "Once you unlock Mastery, begin to grind your way back to do your second reset. Once that is done, you can begin your first Mastery, which should be fairly straightforward as all you need to do is purchase Prestige Upgrades. Continue to push for more Mastery and Mastery completions. When Mastering Row 2, Mastering Boosters is generally easier, so I would recommend doing that one first. When Mastering Row 3, the order in which you complete them is not necessarily important here, just make a choice and stick with it.<br><br>The first relatively difficult spot here comes when Mastering Hindrances, as you'll need to recomplete all Hindrances, which now have much higher goals. Just stick to the same strategies you used the first time you completed them, and you should be fine. If you feel like doing more active gameplay, Master Solarity before Subspace, otherwise start with Subspace.<br><br>Keep on pushing and Mastering layers until you unlock Gears.",
 		unlocked() { return player.ma.unlocked },
 	},
 	ge: {

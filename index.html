@@ -162,7 +162,7 @@
 				<div id="info" v-if="player.tab!='info'"  class="overlayThing" onclick="showTab('info')"><br>i</div>
 				<div id="help" v-if="player.tab!='help' && (typeof help_data != 'undefined')"  class="overlayThing" onclick="showTab('help')"><br>?</div>
 				<div id="discord" class="overlayThing">
-					<img onclick="window.open((modInfo.discordLink ? modInfo.discordLink : 'https://discord.gg/F3xveHV'),'mywindow')" src="images/discord.png"  target="_blank"></img>
+					<img onclick="window.open((modInfo.discordLink ? modInfo.discordLink : 'http://discord.gg/wwQfgPa'),'mywindow')" src="images/discord.png"  target="_blank"></img>
 					<ul id="discord-links">
 						<li><a class="link" href="http://discord.gg/wwQfgPa" target="_blank" v-bind:style="{'font-size': '16px'}">Prestige Tree Discord</a></li>
 						<li><a class="link" href="https://discord.gg/F3xveHV" target="_blank" v-bind:style="modInfo.discordLink ? {'font-size': '16px'} : {}">The Modding Tree Discord</a><br></li>

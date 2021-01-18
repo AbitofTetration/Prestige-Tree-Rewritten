@@ -7501,6 +7501,7 @@ addLayer("a", {
 				name: "Hey I don't own that company yet!",
 				done() { return player.points.gte(1e100) },
 				tooltip: "Reach 1e100 Points.",
+				image: "images/achs/24.png",
 			},
 			25: {
 				name: "Secondary Increment",
@@ -7551,6 +7552,7 @@ addLayer("a", {
 				name: "Enhancing a Company",
 				done() { return player.e.points.gte(1e100) },
 				tooltip: "Reach 1e100 Enhance Points.",
+				image: "images/achs/43.png",
 			},
 			44: {
 				name: "Space is for Dweebs",
@@ -7689,6 +7691,7 @@ addLayer("a", {
 				name: "Galactic Strats",
 				done() { return player.n.unlocked && player.hs.unlocked },
 				tooltip: "Unlock Nebula and Hyperspace. Reward: Nebula and Hyperspace behave as if they were unlocked first.",
+				image: "images/achs/92.png",
 			},
 			93: {
 				name: "No More Meters!",
@@ -7731,6 +7734,7 @@ addLayer("a", {
 			},
 			105: {
 				name: "True Architecture",
+				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("i") },
 				tooltip: "Master Imperium.",
 			},
@@ -7758,6 +7762,7 @@ addLayer("a", {
 			},
 			115: {
 				name: "Baseless Property",
+				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.points.gte("e2.5e13") && player.ss.best.eq(0) && player.q.buyables[11].eq(0) && player.sb.best.eq(0) && player.sg.best.eq(0) && player.t.best.eq(0) && player.s.best.eq(0) && player.e.buyables[11].eq(0) && player.t.buyables[11].eq(0) && player.b.best.eq(0) && player.g.best.eq(0) && inChallenge("h", 42) },
 				tooltip: 'Reach e2.5e13 Points while in the "Productionless" Hindrance and without Subspace Energy, Quirk Layers, any Row 3 currencies or buyables (except Enhance Points & Space Buildings), Boosters, or Generators.',
 			},
@@ -7771,6 +7776,7 @@ addLayer("a", {
 				name: "So Many Teeth!",
 				done() { return tmp.ge.teeth.gte(1e4) },
 				tooltip: "Make your Gears have at least 10,000 Teeth.",
+				image: "images/achs/122.png",
 			},
 			123: {
 				name: "Yearly Solar Output",
@@ -7784,6 +7790,7 @@ addLayer("a", {
 			},
 			125: {
 				name: "Haunted Forever",
+				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ps.points.gte(1350) },
 				tooltip: "Reach 1,375 Phantom Souls. Reward: Shell Expansion's nerf to Gear size is now a buff.",
 				image: "images/achs/125.png",
@@ -7808,9 +7815,11 @@ addLayer("a", {
 				name: "Innermost Desire",
 				done() { return player.mc.upgrades.includes(11) },
 				tooltip() { return "Unlock The Core. Reward: Mastery is 0.0075% cheaper for every Phantom Soul you have (Currently: "+format(Decimal.sub(1, Decimal.pow(.999925, player.ps.points)).times(100))+"% cheaper)" },
+				image: "images/achs/134.png",
 			},
 			135: {
 				name: "One Quadrillion Zeros!",
+				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.points.gte("ee15") },
 				tooltip: "Reach e1e15 Points.",
 			},
