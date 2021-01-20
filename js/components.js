@@ -448,7 +448,19 @@ function loadVue() {
 	// For the save menu popup
 	Vue.component('saves', {
 		template: `
-		<div class="popup" v-if="!(!player.saveMenuOpen)"><div class="popupBlocker" onclick="player.saveMenuOpen = false;"></div><div class="popup-content"><br><div class="upgRow" style="width: 100%;" v-for="(data, name) in allSaves" v-if="name!='set' && data!==undefined"><div v-bind:class="{ activeSave: (allSaves.set==name) }">{{name}}</div><button v-on:click="save(); loadSave(name);" class="popupBtn can">Load</button><button v-on:click="renameSave(name)" class="popupBtn can">Rename</button><button v-on:click="deleteSave(name)" class="popupBtn can">Delete</button><div><button class="popupBtnMini can" v-on:click="moveSave(name, -1)" v-bind:style="{ visibility: (showMoveSaveBtn(name, 'up')?'visible':'hidden')}">▲</button><button class="popupBtnMini can" v-on:click="moveSave(name, 1)" v-bind:style="{ visibility: (showMoveSaveBtn(name, 'down')?'visible':'hidden')}">▼</button></div></div><div class="upgRow" style="width: 100%;"><button onclick="newSave()" class="popupBtn can">New Save</button></div></div></div>
+		<div class="popup" v-if="!(!player.saveMenuOpen)">
+			<div class="popupBlocker" onclick="player.saveMenuOpen = false;"></div>
+			<div class="popup-content"><br>
+				<div class="upgRow" style="width: 100%;" v-for="(data, name) in allSaves" v-if="name!='set' && data!==undefined">
+					<div v-bind:class="{ activeSave: (allSaves.set==name), widthLock: true }">{{name}}</div>
+					<button v-on:click="save(); loadSave(name);" class="popupBtn can">Load</button>
+					<button v-on:click="renameSave(name)" class="popupBtn can">Rename</button>
+					<button v-on:click="deleteSave(name)" class="popupBtn can">Delete</button>
+					<div><button class="popupBtnMini can" v-on:click="moveSave(name, -1)" v-bind:style="{ visibility: (showMoveSaveBtn(name, 'up')?'visible':'hidden')}">▲</button><button class="popupBtnMini can" v-on:click="moveSave(name, 1)" v-bind:style="{ visibility: (showMoveSaveBtn(name, 'down')?'visible':'hidden')}">▼</button></div>
+				</div>
+				<div class="upgRow" style="width: 100%;"><button onclick="newSave()" class="popupBtn can">New Save</button></div>
+			</div>
+		</div>
 	`
 	})
 

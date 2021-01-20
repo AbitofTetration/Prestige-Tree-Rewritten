@@ -83,6 +83,8 @@ function toPlaces(x, precision, maxAccepted) {
 }
 // ************ Save stuff ************
 
+const saveRegexCode = /[^\w ]|_/g // \w = word library (i.e. all numbers & letters, not case-specific)
+
 function setLocalStorage() {
 	localStorage.setItem(modInfo.id, btoa(JSON.stringify(allSaves)));
 }
@@ -264,7 +266,7 @@ function loadSave(name) {
 
 function renameSave(name) {
 	let newName = prompt("Enter save name: ")
-	newName = newName.replace(/[^\w]|_/g, ""); // Removes all non-alphanumeric characters
+	newName = newName.replace(saveRegexCode, ""); // Removes all non-alphanumeric characters
 	if (newName=="set") {
 		alert("Sorry, that name is used in the game's data, so you can't use it personally or it will cause terrible glitches!");
 		return;
@@ -302,7 +304,7 @@ function deleteSave(name) {
 
 function newSave() {
 	let newName = prompt("Enter save name: ");
-	newName = newName.replace(/[^\w]|_/g, ""); // Removes all non-alphanumeric characters
+	newName = newName.replace(saveRegexCode, ""); // Removes all non-alphanumeric characters
 	if (newName=="set") {
 		alert("Sorry, that name is used in the game's data, so you can't use it personally or it will cause terrible glitches!");
 		return;

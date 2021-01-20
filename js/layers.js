@@ -6461,7 +6461,9 @@ addLayer("i", {
 			"resource-display",
 			["display-text", function() { return player.i.unlocked?("You have "+formatWhole(player.i.nb)+" Nebulaic Bricks "+(tmp.nerdMode?"(Formula: log(N/2e3+1)^0.8)":("(next at "+format(tmp.i.nextNB)+" Nebula Energy)"))):"" }],
 			["display-text", function() { return player.i.unlocked?("You have "+formatWhole(player.i.hb)+" Hyperspatial Bricks "+(tmp.nerdMode?"(Formula: log(HS/1e6+1)^0.74)":("(next at "+format(tmp.i.nextHB)+" Hyperspace Energy)"))):"" }],
-			"blank", "blank",
+			"blank",
+			["display-text", function() { return (player.ma.current=="i"&&player.i.unlocked)?"NOTICE: While Mastering Imperium, Imperium Buildings make each other more expensive!":"" }],
+			"blank",
 			"buyables",
 		],
 		buyables: {
@@ -7526,6 +7528,7 @@ addLayer("a", {
 				name: "That Was Quick",
 				done() { return player.e.unlocked&&player.t.unlocked&&player.s.unlocked },
 				tooltip: "Unlock Time, Enhance, & Space. Reward: Unlock some new Time, Enhance, & Space Upgrades.",
+				image: "images/achs/33.png",
 			},
 			34: {
 				name: "Who Needs Row 2 Anyway?",
@@ -7669,6 +7672,7 @@ addLayer("a", {
 				name: "The Impossible Task",
 				done() { return hasMilestone("hn", 7) },
 				tooltip: "Unlock Phantom Boosters.",
+				image: "images/achs/83.png",
 			},
 			84: {
 				name: "Beyond the Basics",
@@ -7754,6 +7758,7 @@ addLayer("a", {
 				name: "One Trillion Zeros",
 				done() { return player.points.gte("ee12") },
 				tooltip: "Reach e1e12 Points. Reward: Add 10% to Hyper Building Power.",
+				image: "images/achs/113.png",
 			},
 			114: {
 				name: "Option E?",
