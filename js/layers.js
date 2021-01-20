@@ -1728,7 +1728,7 @@ addLayer("s", {
                 currencyInternalName: "power",
                 currencyLayer: "g",
 				unlocked() { return hasUpgrade("s", 11) },
-				effect() { return Decimal.pow(20, tmp.s.totalBuildingLevels) },
+				effect() { return softcap("s13", Decimal.pow(20, tmp.s.totalBuildingLevels)) },
 				effectDisplay() { return format(tmp.s.upgrades[13].effect)+"x" },
 				formula: "20^x",
 			},
@@ -2323,7 +2323,7 @@ addLayer("s", {
 				effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
 					let ret = x.plus(tmp.s.buyables[this.id].freeLevels).times(tmp.s.buildingPower).div(1e3).plus(1)
 					if (player.hs.unlocked) ret = ret.pow(buyableEffect("hs", 29));
-					return softcap("spaceBuilding9", ret);
+					return softcap("spaceBuilding9_2", softcap("spaceBuilding9", ret));
                 },
 				display() { // Everything else displayed in the buyable button after the title
                     let data = tmp[this.layer].buyables[this.id]
@@ -7508,6 +7508,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("b")&&player.ma.mastered.includes("g") },
 				tooltip: "Master Boosters & Generators.",
+				image: "images/achs/25.png",
 			},
 			31: {
 				name: "Further Further Down",
@@ -7761,10 +7762,11 @@ addLayer("a", {
 				image: "images/achs/114.png",
 			},
 			115: {
-				name: "Baseless Property",
+				name: "Haunted Forever",
 				unlocked() { return hasAchievement("a", 111) },
-				done() { return player.points.gte("e2.5e13") && player.ss.best.eq(0) && player.q.buyables[11].eq(0) && player.sb.best.eq(0) && player.sg.best.eq(0) && player.t.best.eq(0) && player.s.best.eq(0) && player.e.buyables[11].eq(0) && player.t.buyables[11].eq(0) && player.b.best.eq(0) && player.g.best.eq(0) && inChallenge("h", 42) },
-				tooltip: 'Reach e2.5e13 Points while in the "Productionless" Hindrance and without Subspace Energy, Quirk Layers, any Row 3 currencies or buyables (except Enhance Points & Space Buildings), Boosters, or Generators.',
+				done() { return player.ps.points.gte(1350) },
+				tooltip: "Reach 1,375 Phantom Souls. Reward: Shell Expansion's nerf to Gear size is now a buff.",
+				image: "images/achs/115.png",
 			},
 			121: {
 				name: "Geared for More",
@@ -7789,11 +7791,10 @@ addLayer("a", {
 				tooltip: "Reach e1,000,000 Honour. Reward: Gear Evolution requires 3x less Rotations, and is 20% stronger.",
 			},
 			125: {
-				name: "Haunted Forever",
+				name: "Baseless Property",
 				unlocked() { return hasAchievement("a", 111) },
-				done() { return player.ps.points.gte(1350) },
-				tooltip: "Reach 1,375 Phantom Souls. Reward: Shell Expansion's nerf to Gear size is now a buff.",
-				image: "images/achs/125.png",
+				done() { return player.points.gte("e2.5e13") && player.ss.best.eq(0) && player.q.buyables[11].eq(0) && player.sb.best.eq(0) && player.sg.best.eq(0) && player.t.best.eq(0) && player.s.best.eq(0) && player.e.buyables[11].eq(0) && player.t.buyables[11].eq(0) && player.b.best.eq(0) && player.g.best.eq(0) && inChallenge("h", 42) },
+				tooltip: 'Reach e2.5e13 Points while in the "Productionless" Hindrance and without Subspace Energy, Quirk Layers, any Row 3 currencies or buyables (except Enhance Points & Space Buildings), Boosters, or Generators.',
 			},
 			131: {
 				name: "Artificially Mindless",

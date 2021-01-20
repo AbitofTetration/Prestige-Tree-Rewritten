@@ -1,4 +1,5 @@
 var player;
+let allSaves;
 var needCanvasUpdate = true;
 var gameEnded = false;
 

@@ -118,7 +118,7 @@
 							<td><button class="opt" onclick="toggleOpt('offlineProd')">Offline Prod: {{ player.offlineProd?"ON":"OFF" }}</button></td>
 						</tr>
 						<tr>
-							<td></td>
+							<td><button class="opt" onclick="showAllSaves()">All Save Files</button></td>
 							<td><button class="opt" onclick="toggleOpt('tapNerd')">"Nerd Mode" Activation: {{player.tapNerd?"ON TAP":"ON HOLD"}}</button></td>
 							<td></td>
 						</tr>
@@ -154,7 +154,8 @@
 							<td><button v-if="player.m.unlocked" class="opt" onclick="adjustGlow('maj')">Red Glow - Spells: {{ player.majGlow.toUpperCase() }}</button></td>
 						</tr>
 					</table>
-				</div>
+				</div><br><br>
+				<saves></saves>
 			</div>
 			<div id="treeOverlay" class="treeOverlay" v-if="player.tab!='gameEnded'" v-bind:class="{ fullWidth: (player.tab == 'tree' || player.tab == 'none'), col: (player.tab != 'tree' && player.tab != 'none'), left: (player.tab != 'tree' && player.tab != 'none')}">
 				<div id="version" class="overlayThing" style="margin-right: 25px">{{VERSION.withoutName}}</div>

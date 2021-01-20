@@ -64,7 +64,7 @@ let help_data = {
 	ge: {
 		id: "ge",
 		title: "Gears",
-		text: "WIP",
+		text: `Once you unlock Gears, you'll notice that there are two buyables that cost Dust Product, which you will need to figure out which one you want more. At first, the Kinetic Energy upgrade is much stronger than the Tooth Size upgrade, but later on it will require a little calculation. To do this, take the "Multiply Kinetic Energy gain by X" display and compare it to the "Divide Tooth Size by Y". If X>Y^2, then the Kinetic Energy upgrade is more important, otherwise the Tooth Size upgrade is better. In the end, you should be able to get by without this strategy, but this will make things as efficient as possible.<br><br>You'll also be able to Master Phantom Souls during this era, which should be fairly simple to beat. Continue to push Gears and your other layers as much as possible. During this part of the game, achievements are VERY important, some of their rewards being required to progress, so be sure to keep an eye on the achievement tab for powerful achievement rewards that may just be more in reach than you think. Keep going until you eventually can Master Honour.<br><br>Mastering Honour just requires a little patience and a keen eye. Go from upgrade to upgrade, purchasing them all (they are not all possible in the normal order). Once you Master Honour, unlocking Machines should be just another push away.`,
 		unlocked() { return player.ge.unlocked },
 	},
 	mc: {

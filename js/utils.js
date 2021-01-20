@@ -83,8 +83,17 @@ function toPlaces(x, precision, maxAccepted) {
 }
 // ************ Save stuff ************
 
-function save() {
-	localStorage.setItem(modInfo.id, btoa(JSON.stringify(player)))
+function setLocalStorage() {
+	localStorage.setItem(modInfo.id, btoa(JSON.stringify(allSaves)));
+}
+
+function save(name=allSaves.set) {
+	allSaves[name] = player;
+	setLocalStorage();
+}
+
+function showAllSaves() {
+	player.saveMenuOpen = true;
 }
 
 function startPlayerBase() {
@@ -117,6 +126,7 @@ function startPlayerBase() {
 		oldStyle: false,
 		hideStars: false,
 		showStory: true,
+		saveMenuOpen: false,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
 		lastSafeTab: (layoutInfo.showTree ? "none" : layoutInfo.startTab)
@@ -246,10 +256,113 @@ function fixData(defaultData, newData) {
 	}	
 }
 
+function loadSave(name) {
+	allSaves.set = name;
+	setLocalStorage();
+	window.location.reload();
+}
+
+function renameSave(name) {
+	let newName = prompt("Enter save name: ")
+	newName = newName.replace(/[^\w]|_/g, ""); // Removes all non-alphanumeric characters
+	if (newName=="set") {
+		alert("Sorry, that name is used in the game's data, so you can't use it personally or it will cause terrible glitches!");
+		return;
+	} else if (allSaves[newName] !== undefined) {
+		alert("That name is taken already, sorry!");
+		return;
+	} else if (newName.length>20) {
+		alert("This name is too long!");
+		return;
+	} else {
+		if (name==allSaves.set) save();
+		allSaves[newName] = allSaves[name];
+		allSaves[name] = undefined;
+		if (name==allSaves.set) loadSave(newName);
+		else setLocalStorage();
+	}
+	resetSaveMenu();
+}
+
+function deleteSave(name) {
+	if (Object.keys(allSaves).filter(x => (x!="set" && allSaves[x]!==undefined)).length==1) {
+		hardReset();
+		return;
+	}
+	if (!confirm("Are you sure you wish to delete this save?")) return;
+	allSaves[name] = undefined;
+	if (name==allSaves.set) {
+		let valid = Object.keys(allSaves).filter(x => (x!="set" && (allSaves[x]!==undefined||x==name)));
+		let toLoad = valid[(valid.indexOf(name)+1)%valid.length];
+		loadSave(toLoad);
+	}
+	setLocalStorage();
+	resetSaveMenu();
+}
+
+function newSave() {
+	let newName = prompt("Enter save name: ");
+	newName = newName.replace(/[^\w]|_/g, ""); // Removes all non-alphanumeric characters
+	if (newName=="set") {
+		alert("Sorry, that name is used in the game's data, so you can't use it personally or it will cause terrible glitches!");
+		return;
+	} else if (allSaves[newName] !== undefined) {
+		alert("That name is taken already, sorry!");
+		return;
+	} else if (newName.length>20) {
+		alert("This name is too long!");
+		return;
+	} else {
+		allSaves[newName] = getStartPlayer();
+		loadSave(newName);
+	}
+}
+
+function moveSave(name, dir) {
+	let valid = Object.keys(allSaves).filter(x => (x!="set" && allSaves[x]!==undefined));
+	let oldPos = valid.indexOf(name);
+	let newPos = Math.min(Math.max(oldPos+dir, 0), valid.length-1);
+	console.log("Old: "+oldPos+", New: "+newPos);
+	if (oldPos==newPos) return;
+	
+	let name1 = valid[oldPos];
+	let name2 = valid[newPos];
+	let active1 = name1==allSaves.set;
+	let active2 = name2==allSaves.set;
+	
+	if (active1 || active2) save();
+	let newAllSaves = {set: allSaves.set};
+	for (let n of Object.keys(allSaves).sort((x,y) => ((x==name1&&y==name2)||(x==name2&&y==name1))?-1:1)) newAllSaves[n] = allSaves[n]
+	allSaves = newAllSaves;
+	
+	setLocalStorage();
+	resetSaveMenu();
+}
+
+function showMoveSaveBtn(name, dir) {
+	let valid = Object.keys(allSaves).filter(x => (x!="set" && allSaves[x]!==undefined));
+	if (dir=="up") return valid.indexOf(name)>0
+	else return valid.indexOf(name)<(valid.length-1);
+}
+
+function resetSaveMenu() {
+	player.saveMenuOpen = false;
+	player.saveMenuOpen = true;
+}
+
 function load() {
 	let get = localStorage.getItem(modInfo.id);
 	if (get===null || get===undefined) player = getStartPlayer()
-	else player = Object.assign(getStartPlayer(), JSON.parse(atob(get)))
+	else {
+		let data = JSON.parse(atob(get));
+		if (data.set !== undefined) {
+			player = Object.assign(getStartPlayer(), data[data.set]);
+			allSaves = data;
+		} else {
+			player = Object.assign(getStartPlayer(), data);
+			allSaves = {set: "save1", save1: player}
+		}
+	}
 	fixSave()
 
 	if (player.offlineProd) {
@@ -267,6 +380,8 @@ function load() {
 	updateTemp();
 	updateTemp();
 	loadVue();
+	
+	player.saveMenuOpen = false; // Slight quality of life :)
 }
 
 

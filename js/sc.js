@@ -103,6 +103,22 @@ const SOFTCAPS = {
 		display() { return player.s.buyables[19].gt(0) && buyableEffect("s", 19).gte(this.start) },
 		info() { return "Starts at "+format(this.start)+"x, exponent brought to the sixth root" },
 	},
+	spaceBuilding9_2: {
+		title: "Nonary Space Building",
+		type: "log",
+		start: new Decimal(1e7),
+		exp: new Decimal(1),
+		display() { return player.s.buyables[19].gt(0) && buyableEffect("s", 19).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, logarithmic" },
+	},
+	s13: {
+		title: "Space Upgrade 3 (Shipped Away)",
+		type: "expRoot",
+		start: new Decimal("e1.5e11"),
+		mag: new Decimal(5),
+		display() { return upgradeEffect("s", 13).gte(this.start) && hasUpgrade("s", 13) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the fifth root" },
+	},
 	hindr_base: {
 		title: "Hindrance Spirit Effect",
 		type: "expRoot",
