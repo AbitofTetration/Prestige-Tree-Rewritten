@@ -7597,9 +7597,10 @@ addLayer("a", {
 				tooltip: "Master Quirks & Hindrances.",
 			},
 			61: {
-				name: "Quite Specific",
+				name: "Seriously Specific",
 				done() { return player.ss.unlocked || player.o.unlocked },
 				tooltip: "Perform a Solarity reset or a Subspace reset.",
+				image: "images/achs/61.png",
 			},
 			62: {
 				name: "Gotta Get Em All",
@@ -7702,6 +7703,7 @@ addLayer("a", {
 				name: "No More Meters!",
 				done() { return player.i.unlocked },
 				tooltip: "Unlock Imperium.",
+				image: "images/achs/93.png",
 			},
 			94: {
 				name: "Finally Done Being Hindered",
@@ -7789,6 +7791,7 @@ addLayer("a", {
 				name: "Yearly Solar Output",
 				done() { return player.ge.energy.gte(1.2e34) },
 				tooltip: "Reach 1.2e34 J of Kinetic Energy. Reward: The Kinetic Energy Gear Upgrade's base is quadrupled.",
+				image: "images/achs/123.png",
 			},
 			124: {
 				name: "The Perfect Being",
@@ -7800,6 +7803,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.points.gte("e2.5e13") && player.ss.best.eq(0) && player.q.buyables[11].eq(0) && player.sb.best.eq(0) && player.sg.best.eq(0) && player.t.best.eq(0) && player.s.best.eq(0) && player.e.buyables[11].eq(0) && player.t.buyables[11].eq(0) && player.b.best.eq(0) && player.g.best.eq(0) && inChallenge("h", 42) },
 				tooltip: 'Reach e2.5e13 Points while in the "Productionless" Hindrance and without Subspace Energy, Quirk Layers, any Row 3 currencies or buyables (except Enhance Points & Space Buildings), Boosters, or Generators.',
+				image: "images/achs/125.png",
 			},
 			131: {
 				name: "Artificially Mindless",
@@ -7810,6 +7814,7 @@ addLayer("a", {
 				name: "God is a Turtle",
 				done() { return player.mc.buyables[11].gte(200) },
 				tooltip: "Reach a Shell size of at least 200m. Reward: Shell Expansion's buff is raised ^5, its cost is divided by 7, & you get 2 free Gear Evolutions.",
+				image: "images/achs/132.png",
 			},
 			133: {
 				name: "Breaching the Barriers",
@@ -7828,6 +7833,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.points.gte("ee15") },
 				tooltip: "Reach e1e15 Points.",
+				image: "images/achs/135.png",
 			},
 		},
 		tabFormat: [
