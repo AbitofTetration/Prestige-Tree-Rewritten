@@ -7725,6 +7725,7 @@ addLayer("a", {
 				name: "Realm of The Impossible",
 				done() { return player.q.points.gte("e1e6") },
 				tooltip: "Reach e1,000,000 Quirks. Reward: The Quirk Layer cost base is reduced by 0.2.",
+				image: "images/achs/101.png",
 			},
 			102: {
 				name: "We're Not Beyond This?",
