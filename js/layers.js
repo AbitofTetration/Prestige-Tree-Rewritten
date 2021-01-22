@@ -6901,10 +6901,10 @@ addLayer("ge", {
         }},
         color: "#bfbfbf",
 		nodeStyle() { return {
-			background: (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #bfbfbf 0%, #838586 100%)":"#838586"):"#bfbfbf",
+			background: (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #bfbfbf 0%, #838586 100%)":"#838586"):"#bf8f8f",
 		}},
 		componentStyles: {
-			background() { return (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #bfbfbf 0%, #838586 100%)":"#bfbfbf"):"#bfbfbf" },
+			background() { return (player.ge.unlocked||canReset("ge"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #bfbfbf 0%, #838586 100%)":"#bfbfbf"):"#bf8f8f" },
 		},
         requires: new Decimal(1e256), // Can be a function that takes requirement increases into account
         resource: "gears", // Name of prestige currency 
@@ -7197,7 +7197,7 @@ addLayer("mc", {
         }},
         color: "#c99a6b",
 		nodeStyle() { return {
-			background: (player.mc.unlocked||canReset("mc"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #c99a6b 0%, #706d6d 100%)":"#c99a6b"):"#c99a6b",
+			background: (player.mc.unlocked||canReset("mc"))?((player.grad&&!player.oldStyle)?"radial-gradient(circle, #c99a6b 0%, #706d6d 100%)":"#c99a6b"):"#bf8f8f",
 		}},
 		componentStyles: {
 			"prestige-button": {
@@ -7541,16 +7541,19 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("t")&&player.ma.mastered.includes("e")&&player.ma.mastered.includes("s") },
 				tooltip: "Master Time, Enhance, & Space.",
+				image: "images/achs/35.png",
 			},
 			41: {
 				name: "Super Super",
 				done() { return player.sb.unlocked },
 				tooltip: "Unlock Super-Boosters. Reward: Prestige Upgrades are always kept on reset, and unlock 3 new Booster Upgrades.",
+				image: "images/achs/41.png",
 			},
 			42: {
 				name: "Yet Another Inf- [COPYRIGHT]",
 				done() { return player.g.power.gte(Number.MAX_VALUE) },
 				tooltip: "Reach 1.8e308 Generator Power.",
+				image: "images/achs/42.png",
 			},
 			43: {
 				name: "Enhancing a Company",
@@ -7573,6 +7576,7 @@ addLayer("a", {
 				name: "Yet Another Row, Huh",
 				done() { return player.h.unlocked||player.q.unlocked },
 				tooltip: "Perform a Row 4 reset. Reward: Time/Enhance/Space don't increase each other's requirements.",
+				image: "images/achs/51.png",
 			},
 			52: {
 				name: "Hinder is Coming",
@@ -7744,6 +7748,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("i") },
 				tooltip: "Master Imperium.",
+				image: "images/achs/105.png",
 			},
 			111: {
 				name: "Realm of Creation",
