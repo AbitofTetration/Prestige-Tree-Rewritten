@@ -7565,12 +7565,14 @@ addLayer("a", {
 				name: "Space is for Dweebs",
 				done() { return tmp.s.manualBuildingLevels.eq(0) && player.g.power.gte("1e370") },
 				tooltip: "Reach 1e370 Generator Power without any Space Buildings.",
+				image: "images/achs/44.png",
 			},
 			45: {
-				name: "How Super!",
+				name: "Super Precision",
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("sb")&&player.ma.mastered.includes("sg") },
 				tooltip: "Master Super Boosters & Super Generators.",
+				image: "images/achs/45.png",
 			},
 			51: {
 				name: "Yet Another Row, Huh",
@@ -7588,17 +7590,20 @@ addLayer("a", {
 				name: "Already????",
 				done() { return player.sg.unlocked },
 				tooltip: "Perform a Super-Generator reset. Reward: Get 2 extra Space.",
+				image: "images/achs/53.png",
 			},
 			54: {
-				name: "Super Layers are Pointless",
+				name: "The Superless Bug",
 				done() { return player.sg.best.eq(0) && player.sb.best.eq(0) && player.points.gte("1e15500") },
 				tooltip: "Reach 1e15,500 Points without Super-Boosters & Super-Generators.",
+				image: "images/achs/54.png",
 			},
 			55: {
-				name: "Not So Challenging Now!",
+				name: "Evil HQ",
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("q")&&player.ma.mastered.includes("h") },
 				tooltip: "Master Quirks & Hindrances.",
+				image: "images/achs/55.png",
 			},
 			61: {
 				name: "Seriously Specific",
@@ -7761,6 +7766,7 @@ addLayer("a", {
 				name: "True Mastery",
 				done() { return player.ma.points.gte(10) },
 				tooltip: "Reach 10 Mastery.",
+				image: "images/achs/112.png",
 			},
 			113: {
 				name: "One Trillion Zeros",
