@@ -7665,6 +7665,7 @@ addLayer("a", {
 				unlocked() { return hasAchievement("a", 111) },
 				done() { return player.ma.mastered.includes("m")&&player.ma.mastered.includes("ba")&&player.ma.mastered.includes("ps") },
 				tooltip: "Master Magic, Balance, & Phantom Souls.",
+				image: "images/achs/75.png",
 			},
 			81: {
 				name: "Yes I Am",
@@ -7688,6 +7689,7 @@ addLayer("a", {
 				name: "Beyond the Basics",
 				done() { return player.points.gte("e9250000") && player.b.best.eq(0) && player.g.best.eq(0) },
 				tooltip: "Reah e9,250,000 Points without any Boosters or Generators.",
+				image: "images/achs/84.png",
 			},
 			85: {
 				name: "I Understand Your Pain",
@@ -7718,6 +7720,7 @@ addLayer("a", {
 				name: "Finally Done Being Hindered",
 				done() { return player.h.challenges[31]>=30 && player.h.challenges[32]>=10 },
 				tooltip: 'Complete "Timeless" 30 times and "Option D" 10 times.',
+				image: "images/achs/94.png",
 			},
 			95: {
 				name: "I Hate This Mechanic",
@@ -7736,6 +7739,7 @@ addLayer("a", {
 				name: "We're Not Beyond This?",
 				done() { return inChallenge("h", 31) && player.h.challenges[31]>=30 && player.points.gte("e2e7") },
 				tooltip: 'Reach e20,000,000 Points while in the "Timeless" hindrance (which must be completed at least 30 times).',
+				image: "images/achs/102.png",
 			},
 			103: {
 				name: "One Billion Zeros",
@@ -7809,6 +7813,7 @@ addLayer("a", {
 				name: "The Perfect Being",
 				done() { return player.hn.points.gte("ee6") },
 				tooltip: "Reach e1,000,000 Honour. Reward: Gear Evolution requires 3x less Rotations, and is 20% stronger.",
+				image: "images/achs/124.png",
 			},
 			125: {
 				name: "Baseless Property",
@@ -7821,6 +7826,7 @@ addLayer("a", {
 				name: "Artificially Mindless",
 				done() { return player.mc.unlocked },
 				tooltip: "Unlock Machines. Reward: Mastery is 10% cheaper.",
+				image: "images/achs/131.png",
 			},
 			132: {
 				name: "God is a Turtle",
