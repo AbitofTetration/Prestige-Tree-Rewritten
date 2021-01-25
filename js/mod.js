@@ -8,14 +8,14 @@ let modInfo = {
 	changelogLink: "https://github.com/AbitofTetration/Prestige-Tree-Rewritten/blob/master/changelog.md",
     offlineLimit: 1,  // In hours
     initialStartPoints: new Decimal(10), // Used for hard resets and new players
-	endgame: new Decimal("10^^69"),
-	specialEndgameText: "v1.2 Beta 28 Endgame: e1e15 Points",
+	endgame: new Decimal("e1e15"),
+	// specialEndgameText: "v1.2 Beta 28 Endgame: e1e15 Points",
 }
 
 // Set your version in num and name
 let VERSION = {
 	num: "1.2",
-	beta: 28,
+	// beta: 28,
 	// patch: 1,
 	name: "Mechanical Mastery",
 }

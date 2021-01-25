@@ -5,6 +5,7 @@
 - Added the next section of achievements
 - More minor bugfixes/QoL improvements were made
 - Added achievement images
+- Implemented a multi-save system
 - Finished the "Help" tab
 
 ### v1.1: Hyperium Nebulae
