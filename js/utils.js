@@ -34,7 +34,7 @@ function sumValues(x) {
 	return x.reduce((a, b) => Decimal.add(a, b))
 }
 
-function format(decimal, precision=2) {
+function format(decimal, precision=2, whole=false) {
 	decimal = new Decimal(decimal)
 	if (isNaN(decimal.sign)||isNaN(decimal.layer)||isNaN(decimal.mag)) {
 		player.hasNaN = true;
@@ -53,16 +53,16 @@ function format(decimal, precision=2) {
 	else if (decimal.gte("1e1000")) return exponentialFormat(decimal, 0)
 	else if (decimal.gte(1e9)) return exponentialFormat(decimal, precision)
 	else if (decimal.gte(1e3)) return commaFormat(decimal, 0)
-	else if (decimal.gte(Decimal.pow(0.1, precision))) return regularFormat(decimal, precision)
-	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte(1e-9)?precision:0)
+	else if (decimal.gte(Decimal.pow(0.1, precision)) || whole) return regularFormat(decimal, precision)
+	else if (decimal.gt("1e-100000")) return exponentialFormat(decimal, decimal.gte("1e-1000")?precision:0)
 	else return "1/("+format(decimal.pow(-1), precision)+")"
 }
 
-function formatWhole(decimal) {
+function formatWhole(decimal, reallyWhole=false) {
 	decimal = new Decimal(decimal)
 	if (decimal.gte(1e9)) return format(decimal, 2)
-	if (decimal.lte(0.95) && !decimal.eq(0)) return format(decimal, 2)
-	return format(decimal, 0)
+	if (decimal.lte(0.95) && !decimal.eq(0) && !reallyWhole) return format(decimal, 2)
+	else return format(decimal, 0, true)
 }
 
 function formatTime(s) {
@@ -83,8 +83,19 @@ function toPlaces(x, precision, maxAccepted) {
 }
 // ************ Save stuff ************
 
-function save() {
-	localStorage.setItem(modInfo.id, btoa(JSON.stringify(player)))
+const saveRegexCode = /[^\w ]|_/g // \w = word library (i.e. all numbers & letters, not case-specific)
+
+function setLocalStorage() {
+	localStorage.setItem(modInfo.id, btoa(JSON.stringify(allSaves)));
+}
+
+function save(name=allSaves.set) {
+	allSaves[name] = player;
+	setLocalStorage();
+}
+
+function showAllSaves() {
+	player.saveMenuOpen = true;
 }
 
 function startPlayerBase() {
@@ -112,10 +123,12 @@ function startPlayerBase() {
 		redGlowActive: true,
 		spaceGlow: "normal",
 		solGlow: "normal",
-		majGlow: "normal",
+		majGlow: "uncasted",
 		scShown: true,
 		oldStyle: false,
+		hideStars: false,
 		showStory: true,
+		saveMenuOpen: false,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
 		lastSafeTab: (layoutInfo.showTree ? "none" : layoutInfo.startTab)
@@ -179,7 +192,7 @@ function getStartClickables(layer){
 	if (layers[layer].clickables) {
 		for (id in layers[layer].clickables)
 			if (!isNaN(id))
-				data[id] = ""
+				data[id] = new Decimal(0)
 	}
 	return data
 }
@@ -245,10 +258,113 @@ function fixData(defaultData, newData) {
 	}	
 }
 
+function loadSave(name) {
+	allSaves.set = name;
+	setLocalStorage();
+	window.location.reload();
+}
+
+function renameSave(name) {
+	let newName = prompt("Enter save name: ")
+	newName = newName.replace(saveRegexCode, ""); // Removes all non-alphanumeric characters
+	if (newName=="set") {
+		alert("Sorry, that name is used in the game's data, so you can't use it personally or it will cause terrible glitches!");
+		return;
+	} else if (allSaves[newName] !== undefined) {
+		alert("That name is taken already, sorry!");
+		return;
+	} else if (newName.length>20) {
+		alert("This name is too long!");
+		return;
+	} else {
+		if (name==allSaves.set) save();
+		allSaves[newName] = allSaves[name];
+		allSaves[name] = undefined;
+		if (name==allSaves.set) loadSave(newName);
+		else setLocalStorage();
+	}
+	resetSaveMenu();
+}
+
+function deleteSave(name) {
+	if (Object.keys(allSaves).filter(x => (x!="set" && allSaves[x]!==undefined)).length==1) {
+		hardReset();
+		return;
+	}
+	if (!confirm("Are you sure you wish to delete this save?")) return;
+	allSaves[name] = undefined;
+	if (name==allSaves.set) {
+		let valid = Object.keys(allSaves).filter(x => (x!="set" && (allSaves[x]!==undefined||x==name)));
+		let toLoad = valid[(valid.indexOf(name)+1)%valid.length];
+		loadSave(toLoad);
+	}
+	setLocalStorage();
+	resetSaveMenu();
+}
+
+function newSave() {
+	let newName = prompt("Enter save name: ");
+	newName = newName.replace(saveRegexCode, ""); // Removes all non-alphanumeric characters
+	if (newName=="set") {
+		alert("Sorry, that name is used in the game's data, so you can't use it personally or it will cause terrible glitches!");
+		return;
+	} else if (allSaves[newName] !== undefined) {
+		alert("That name is taken already, sorry!");
+		return;
+	} else if (newName.length>20) {
+		alert("This name is too long!");
+		return;
+	} else {
+		allSaves[newName] = getStartPlayer();
+		loadSave(newName);
+	}
+}
+
+function moveSave(name, dir) {
+	let valid = Object.keys(allSaves).filter(x => (x!="set" && allSaves[x]!==undefined));
+	let oldPos = valid.indexOf(name);
+	let newPos = Math.min(Math.max(oldPos+dir, 0), valid.length-1);
+	console.log("Old: "+oldPos+", New: "+newPos);
+	if (oldPos==newPos) return;
+	
+	let name1 = valid[oldPos];
+	let name2 = valid[newPos];
+	let active1 = name1==allSaves.set;
+	let active2 = name2==allSaves.set;
+	
+	if (active1 || active2) save();
+	let newAllSaves = {set: allSaves.set};
+	for (let n of Object.keys(allSaves).sort((x,y) => ((x==name1&&y==name2)||(x==name2&&y==name1))?-1:1)) newAllSaves[n] = allSaves[n]
+	allSaves = newAllSaves;
+	
+	setLocalStorage();
+	resetSaveMenu();
+}
+
+function showMoveSaveBtn(name, dir) {
+	let valid = Object.keys(allSaves).filter(x => (x!="set" && allSaves[x]!==undefined));
+	if (dir=="up") return valid.indexOf(name)>0
+	else return valid.indexOf(name)<(valid.length-1);
+}
+
+function resetSaveMenu() {
+	player.saveMenuOpen = false;
+	player.saveMenuOpen = true;
+}
+
 function load() {
 	let get = localStorage.getItem(modInfo.id);
 	if (get===null || get===undefined) player = getStartPlayer()
-	else player = Object.assign(getStartPlayer(), JSON.parse(atob(get)))
+	else {
+		let data = JSON.parse(atob(get));
+		if (data.set !== undefined) {
+			player = Object.assign(getStartPlayer(), data[data.set]);
+			allSaves = data;
+		} else {
+			player = Object.assign(getStartPlayer(), data);
+			allSaves = {set: "save1", save1: player}
+		}
+	}
 	fixSave()
 
 	if (player.offlineProd) {
@@ -266,6 +382,8 @@ function load() {
 	updateTemp();
 	updateTemp();
 	loadVue();
+	
+	player.saveMenuOpen = false; // Slight quality of life :)
 }
 
 
@@ -421,7 +539,7 @@ function adjustGlow(type) {
 			data.push("never")
 			return data;
 		},
-		maj() { return ["normal", "never"] },
+		maj() { return ["normal", "uncasted", "never"] },
 	}
 	let data = glowData[type]()
 	let index = data.indexOf(player[type+"Glow"]);
@@ -505,7 +623,7 @@ function canAffordUpgrade(layer, id) {
 }
 
 function hasUpgrade(layer, id){
-	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString()))
+	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString())) && unl(layer)
 }
 
 function hasMilestone(layer, id){
@@ -513,11 +631,11 @@ function hasMilestone(layer, id){
 }
 
 function hasAchievement(layer, id){
-	return (player[layer].achievements.includes(toNumber(id)) || player[layer].achievements.includes(id.toString()))
+	return (player[layer].achievements.includes(toNumber(id)) || player[layer].achievements.includes(id.toString())) && unl(layer)
 }
 
 function hasChallenge(layer, id){
-	return (player[layer].challenges[id]>=tmp[layer].challenges[id].completionLimit)
+	return (player[layer].challenges[id]>=tmp[layer].challenges[id].completionLimit) && unl(layer)
 }
 
 function maxedChallenge(layer, id){
@@ -525,11 +643,11 @@ function maxedChallenge(layer, id){
 }
 
 function challengeCompletions(layer, id){
-	return (player[layer].challenges[id])
+	return unl(layer)?(player[layer].challenges[id]||0):0
 }
 
 function getBuyableAmount(layer, id){
-	return (player[layer].buyables[id])
+	return unl(layer)?(player[layer].buyables[id]):0
 }
 
 function setBuyableAmount(layer, id, amt){
@@ -565,6 +683,7 @@ function achievementEffect(layer, id){
 }
 
 function getImprovements(layer, id) {
+	if (!unl(layer)) return new Decimal(0);
 	return tmp[layer].impr[id].unlocked?(tmp[layer].impr.amount.sub(tmp[layer].impr[id].num).div(tmp[layer].impr.activeRows*tmp[layer].impr.activeCols).plus(1).floor().max(0)):new Decimal(0);
 }
 
@@ -787,9 +906,15 @@ function nodeShown(layer) {
 	return false
 }
 
+function unl(layer) {
+	if (Array.isArray(tmp.ma.canBeMastered)) if (player.ma.selectionActive&&tmp[layer].row<6&&!tmp.ma.canBeMastered.includes(layer)) return false;
+	return player[layer].unlocked;
+}
+
 function layerunlocked(layer) {
+	if (player.ma.selectionActive&&tmp[layer].row<6&&!tmp.ma.canBeMastered.includes(layer)) return false;
 	if (tmp[layer] && tmp[layer].type == "none") return (player[layer].unlocked)
-	return LAYERS.includes(layer) && (player[layer].unlocked || (tmp[layer].baseAmount.gte(tmp[layer].requires) && tmp[layer].layerShown))
+	return LAYERS.includes(layer) && (player[layer].unlocked || (tmp[layer].canReset && tmp[layer].layerShown))
 }
 
 function keepGoing() {

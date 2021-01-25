@@ -1,5 +1,13 @@
 # The Prestige Tree: Rewritten changelog (major updates only):
 
+### v1.2: Mechanical Mastery
+- Ported the "MA", "GE", and "MC" layers
+- Added the next section of achievements
+- More minor bugfixes/QoL improvements were made
+- Added achievement images
+- Implemented a multi-save system
+- Finished the "Help" tab
+
 ### v1.1: Hyperium Nebulae
 - Added the "N" layer (replaces "L"), and ported the "HS" & "I" layers
 - Added the next section of achievements

@@ -1,4 +1,5 @@
 var player;
+let allSaves;
 var needCanvasUpdate = true;
 var gameEnded = false;
 
@@ -22,7 +23,8 @@ function getResetGain(layer, useType = null) {
 	} else if (type=="normal"){
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return new Decimal(0)
 		let gain = tmp[layer].baseAmount.div(tmp[layer].requires).pow(tmp[layer].exponent).times(tmp[layer].gainMult).pow(tmp[layer].gainExp)
-		gain = softcap("normal_layers", gain)
+		gain = softcap("normal_layers_2", softcap("normal_layers", gain));
+		if (layer=="e") gain = softcap("epGain", gain);
 		return gain.floor().max(0);
 	} else if (type=="custom"){
 		return layers[layer].getResetGain()
@@ -51,7 +53,7 @@ function getNextAt(layer, canMax=false, useType = null) {
 		return cost;
 	} else if (type=="normal"){
 		let next = tmp[layer].resetGain.add(1)
-		next = reverse_softcap("normal_layers", next)
+		next = reverse_softcap("normal_layers", reverse_softcap("normal_layers_2", next));
 		next = next.root(tmp[layer].gainExp).div(tmp[layer].gainMult).root(tmp[layer].exponent).times(tmp[layer].requires).max(tmp[layer].requires)
 		if (tmp[layer].roundUpCost) next = next.ceil()
 		return next;
@@ -95,6 +97,7 @@ function shouldNotify(layer){
 					}
 				} else if (layer=="m") {
 					if (player.majGlow=="never" || (player.m.auto && hasMilestone("hn", 2))) continue;
+					if (player.majGlow=="uncasted") if (Object.values(player.m.spellTimes).some(x => Decimal.eq(x, 0))) continue;
 				}
 				return true
 			}
@@ -300,7 +303,7 @@ function completeChallenge(layer, x) {
 		player[layer].activeChallenge = null;
 		return
 	}
-	if (player[layer].challenges[x] < tmp[layer].challenges[x].completionLimit) {
+	if ((player[layer].challenges[x]||0) < tmp[layer].challenges[x].completionLimit) {
 		needCanvasUpdate = true
 		player[layer].challenges[x] += 1
 		if (layers[layer].challenges[x].onComplete) layers[layer].challenges[x].onComplete()
@@ -336,9 +339,11 @@ function gameLoop(diff) {
 	for (x = 0; x <= maxRow; x++){
 		for (item in TREE_LAYERS[x]) {
 			let layer = TREE_LAYERS[x][item]
-			if (tmp[layer].passiveGeneration) generatePoints(layer, diff*tmp[layer].passiveGeneration);
-			if (layers[layer].update) layers[layer].update(diff);
 			if (!player[layer].unlocked) player[layer].first += diff;
+			if (!unl(layer)) continue;
+			let speed = (x<6)?tmp.row1to6spd:new Decimal(1)
+			if (tmp[layer].passiveGeneration) generatePoints(layer, speed.times(diff*tmp[layer].passiveGeneration));
+			if (layers[layer].update) layers[layer].update(speed.times(diff));
 		}
 	}
 
@@ -353,6 +358,7 @@ function gameLoop(diff) {
 	for (x = maxRow; x >= 0; x--){
 		for (item in TREE_LAYERS[x]) {
 			let layer = TREE_LAYERS[x][item]
+			if (!unl(layer)) continue;
 			if (tmp[layer].autoPrestige && tmp[layer].canReset) doReset(layer);
 			if (layers[layer].automate) layers[layer].automate();
 		}

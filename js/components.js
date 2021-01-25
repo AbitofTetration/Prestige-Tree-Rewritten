@@ -60,9 +60,9 @@ function loadVue() {
 		<div class="upgTable instant">
 			<div class="upgCol">
 				<div v-for="item in data">
-					<div v-if="!Array.isArray(item)" v-bind:is="item" :layer= "layer" v-bind:style="tmp[layer].componentStyles[item]"></div>
-					<div v-else-if="item.length==3" v-bind:style="[tmp[layer].componentStyles[item[0]], (item[2] ? item[2] : {})]" v-bind:is="item[0]" :layer= "layer" :data= "item[1]"></div>
-					<div v-else-if="item.length==2" v-bind:is="item[0]" :layer= "layer" :data= "item[1]" v-bind:style="tmp[layer].componentStyles[item[0]]"></div>
+					<div v-if="!Array.isArray(item)" v-bind:is="item" :layer= "layer" v-bind:style="(item=='prestige-button')?{}:tmp[layer].componentStyles[item]"></div>
+					<div v-else-if="item.length==3" v-bind:style="[(item[0]=='prestige-button')?{}:tmp[layer].componentStyles[item[0]], (item[2] ? item[2] : {})]" v-bind:is="item[0]" :layer= "layer" :data= "item[1]"></div>
+					<div v-else-if="item.length==2" v-bind:is="item[0]" :layer= "layer" :data= "item[1]" v-bind:style="(item[0]=='prestige-button')?{}:tmp[layer].componentStyles[item[0]]"></div>
 				</div>
 			</div>
 		</div>
@@ -186,7 +186,7 @@ function loadVue() {
 			v-bind:style="[tmp[layer].impr[data].style]">
 			<span v-if= "tmp[layer].impr[data].title"><h3 v-html="tmp[layer].impr[data].title"></h3><br></span>
 			<span v-html="tmp[layer].impr[data].description"></span>
-			Amount: <span v-html="formatWhole(getImprovements(layer, data))"></span> (next at <span v-html="format(getNextImpr(layer, data))"></span> <span v-html="tmp[layer].impr.resName"></span>)
+			Amount: <span v-html="formatWhole(getImprovements(layer, data))+(tmp[layer].impr.free?(tmp[layer].impr.free.gt(0)?(' + '+formatWhole(tmp[layer].impr.free)):''):'')"></span> (next at <span v-html="format(getNextImpr(layer, data))"></span> <span v-html="tmp[layer].impr.resName"></span>)
 			<br><span v-if="tmp[layer].impr[data].effect"><br>{{(tmp.nerdMode&&!tmp[layer].impr[data].noFormula)?'Formula: ':'Currently: '}}<span v-if="tmp.nerdMode&&!tmp[layer].impr[data].noFormula" v-html="tmp[layer].impr[data].formula?tmp[layer].impr[data].formula:'???'"></span><span v-if="(!tmp.nerdMode)||tmp[layer].impr[data].noFormula" v-html="(tmp[layer].impr[data].effectDisplay) ? (tmp[layer].impr[data].effectDisplay) : format(tmp[layer].impr[data].effect)"></span></span>
 		</button>
 		`
@@ -228,10 +228,15 @@ function loadVue() {
 	Vue.component('prestige-button', {
 		props: ['layer', 'data'],
 		template: `
-		<button v-if="(tmp[layer].type !== 'none')" v-bind:class="{ [layer]: true, reset: true, locked: !tmp[layer].canReset, can: tmp[layer].canReset, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
+		<div class='upgRow'><button v-if="(tmp[layer].type !== 'none')" v-bind:class="{ [layer]: true, reset: true, locked: !tmp[layer].canReset, can: tmp[layer].canReset, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle)}"
 			v-bind:style="[tmp[layer].canReset ? {'background-color': tmp[layer].color} : {}, tmp[layer].componentStyles['prestige-button']]"
 			v-html="tmp[layer].prestigeButtonText" v-on:click="doReset(layer)">
 		</button>
+		<button v-if="player.ma.selectionActive&&tmp[layer].row<tmp.ma.rowLimit&&tmp.ma.canBeMastered.includes(layer)&&player.ma.current==layer" v-bind:class="{ ma: true, reset: true, locked: player[layer].points.lt(tmp.ma.masteryGoal[layer]), can: player[layer].points.gte(tmp.ma.masteryGoal[layer]), anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }"
+			v-bind:style="(player[layer].points.gte(tmp.ma.masteryGoal[layer]))?{'background-color': tmp.ma.color}:{}"
+			v-html="(player[layer].points.gte(tmp.ma.masteryGoal[layer]))?('Master this layer!'):('Reach '+format(tmp.ma.masteryGoal[layer])+' '+tmp[layer].resource+' to fully Master this layer.')"
+			v-on:click="layers.ma.completeMastery(layer)">
+		</button></div>
 		`
 	
 	})
@@ -240,7 +245,7 @@ function loadVue() {
 	Vue.component('main-display', {
 		props: ['layer'],
 		template: `
-		<div v-if="!!player[layer].points"><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': '0px 0px 10px' + tmp[layer].color}">{{formatWhole(player[layer].points)}}</h2> {{tmp[layer].resource}}<span v-if="tmp[layer].effectDescription">, {{tmp[layer].effectDescription}}</span><br><br></span>
+		<div v-if="!!player[layer].points"><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': ('0px 0px 10px' + tmp[layer].color)}">{{formatWhole(player[layer].points)}}</h2><span v-if="tmp[layer].extraAmtDisplay"><span v-html="tmp[layer].extraAmtDisplay"></span></span> <h3 v-if="tmp.ma.mastered.includes(layer)" v-bind:style="{'color': tmp.ma.color, 'text-shadow': '0px 0px 10px', 'font-weight': 'bold'}">mastered</h3> {{tmp[layer].resource}}<span v-if="tmp[layer].effectDescription">, {{tmp[layer].effectDescription}}</span><br><br></div>
 		`
 	})
 
@@ -249,7 +254,7 @@ function loadVue() {
 		props: ['layer'],
 		template: `
 		<div style="margin-top: -13px">
-			<span v-if="tmp[layer].type=='normal' && tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3)"><br>You have {{formatWhole(tmp[layer].baseAmount)}} {{tmp[layer].baseResource}}</span>
+			<span v-if="tmp[layer].type=='normal'"><br><span v-if="tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3)">You have </span>{{formatWhole(tmp[layer].baseAmount)}} {{tmp[layer].baseResource}}</span>
 			<br><br>
 			<span v-if="tmp[layer].showBest">Your best {{tmp[layer].resource}} is {{formatWhole(player[layer].best)}}<br></span>
 			<span v-if="tmp[layer].showTotal">You have made a total of {{formatWhole(player[layer].total)}} {{tmp[layer].resource}}<br></span>
@@ -395,10 +400,20 @@ function loadVue() {
 				: (tmp[layer].achievements[data].goalTooltip ? tmp[layer].achievements[data].goalTooltip : (tmp[layer].achievements[data].tooltip ? tmp[layer].achievements[data].tooltip : 'LOCKED'))
 			"
 
-			v-bind:style="[(!tmp[layer].achievements[data].unlocked) ? {'visibility': 'hidden'} : {}, tmp[layer].achievements[data].style,]">
+			v-bind:style="[(!tmp[layer].achievements[data].unlocked) ? {'visibility': 'hidden'} : {}, tmp[layer].achievements[data].style, (tmp[layer].achievements[data].image?{'background-image': (hasAchievement(layer, data)?('url('+tmp[layer].achievements[data].image+')'):''), 'background-size': '110% 110%', 'background-repeat': 'no-repeat', 'background-position': 'center', 'text-shadow': '0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000, 0px 0px 2px #000000'}:''), ]">
 			<span v-if= "tmp[layer].achievements[data].name"><br><h3 v-html="tmp[layer].achievements[data].name"></h3><br></span>
 		</div>
 		`
+	})
+	
+	Vue.component('stars', {
+		props: ['layer'],
+		template: `<div v-if='!player.hideStars'><div v-if='player.ma.mastered.includes(layer)' class='star' style='position: absolute; left: -10px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; left: 13px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; left: 36px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; left: 59px; top: -10px;'></div>
+		<div v-if='false' class='star' style='position: absolute; right: -10px; top: -10px;'></div>
+		</div>`
 	})
 
 	// Data is an array with the structure of the tree
@@ -429,6 +444,25 @@ function loadVue() {
 			<button v-if="tmp[layer].buyables && tmp[layer].buyables[data].sellAll && !(tmp[layer].buyables[data].canSellAll !== undefined && tmp[layer].buyables[data].canSellAll == false)" v-on:click="tmp[layer].buyables[data].sellAll()" v-bind:class="{ longUpg: true, can: player[layer].unlocked, locked: !player[layer].unlocked, anim: (player.anim&&!player.oldStyle), grad: (player.grad&&!player.oldStyle) }">{{tmp[layer].buyables.sellAllText ? tmp[layer].buyables.sellAllText : "Sell All"}}</button>
 	`
 	})
+	
+	// For the save menu popup
+	Vue.component('saves', {
+		template: `
+		<div class="popup" v-if="!(!player.saveMenuOpen)">
+			<div class="popupBlocker" onclick="player.saveMenuOpen = false;"></div>
+			<div class="popup-content"><br>
+				<div class="upgRow" style="width: 100%;" v-for="(data, name) in allSaves" v-if="name!='set' && data!==undefined">
+					<div v-bind:class="{ activeSave: (allSaves.set==name), widthLock: true }">{{name}}</div>
+					<button v-on:click="save(); loadSave(name);" class="popupBtn can">Load</button>
+					<button v-on:click="renameSave(name)" class="popupBtn can">Rename</button>
+					<button v-on:click="deleteSave(name)" class="popupBtn can">Delete</button>
+					<div><button class="popupBtnMini can" v-on:click="moveSave(name, -1)" v-bind:style="{ visibility: (showMoveSaveBtn(name, 'up')?'visible':'hidden')}">▲</button><button class="popupBtnMini can" v-on:click="moveSave(name, 1)" v-bind:style="{ visibility: (showMoveSaveBtn(name, 'down')?'visible':'hidden')}">▼</button></div>
+				</div>
+				<div class="upgRow" style="width: 100%;"><button onclick="newSave()" class="popupBtn can">New Save</button></div>
+			</div>
+		</div>
+	`
+	})
 
 	// SYSTEM COMPONENTS
 
@@ -445,6 +479,7 @@ function loadVue() {
 		el: "#app",
 		data: {
 			player,
+			allSaves,
 			tmp,
 			Decimal,
 			format,

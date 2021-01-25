@@ -34,8 +34,7 @@ var systemComponents = {
 				anim: (player.anim&&!player.oldStyle),
 				grad: (player.grad&&!player.oldStyle)
 			}"
-			v-bind:style="[tmp[layer].canClick ? {'background-color': tmp[layer].color} : {}, tmp[layer].nodeStyle]">
-			{{abb}}
+			v-bind:style="[tmp[layer].canClick ? {'background-color': tmp[layer].color} : {}, tmp[layer].nodeStyle]" v-bind:html="abb">
 		</button>
 		`
 	},
@@ -46,11 +45,12 @@ var systemComponents = {
 		<button v-if="nodeShown(layer)"
 			v-bind:id="layer"
 			v-on:click="function() {
+				if (player.ma.selectionActive&&tmp[layer].row<tmp.ma.rowLimit&&tmp.ma.canBeMastered.includes(layer)&&player.ma.current===null) layers.ma.startMastery(layer);
 				showTab(layer)
 			}"
 			v-bind:tooltip="
-				player[layer].unlocked ? (tmp[layer].tooltip ? tmp[layer].tooltip : formatWhole(player[layer].points) + ' ' + tmp[layer].resource)
-				: (tmp[layer].tooltipLocked ? tmp[layer].tooltipLocked : 'Reach ' + formatWhole(tmp[layer].requires) + ' ' + tmp[layer].baseResource + ' to unlock (You have ' + formatWhole(tmp[layer].baseAmount) + ' ' + tmp[layer].baseResource + ')')
+				(player.ma.selectionActive&&tmp[layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(layer))?'Cannot be mastered yet.':((player.ma.selectionActive&&tmp[layer].row<tmp.ma.rowLimit&&player.ma.current===null)?'Click to attempt Mastery.':(player[layer].unlocked ? (tmp[layer].tooltip ? tmp[layer].tooltip : formatWhole(player[layer].points) + ' ' + tmp[layer].resource)
+				: (tmp[layer].tooltipLocked ? tmp[layer].tooltipLocked : 'Reach ' + formatWhole(tmp[layer].requires) + ' ' + tmp[layer].baseResource + ' to unlock (You have ' + formatWhole(tmp[layer].baseAmount) + ' ' + tmp[layer].baseResource + ')')))
 			"
 			v-bind:class="{
 				treeNode: size != 'small',
@@ -58,17 +58,17 @@ var systemComponents = {
 				[layer]: true,
 				ghost: tmp[layer].layerShown == 'ghost',
 				hidden: !tmp[layer].layerShown,
-				locked: !player[layer].unlocked && !(tmp[layer].baseAmount.gte(tmp[layer].requires)&&tmp[layer].canReset),
+				locked: (player.ma.selectionActive&&tmp[layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(layer))||(!player[layer].unlocked && !(tmp[layer].baseAmount.gte(tmp[layer].requires)&&tmp[layer].canReset)),
 				notify: tmp[layer].notify,
 				resetNotify: tmp[layer].prestigeNotify,
-				can: player[layer].unlocked,
+				can: player[layer].unlocked&&!(player.ma.selectionActive&&tmp[layer].row<tmp.ma.rowLimit&&!tmp.ma.canBeMastered.includes(layer)),
 				anim: (player.anim&&!player.oldStyle),
 				grad: (player.grad&&!player.oldStyle)
 			}"
 			v-bind:style="[layerunlocked(layer) ? {
 				'background-color': tmp[layer].color,
 			} : {}, tmp[layer].nodeStyle]">
-			{{abb}}
+			<stars :layer='layer'></stars><span class="noChange" v-html="abb"></span>
 		</button>
 		`
 	},
@@ -82,7 +82,7 @@ var systemComponents = {
 			<info-box v-if="tmp[layer].infoboxes" :layer="layer" :data="Object.keys(tmp[layer].infoboxes)[0]"></info-box>
 			<main-display v-bind:style="tmp[layer].componentStyles['main-display']" :layer="layer"></main-display>
 			<div v-if="tmp[layer].type !== 'none'">
-				<prestige-button v-bind:style="tmp[layer].componentStyles['prestige-button']" :layer="layer"></prestige-button>
+				<prestige-button :layer="layer"></prestige-button>
 			</div>
 			<resource-display v-bind:style="tmp[layer].componentStyles['resource-display']" :layer="layer"></resource-display>
 			<milestones v-bind:style="tmp[layer].componentStyles.milestones" :layer="layer"></milestones>

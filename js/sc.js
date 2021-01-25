@@ -7,6 +7,14 @@ const SOFTCAPS = {
 		display() { return player.p.points.gte("e1e6") },
 		info() { return "Starts at "+format(this.start)+", square rooted" },
 	},
+	normal_layers_2: {
+		title: "Non-Static Layer Gain",
+		type: "expRoot",
+		start: new Decimal("e5e11"),
+		mag: new Decimal(2),
+		display() { return player.p.points.gte("ee11") },
+		info() { return "Starts at "+format(this.start)+", exponent square rooted" },
+	},
 	p12: {
 		title: "Prestige Upgrade 2 (Prestige Boost)",
 		type: "log",
@@ -22,6 +30,30 @@ const SOFTCAPS = {
 		mag() { return new Decimal(2).sub((hasUpgrade("hn", 21)) ? upgradeEffect("hn", 21) : 0) },
 		display() { return hasUpgrade("p", 12) && hasChallenge("h", 22) && upgradeEffect("p", 12).gte(this.start()) },
 		info() { return "Starts at "+format(this.start())+"x, exponent brought to the "+(this.mag().eq(2)?"2nd":(format(this.mag())+"th"))+" root" },
+	},
+	timeEnEff: {
+		title: "First Time Energy Effect",
+		type: "expRoot",
+		start() { return ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("t"):false)?new Decimal("e3.1e9"):(new Decimal(player.ma.mastered.includes("b")?(player.ma.mastered.includes("g")?"e2.838e9":"e2.75e9"):"e2.5e9")) },
+		mag: new Decimal(5),
+		display() { return player.t.unlocked && tmp.t.enEff.gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent brought to the fifth root" },
+	},
+	timeEnEff2: {
+		title: "Second Time Energy Effect",
+		type: "root",
+		start: new Decimal(1.4e6),
+		mag: new Decimal(2),
+		display() { return tmp.t.enEff2.gte(this.start) },
+		info() { return "Starts at "+formatWhole(this.start)+", square rooted" },
+	},
+	epGain: {
+		title: "Enhance Point Gain",
+		type: "expRoot",
+		start: new Decimal("e1.8e9"),
+		mag: new Decimal(3),
+		display() { return player.e.unlocked && new Decimal(tmp.e.resetGain||0).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+", exponent cube rooted" },
 	},
 	enh1: {
 		title: "First Enhancer Effect",
@@ -63,14 +95,38 @@ const SOFTCAPS = {
 		display() { return player.s.buyables[14].gt(0) && buyableEffect("s", 14).gte(this.start) },
 		info() { return "Starts at ^"+format(this.start)+", logarithmic" },
 	},
+	spaceBuilding9: {
+		title: "Nonary Space Building",
+		type: "expRoot",
+		start: new Decimal(7.5e5),
+		mag: new Decimal(6),
+		display() { return player.s.buyables[19].gt(0) && buyableEffect("s", 19).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the sixth root" },
+	},
+	spaceBuilding9_2: {
+		title: "Nonary Space Building",
+		type: "log",
+		start: new Decimal(1e7),
+		exp: new Decimal(1),
+		display() { return player.s.buyables[19].gt(0) && buyableEffect("s", 19).gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, logarithmic" },
+	},
+	s13: {
+		title: "Space Upgrade 3 (Shipped Away)",
+		type: "expRoot",
+		start: new Decimal("e1.5e11"),
+		mag: new Decimal(5),
+		display() { return upgradeEffect("s", 13).gte(this.start) && hasUpgrade("s", 13) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the fifth root" },
+	},
 	hindr_base: {
 		title: "Hindrance Spirit Effect",
 		type: "expRoot",
 		start: new Decimal(15e4),
-		mag: new Decimal(4),
+		mag() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("h"):false)?2.5:4) },
 		spec() { return 3*(hasChallenge("h", 11)?1.2:1)*hasUpgrade("ba", 21)?8:1 },
 		display() { return player.h.unlocked && tmp.h.effect.root(this.spec()).gte(this.start) },
-		info() { return "Starts at "+format(this.start.pow(this.spec()))+"x, exponent brought to the "+format(this.mag)+"th root" },
+		info() { return "Starts at "+format(this.start.pow(this.spec()))+"x, exponent brought to the "+format(this.mag())+"th root" },
 	},
 	option_d: {
 		title: '"Option D" Effect',
@@ -86,6 +142,7 @@ const SOFTCAPS = {
 		start() { 
 			let start = new Decimal("e1800000") 
 			if (hasUpgrade("q", 15) && player.i.buyables[12].gte(6)) start = start.times(upgradeEffect("q", 15));
+			if ((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("q"):false) start = start.pow(1.5);
 			return start;
 		},
 		mag: new Decimal(2),
@@ -149,13 +206,21 @@ const SOFTCAPS = {
 		display() { return player.o.buyables[21].gt(0) && buyableEffect("o", 21).gte(this.start) },
 		info() { return "Starts at "+format(this.start.times(100))+"%, exponent square rooted" },
 	},
+	hexGain: {
+		title: "Hex Gain",
+		type: "expRoot",
+		start: new Decimal("e25000000"),
+		mag: new Decimal(3),
+		display() { return player.m.hexes.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+", exponent cube rooted" },
+	},
 	hex: {
 		title: "Hex Effect",
 		type: "log",
-		start: new Decimal("1e10000"),
-		exp: new Decimal(10),
-		display() { return player.m.unlocked && tmp.m.hexEff.gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, logarithmic but raised to the power of "+format(this.exp) },
+		start() { return new Decimal("1e10000").times(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("m"):false)?Decimal.pow(1.00001, player.m.points.plus(1).log10()):1) },
+		exp() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("m"):false)?2e3:10) },
+		display() { return player.m.unlocked && tmp.m.hexEff.gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, logarithmic but raised to the power of "+format(this.exp()) },
 	},
 	spell1: {
 		title: "First Spell (Booster Launch)",
@@ -184,10 +249,10 @@ const SOFTCAPS = {
 	posBuff: {
 		title: "Positivity Buff",
 		type: "root",
-		start: new Decimal(1e6),
+		start() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("ba"):false)?"1e400":1e6) },
 		mag: new Decimal(3),
-		display() { return player.ba.unlocked && tmp.ba.posBuff.gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, cube rooted" },
+		display() { return player.ba.unlocked && tmp.ba.posBuff.gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, cube rooted" },
 	},
 	negBuff: {
 		title: "Negativity Buff",
@@ -232,10 +297,26 @@ const SOFTCAPS = {
 	hn12: {
 		title: "Second Honour Upgrade (Honour Boost)",
 		type: "expRoot",
-		start: new Decimal(1e10),
+		start() { return new Decimal(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("hn"):false)?Infinity:1e10) },
 		mag: new Decimal(2),
-		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start) },
-		info() { return "Starts at "+format(this.start)+"x, exponent square rooted" },
+		display() { return hasUpgrade("hn", 12) && upgradeEffect("hn", 12).gte(this.start()) },
+		info() { return "Starts at "+format(this.start())+"x, exponent square rooted" },
+	},
+	hsBuilds: {
+		title: "Hyper Buildings",
+		type: "root",
+		start() { return Decimal.add(3, hasAchievement("a", 121)?player.hs.buyables[11].root(5).times(.1):0).plus(((Array.isArray(tmp.ma.mastered))?tmp.ma.mastered.includes("hs"):false)?.1:0) },
+		mag: new Decimal(5),
+		display() { return player.hs.unlocked && tmp.hs.buildLimit.gt(this.start()) },
+		info() { return "Starts at Level "+format(this.start().plus(1))+", brought to the fifth root" },
+	},
+	rotEff: {
+		title: "Rotation Effect",
+		type: "expRoot",
+		start: new Decimal(1e230),
+		mag: new Decimal(1.7),
+		display() { return tmp.ge.rotEff.gte(this.start) },
+		info() { return "Starts at "+format(this.start)+"x, exponent brought to the 1.7th root" },
 	},
 }
 
