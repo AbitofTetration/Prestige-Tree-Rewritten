@@ -354,8 +354,10 @@ function resetSaveMenu() {
 
 function load() {
 	let get = localStorage.getItem(modInfo.id);
-	if (get===null || get===undefined) player = getStartPlayer()
-	else {
+	if (get===null || get===undefined) {
+		player = getStartPlayer()
+		allSaves = {set: "save1", save1: player}
+	} else {
 		let data = JSON.parse(atob(get));
 		if (data.set !== undefined) {
 			player = Object.assign(getStartPlayer(), data[data.set]);
@@ -438,9 +440,9 @@ function importSave(imported=undefined, forced=false) {
 			return
 		player = tempPlr;
 		player.versionType = modInfo.id
-		fixSave()	
+		fixSave()
 		save()
-		window.location.reload()
+		loadSave(allSaves.set)
 	} catch(e) {
 		return;
 	}
@@ -463,7 +465,7 @@ function versionCheck() {
 }
 
 var saveInterval = setInterval(function() {
-	if (player===undefined) return;
+	if (player===undefined || allSaves===undefined) return;
 	if (gameEnded&&!player.keepGoing) return;
 	if (player.autosave) save();
 }, 5000)

@@ -15,8 +15,7 @@ let modInfo = {
 // Set your version in num and name
 let VERSION = {
 	num: "1.2",
-	// beta: 28,
-	// patch: 1,
+	patch: 1,
 	name: "Mechanical Mastery",
 }
 
